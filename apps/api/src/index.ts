@@ -4,6 +4,9 @@ import type { Env, Variables } from "./lib/env.js";
 import { errorHandler } from "./lib/errors.js";
 import { anonMiddleware } from "./middleware/anon.js";
 import { loggerMiddleware } from "./middleware/logger.js";
+import dogsRoute from "./routes/dogs.js";
+import breedsRoute from "./routes/breeds.js";
+import leaderboardRoute from "./routes/leaderboard.js";
 
 // Create the Hono app with typed bindings
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -25,12 +28,10 @@ app.get("/", (c) => {
   });
 });
 
-// API routes will be added here
-// app.route("/api/dogs", dogsRoute);
-// app.route("/api/breeds", breedsRoute);
-// app.route("/api/leaderboard", leaderboardRoute);
-// app.route("/api/me", meRoute);
-// app.route("/api/admin", adminRoute);
+// API routes
+app.route("/api/dogs", dogsRoute);
+app.route("/api/breeds", breedsRoute);
+app.route("/api/leaderboard", leaderboardRoute);
 
 // 404 handler for unmatched routes
 app.notFound((c) => {

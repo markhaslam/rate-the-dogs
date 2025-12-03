@@ -40,13 +40,18 @@ export function createPresignedUploadUrl(
 
 /**
  * Get public URL for an image
- * Requires R2 bucket to be configured with public access or custom domain
+ * For MVP, use placeholder images. In production, configure R2 with custom domain.
  */
-export function getImageUrl(
-  key: string,
-  bucketUrl = "https://images.ratethedogs.com"
-): string {
-  return `${bucketUrl}/${key}`;
+export function getImageUrl(key: string): string {
+  // Extract dog ID from key for consistent placeholder
+  const match = key.match(/sample-(\d+)/);
+  if (match) {
+    const id = match[1];
+    return `https://placedog.net/500/500?id=${id}`;
+  }
+  // For uploaded images, use a hash of the key
+  const hash = key.split("").reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0);
+  return `https://placedog.net/500/500?id=${Math.abs(hash)}`;
 }
 
 /**

@@ -1,48 +1,36 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
+import { RatePage } from "@/pages/RatePage";
+import { UploadPage } from "@/pages/UploadPage";
+import { LeaderboardPage } from "@/pages/LeaderboardPage";
 
-// Pages (to be implemented)
-// import RatePage from "@/pages/RatePage";
-// import UploadPage from "@/pages/UploadPage";
-// import LeaderboardPage from "@/pages/LeaderboardPage";
-// import BreedsPage from "@/pages/BreedsPage";
-// import BreedDetailPage from "@/pages/BreedDetailPage";
-// import DogDetailPage from "@/pages/DogDetailPage";
-// import MyRatingsPage from "@/pages/MyRatingsPage";
-// import AdminPage from "@/pages/AdminPage";
+function Nav() {
+  return (
+    <nav className="bg-white shadow-sm border-b">
+      <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <Link to="/" className="text-xl font-bold text-amber-600">
+          RateTheDogs
+        </Link>
+        <div className="flex gap-4">
+          <Link to="/" className="hover:text-amber-600">Rate</Link>
+          <Link to="/leaderboard" className="hover:text-amber-600">Leaderboard</Link>
+          <Link to="/upload" className="hover:text-amber-600">Upload</Link>
+        </div>
+      </div>
+    </nav>
+  );
+}
 
 function App() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
+      <Nav />
       <main>
         <Routes>
-          <Route path="/" element={<PlaceholderPage title="Rate Dogs" />} />
-          <Route
-            path="/upload"
-            element={<PlaceholderPage title="Upload Dog" />}
-          />
-          <Route
-            path="/leaderboard"
-            element={<PlaceholderPage title="Leaderboard" />}
-          />
-          <Route
-            path="/breeds"
-            element={<PlaceholderPage title="Browse Breeds" />}
-          />
-          <Route
-            path="/breeds/:slug"
-            element={<PlaceholderPage title="Breed Details" />}
-          />
-          <Route
-            path="/dogs/:id"
-            element={<PlaceholderPage title="Dog Details" />}
-          />
-          <Route
-            path="/my/ratings"
-            element={<PlaceholderPage title="My Ratings" />}
-          />
-          <Route path="/admin" element={<PlaceholderPage title="Admin" />} />
-          <Route path="*" element={<PlaceholderPage title="Not Found" />} />
+          <Route path="/" element={<RatePage />} />
+          <Route path="/upload" element={<UploadPage />} />
+          <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <Toaster />
@@ -50,15 +38,15 @@ function App() {
   );
 }
 
-// Temporary placeholder component
-function PlaceholderPage({ title }: { title: string }) {
+function NotFound() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-[60vh] items-center justify-center">
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-foreground">{title}</h1>
-        <p className="mt-4 text-muted-foreground">
-          This page is under construction
-        </p>
+        <h1 className="text-4xl font-bold">404</h1>
+        <p className="mt-2 text-gray-600">Page not found</p>
+        <Link to="/" className="mt-4 inline-block text-amber-600 hover:underline">
+          Go home
+        </Link>
       </div>
     </div>
   );
