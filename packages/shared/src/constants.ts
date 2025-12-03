@@ -55,7 +55,7 @@ export const PAGINATION = {
  */
 export const COOKIE = {
   ANON_ID_NAME: "anon_id",
-  MAX_AGE_SECONDS: 2 * 365 * 24 * 60 * 60, // 2 years
+  MAX_AGE_SECONDS: 400 * 24 * 60 * 60, // 400 days (browser max)
 } as const;
 
 /**
