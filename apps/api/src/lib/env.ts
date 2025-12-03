@@ -1,0 +1,32 @@
+import type { D1Database, R2Bucket } from "@cloudflare/workers-types";
+
+/**
+ * Environment bindings for Cloudflare Workers
+ */
+export interface Env {
+  // D1 Database
+  DB: D1Database;
+
+  // R2 Bucket for images
+  IMAGES: R2Bucket;
+
+  // Secrets
+  ADMIN_SECRET: string;
+
+  // Variables
+  ENVIRONMENT: "development" | "production" | "test";
+}
+
+/**
+ * Context variables set by middleware
+ */
+export interface Variables {
+  // Anonymous user ID from cookie
+  anonId: string;
+
+  // IP hash for abuse detection
+  ipHash: string;
+
+  // User ID if logged in (Phase 2)
+  userId?: number;
+}
