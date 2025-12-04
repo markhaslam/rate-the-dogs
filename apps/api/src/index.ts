@@ -21,8 +21,17 @@ app.use("/api/*", anonMiddleware);
 // Global error handler
 app.onError(errorHandler);
 
-// Health check endpoint
+// Health check endpoint (root for direct API access)
 app.get("/", (c) => {
+  return c.json({
+    name: "RateTheDogs API",
+    version: "0.1.0",
+    status: "healthy",
+  });
+});
+
+// Health check endpoint (under /api for unified deployment with run_worker_first)
+app.get("/api/health", (c) => {
   return c.json({
     name: "RateTheDogs API",
     version: "0.1.0",

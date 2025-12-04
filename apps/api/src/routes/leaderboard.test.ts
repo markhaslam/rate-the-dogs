@@ -86,7 +86,8 @@ describe("Leaderboard API", () => {
 
       expect(json.data.items.length).toBeGreaterThan(0);
       expect(json.data.items[0]).toHaveProperty("image_url");
-      expect(json.data.items[0].image_url).toContain("images.dog.ceo");
+      // Test data uses image_key (user_upload style), so returns API proxy URL
+      expect(json.data.items[0].image_url).toContain("/api/images/");
     });
 
     it("returns dogs sorted by avg_rating descending", async () => {

@@ -25,6 +25,8 @@ leaderboard.get("/dogs", async (c) => {
       id: dogsTable.id,
       name: dogsTable.name,
       image_key: dogsTable.imageKey,
+      image_url: dogsTable.imageUrl,
+      image_source: dogsTable.imageSource,
       breed_name: breedsTable.name,
       breed_slug: breedsTable.slug,
       avg_rating: avg(ratingsTable.value),
@@ -41,9 +43,17 @@ leaderboard.get("/dogs", async (c) => {
     .offset(offset);
 
   const dogs = result.map((dog, index) => ({
-    ...dog,
+    id: dog.id,
+    name: dog.name,
+    breed_name: dog.breed_name,
+    breed_slug: dog.breed_slug,
     avg_rating: dog.avg_rating ? parseFloat(String(dog.avg_rating)) : null,
-    image_url: getImageUrl(dog.image_key, dog.breed_slug),
+    rating_count: dog.rating_count,
+    image_url: getImageUrl({
+      imageUrl: dog.image_url,
+      imageKey: dog.image_key,
+      imageSource: dog.image_source,
+    }),
     rank: offset + index + 1,
   }));
 

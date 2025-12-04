@@ -59,10 +59,10 @@ export default defineConfig({
   // Start local servers before running tests
   webServer: process.env.CI
     ? [
-        // CI: Use unified wrangler server (requires pre-built web app)
+        // CI: Use unified wrangler server (requires pre-built web app + D1 migrations)
         {
           command:
-            "bun run --cwd ../apps/web build && bun run --cwd ../apps/api dev",
+            "bun run --cwd ../apps/web build && bun run --cwd ../apps/api db:migrate:local && bun run --cwd ../apps/api dev",
           port: 8787,
           reuseExistingServer: false,
         },

@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { eq, and, notInArray, sql } from "drizzle-orm";
+import { z } from "zod";
 import type { Env, Variables } from "../lib/env.js";
 import { success } from "../lib/response.js";
 import { generateImageKey, getImageUrl } from "../lib/r2.js";
@@ -44,6 +45,8 @@ dogs.get("/next", async (c) => {
       id: dogsTable.id,
       name: dogsTable.name,
       image_key: dogsTable.imageKey,
+      image_url: dogsTable.imageUrl,
+      image_source: dogsTable.imageSource,
       breed_id: dogsTable.breedId,
       breed_name: breedsTable.name,
       breed_slug: breedsTable.slug,
@@ -71,10 +74,109 @@ dogs.get("/next", async (c) => {
   const dog = result[0];
   return c.json(
     success({
-      ...dog,
-      image_url: getImageUrl(dog.image_key, dog.breed_slug),
+      id: dog.id,
+      name: dog.name,
+      breed_id: dog.breed_id,
+      breed_name: dog.breed_name,
+      breed_slug: dog.breed_slug,
+      avg_rating: dog.avg_rating,
+      rating_count: dog.rating_count,
+      image_url: getImageUrl({
+        imageUrl: dog.image_url,
+        imageKey: dog.image_key,
+        imageSource: dog.image_source,
+      }),
     })
   );
+});
+
+/**
+ * GET /api/dogs/prefetch - Get multiple unrated dogs for prefetching
+ * Returns multiple random approved dogs that the user hasn't rated or skipped
+ * Used for instant image transitions in the frontend
+ */
+const prefetchQuerySchema = z.object({
+  count: z.coerce.number().min(1).max(20).default(10),
+  exclude: z
+    .string()
+    .optional()
+    .transform((val) =>
+      val
+        ? val
+            .split(",")
+            .map((s) => parseInt(s.trim(), 10))
+            .filter((n) => !isNaN(n))
+        : []
+    ),
+});
+
+dogs.get("/prefetch", zValidator("query", prefetchQuerySchema), async (c) => {
+  const db = c.get("db");
+  const anonId = c.get("anonId");
+  const { count, exclude } = c.req.valid("query");
+
+  // Subquery for dogs already rated by this user
+  const ratedDogIds = db
+    .select({ dogId: ratingsTable.dogId })
+    .from(ratingsTable)
+    .where(eq(ratingsTable.anonId, anonId));
+
+  // Subquery for dogs already skipped by this user
+  const skippedDogIds = db
+    .select({ dogId: skipsTable.dogId })
+    .from(skipsTable)
+    .where(eq(skipsTable.anonId, anonId));
+
+  // Build where conditions
+  const conditions = [
+    eq(dogsTable.status, "approved"),
+    notInArray(dogsTable.id, ratedDogIds),
+    notInArray(dogsTable.id, skippedDogIds),
+  ];
+
+  // Exclude additional dog IDs (already prefetched)
+  if (exclude.length > 0) {
+    conditions.push(notInArray(dogsTable.id, exclude));
+  }
+
+  // Main query - get multiple random unrated/unskipped approved dogs
+  const result = await db
+    .select({
+      id: dogsTable.id,
+      name: dogsTable.name,
+      image_key: dogsTable.imageKey,
+      image_url: dogsTable.imageUrl,
+      image_source: dogsTable.imageSource,
+      breed_id: dogsTable.breedId,
+      breed_name: breedsTable.name,
+      breed_slug: breedsTable.slug,
+      avg_rating: sql<
+        number | null
+      >`(SELECT AVG(value) FROM ratings WHERE dog_id = ${dogsTable.id})`,
+      rating_count: sql<number>`(SELECT COUNT(*) FROM ratings WHERE dog_id = ${dogsTable.id})`,
+    })
+    .from(dogsTable)
+    .innerJoin(breedsTable, eq(dogsTable.breedId, breedsTable.id))
+    .where(and(...conditions))
+    .orderBy(sql`RANDOM()`)
+    .limit(count);
+
+  const items = result.map((dog) => ({
+    id: dog.id,
+    name: dog.name,
+    breed_id: dog.breed_id,
+    breed_name: dog.breed_name,
+    breed_slug: dog.breed_slug,
+    avg_rating: dog.avg_rating,
+    rating_count: dog.rating_count,
+    image_url: getImageUrl({
+      imageUrl: dog.image_url,
+      imageKey: dog.image_key,
+      imageSource: dog.image_source,
+    }),
+  }));
+
+  return c.json(success({ items }));
 });
 
 /**
@@ -89,6 +191,8 @@ dogs.get("/:id", async (c) => {
       id: dogsTable.id,
       name: dogsTable.name,
       image_key: dogsTable.imageKey,
+      image_url: dogsTable.imageUrl,
+      image_source: dogsTable.imageSource,
       breed_id: dogsTable.breedId,
       breed_name: breedsTable.name,
       breed_slug: breedsTable.slug,
@@ -115,8 +219,18 @@ dogs.get("/:id", async (c) => {
   const dog = result[0];
   return c.json(
     success({
-      ...dog,
-      image_url: getImageUrl(dog.image_key, dog.breed_slug),
+      id: dog.id,
+      name: dog.name,
+      breed_id: dog.breed_id,
+      breed_name: dog.breed_name,
+      breed_slug: dog.breed_slug,
+      avg_rating: dog.avg_rating,
+      rating_count: dog.rating_count,
+      image_url: getImageUrl({
+        imageUrl: dog.image_url,
+        imageKey: dog.image_key,
+        imageSource: dog.image_source,
+      }),
     })
   );
 });
@@ -188,6 +302,7 @@ dogs.post("/", zValidator("json", createDogRequestSchema), async (c) => {
     .values({
       name: name ?? null,
       imageKey,
+      imageSource: "user_upload",
       breedId,
       uploaderAnonId: anonId,
       status: "approved",

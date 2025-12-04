@@ -429,6 +429,142 @@ describe("Dogs API", () => {
     });
   });
 
+  describe("GET /api/dogs/prefetch", () => {
+    it("returns multiple dogs by default", async () => {
+      // Add more dogs for prefetch testing
+      await env.DB.prepare(
+        `INSERT INTO dogs (id, name, image_key, breed_id, status) VALUES
+          (2, 'Bella', 'dogs/sample-2.jpg', 1, 'approved'),
+          (3, 'Charlie', 'dogs/sample-3.jpg', 1, 'approved'),
+          (4, 'Luna', 'dogs/sample-4.jpg', 1, 'approved')`
+      ).run();
+
+      const res = await app.request("/api/dogs/prefetch", {}, env);
+      expect(res.status).toBe(200);
+
+      const json = await res.json();
+      expect(json.success).toBe(true);
+      expect(json.data.items).toBeInstanceOf(Array);
+      expect(json.data.items.length).toBe(4); // All 4 dogs
+    });
+
+    it("respects count parameter", async () => {
+      // Add more dogs
+      await env.DB.prepare(
+        `INSERT INTO dogs (id, name, image_key, breed_id, status) VALUES
+          (2, 'Bella', 'dogs/sample-2.jpg', 1, 'approved'),
+          (3, 'Charlie', 'dogs/sample-3.jpg', 1, 'approved')`
+      ).run();
+
+      const res = await app.request("/api/dogs/prefetch?count=2", {}, env);
+      expect(res.status).toBe(200);
+
+      const json = await res.json();
+      expect(json.data.items.length).toBe(2);
+    });
+
+    it("excludes specified dog IDs", async () => {
+      // Add more dogs
+      await env.DB.prepare(
+        `INSERT INTO dogs (id, name, image_key, breed_id, status) VALUES
+          (2, 'Bella', 'dogs/sample-2.jpg', 1, 'approved'),
+          (3, 'Charlie', 'dogs/sample-3.jpg', 1, 'approved')`
+      ).run();
+
+      const res = await app.request("/api/dogs/prefetch?exclude=1,2", {}, env);
+      expect(res.status).toBe(200);
+
+      const json = await res.json();
+      expect(json.data.items.length).toBe(1);
+      expect(json.data.items[0].id).toBe(3);
+    });
+
+    it("excludes already rated dogs", async () => {
+      const anonId = "test-prefetch-rated";
+      await env.DB.prepare(
+        `INSERT INTO ratings (dog_id, value, anon_id) VALUES (1, 4.5, ?)`
+      )
+        .bind(anonId)
+        .run();
+
+      const res = await app.request(
+        "/api/dogs/prefetch",
+        {
+          headers: { Cookie: `anon_id=${anonId}` },
+        },
+        env
+      );
+
+      const json = await res.json();
+      expect(json.data.items).toEqual([]);
+    });
+
+    it("excludes already skipped dogs", async () => {
+      const anonId = "test-prefetch-skipped";
+      await env.DB.prepare(`INSERT INTO skips (dog_id, anon_id) VALUES (1, ?)`)
+        .bind(anonId)
+        .run();
+
+      const res = await app.request(
+        "/api/dogs/prefetch",
+        {
+          headers: { Cookie: `anon_id=${anonId}` },
+        },
+        env
+      );
+
+      const json = await res.json();
+      expect(json.data.items).toEqual([]);
+    });
+
+    it("returns empty array when no dogs available", async () => {
+      await env.DB.prepare(`DELETE FROM dogs`).run();
+
+      const res = await app.request("/api/dogs/prefetch", {}, env);
+      const json = await res.json();
+
+      expect(json.success).toBe(true);
+      expect(json.data.items).toEqual([]);
+    });
+
+    it("returns dogs with correct properties", async () => {
+      const res = await app.request("/api/dogs/prefetch?count=1", {}, env);
+      const json = await res.json();
+
+      expect(json.data.items.length).toBe(1);
+      const dog = json.data.items[0];
+
+      expect(dog).toHaveProperty("id");
+      expect(dog).toHaveProperty("name");
+      expect(dog).toHaveProperty("breed_id");
+      expect(dog).toHaveProperty("breed_name");
+      expect(dog).toHaveProperty("breed_slug");
+      expect(dog).toHaveProperty("avg_rating");
+      expect(dog).toHaveProperty("rating_count");
+      expect(dog).toHaveProperty("image_url");
+    });
+
+    it("rejects count below minimum", async () => {
+      const res = await app.request("/api/dogs/prefetch?count=0", {}, env);
+      expect(res.status).toBe(400);
+    });
+
+    it("rejects count above maximum", async () => {
+      const res = await app.request("/api/dogs/prefetch?count=21", {}, env);
+      expect(res.status).toBe(400);
+    });
+
+    it("handles invalid exclude parameter gracefully", async () => {
+      const res = await app.request(
+        "/api/dogs/prefetch?exclude=invalid,abc",
+        {},
+        env
+      );
+      // Should handle gracefully, filtering out NaN values
+      expect(res.status).toBe(200);
+    });
+  });
+
   describe("POST /api/dogs/upload-url", () => {
     it("returns upload URL for valid content type", async () => {
       const res = await app.request(

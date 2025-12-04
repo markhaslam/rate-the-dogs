@@ -21,7 +21,7 @@ export const dogs = sqliteTable(
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     name: text("name"),
-    imageKey: text("image_key").notNull(),
+    imageKey: text("image_key"), // Nullable for Dog CEO images (they use imageUrl instead)
     // Dog CEO integration
     imageUrl: text("image_url"),
     imageSource: text("image_source", { enum: imageSourceEnum }).default(

@@ -16,7 +16,7 @@ test.describe("Smoke tests", () => {
     const apiBase = process.env.CI
       ? "http://localhost:8787"
       : "http://localhost:8787";
-    const response = await request.get(`${apiBase}/`);
+    const response = await request.get(`${apiBase}/api/health`);
     expect(response.ok()).toBeTruthy();
 
     const body = await response.json();
