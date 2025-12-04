@@ -24,8 +24,8 @@ export interface Variables {
   // Anonymous user ID from cookie
   anonId: string;
 
-  // IP hash for abuse detection
-  ipHash: string;
+  // Raw client IP for analytics
+  clientIP: string;
 
   // User ID if logged in (Phase 2)
   userId?: number;

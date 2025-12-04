@@ -68,7 +68,7 @@ describe("ratingSchema", () => {
       value: 4.5,
       user_id: null,
       anon_id: "550e8400-e29b-41d4-a716-446655440000",
-      ip_hash: "abc123",
+      ip_address: "192.168.1.100",
       created_at: "2024-01-01T00:00:00.000Z",
     };
 
@@ -83,7 +83,7 @@ describe("ratingSchema", () => {
       value: 3.0,
       user_id: null,
       anon_id: null,
-      ip_hash: null,
+      ip_address: null,
       created_at: "2024-01-01T00:00:00.000Z",
     };
 
@@ -98,7 +98,7 @@ describe("ratingSchema", () => {
       value: 3.0,
       user_id: null,
       anon_id: "not-a-uuid",
-      ip_hash: null,
+      ip_address: null,
       created_at: "2024-01-01T00:00:00.000Z",
     };
 

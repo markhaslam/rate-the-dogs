@@ -2,14 +2,14 @@ import { createMiddleware } from "hono/factory";
 import { getCookie, setCookie } from "hono/cookie";
 import type { Env, Variables } from "../lib/env.js";
 import { COOKIE } from "@rate-the-dogs/shared";
-import { hashIP, getClientIP } from "../lib/hash.js";
+import { getClientIP } from "../lib/hash.js";
 
 /**
  * Anonymous ID middleware
  *
  * - Reads or creates an anonymous ID cookie
  * - Sets the anonId in context variables
- * - Hashes the client IP for abuse detection
+ * - Stores the raw client IP for analytics
  */
 export const anonMiddleware = createMiddleware<{
   Bindings: Env;
@@ -34,10 +34,9 @@ export const anonMiddleware = createMiddleware<{
   // Set anon ID in context
   c.set("anonId", anonId);
 
-  // Hash client IP for abuse detection
+  // Store raw client IP for analytics
   const clientIP = getClientIP(c.req.raw);
-  const ipHash = await hashIP(clientIP);
-  c.set("ipHash", ipHash);
+  c.set("clientIP", clientIP);
 
   await next();
 });
@@ -50,8 +49,10 @@ export function getAnonId(c: { get: (key: "anonId") => string }): string {
 }
 
 /**
- * Get the IP hash from context
+ * Get the client IP from context
  */
-export function getIPHash(c: { get: (key: "ipHash") => string }): string {
-  return c.get("ipHash");
+export function getClientIPFromContext(c: {
+  get: (key: "clientIP") => string;
+}): string {
+  return c.get("clientIP");
 }

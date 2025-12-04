@@ -37,7 +37,7 @@ The original PRD had gaps. Here are the additions/corrections made:
 ### Schema Additions
 
 1. **Dog name field** - Users can name their dogs
-2. **ip_hash in ratings** - For abuse detection (mentioned but not in schema)
+2. **ip_address in ratings** - Raw IP for analytics and abuse detection
 3. **is_banned in anonymous_users** - Table is now required, not optional
 4. **Unique constraints on ratings** - Prevent duplicate ratings
 5. **image_key not image_url** - We store R2 keys, construct URLs at runtime
@@ -226,7 +226,7 @@ CREATE TABLE ratings (
   value REAL NOT NULL CHECK(value >= 0.5 AND value <= 5.0),
   user_id INTEGER REFERENCES users(id),
   anon_id TEXT,
-  ip_hash TEXT,                               -- Abuse detection
+  ip_address TEXT,                            -- Raw IP for analytics
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE(dog_id, anon_id),
   UNIQUE(dog_id, user_id)

@@ -29,7 +29,7 @@ export const ratingSchema = z.object({
   value: ratingValueSchema,
   user_id: z.number().int().positive().nullable(),
   anon_id: z.string().uuid().nullable(),
-  ip_hash: z.string().nullable(),
+  ip_address: z.string().nullable(),
   created_at: z.string().datetime(),
 });
 
