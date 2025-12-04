@@ -83,8 +83,11 @@ test.describe("Deployment verification", () => {
     test("client-side navigation works", async ({ page }) => {
       await page.goto("/");
 
-      // Find and click a navigation link (if present)
-      const leaderboardLink = page.getByRole("link", { name: /leaderboard/i });
+      // Find and click a navigation link (use exact match to avoid multiple elements)
+      const leaderboardLink = page.getByRole("link", {
+        name: "Leaderboard",
+        exact: true,
+      });
       if (await leaderboardLink.isVisible()) {
         await leaderboardLink.click();
         await expect(page).toHaveURL(/\/leaderboard/);
