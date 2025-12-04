@@ -114,7 +114,10 @@ async function executeSqlFile(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const remoteFlag = remote ? "--remote" : "--local";
-    await $`cd apps/api && bunx wrangler d1 execute rate-the-dogs ${remoteFlag} --file=${filePath}`.quiet();
+    // Get the api directory (parent of scripts directory where this file lives)
+    const apiDir = new URL("..", import.meta.url).pathname;
+
+    await $`cd ${apiDir} && bunx wrangler d1 execute rate-the-dogs ${remoteFlag} --file=${filePath}`.quiet();
     return { success: true };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);

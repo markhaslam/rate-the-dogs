@@ -54,22 +54,6 @@ export function DogCard({
     <Card className="w-full max-w-md overflow-hidden bg-card shadow-xl shadow-black/10 dark:shadow-black/30 border-border">
       {/* Image container with modern styling */}
       <div className="aspect-square relative bg-muted overflow-hidden">
-        {/* Decorative background pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <svg className="w-full h-full" viewBox="0 0 100 100">
-            <pattern
-              id="paws"
-              width="20"
-              height="20"
-              patternUnits="userSpaceOnUse"
-            >
-              <circle cx="5" cy="5" r="2" fill="currentColor" />
-              <circle cx="15" cy="15" r="2" fill="currentColor" />
-            </pattern>
-            <rect width="100%" height="100%" fill="url(#paws)" />
-          </svg>
-        </div>
-
         {/* Previous image (shown underneath during slide transition) */}
         {isSliding && (
           <img

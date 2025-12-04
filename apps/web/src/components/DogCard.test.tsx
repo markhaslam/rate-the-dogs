@@ -207,7 +207,10 @@ describe("DogCard", () => {
       expect(images).toHaveLength(2);
 
       // First image is the previous one (underneath)
-      expect(images[0]).toHaveAttribute("src", "https://example.com/prev-dog.jpg");
+      expect(images[0]).toHaveAttribute(
+        "src",
+        "https://example.com/prev-dog.jpg"
+      );
       expect(images[0]).toHaveAttribute("alt", "Previous dog");
 
       // Second image is the current one with slide animation
