@@ -420,13 +420,13 @@ apps/api/src/test/
 └── seedHelpers.ts   # Type-safe seeding functions + fixtures
 ```
 
-### Why Tests Use Some Raw SQL
+### Why Some Code Uses Raw SQL
 
-While production code uses Drizzle exclusively, test setup has two necessary exceptions:
+While production code uses Drizzle exclusively, there are two cases where raw SQL is the recommended approach:
 
 1. **Schema Creation (`setup.ts`)**: Miniflare's D1 doesn't support Drizzle's migration/push features. We use raw SQL `CREATE TABLE` statements that mirror the Drizzle schema definitions.
 
-2. **CLI Seed Scripts**: Scripts like `seedDogCeoImages.ts` run outside the Workers runtime, so D1 bindings aren't available. They use wrangler's `d1 execute --file` command.
+2. **CLI Seed Scripts**: Scripts like `seedDogCeoImages.ts` use SQL files with `wrangler d1 execute --file`. This is a [community-recommended best practice](https://github.com/drizzle-team/drizzle-orm/issues/4285) because D1 bindings are only available inside the Workers runtime. The official `drizzle-seed` package doesn't support D1 yet.
 
 **Important:** Keep `test/setup.ts` in sync with `src/db/schema/*.ts` when schema changes!
 
