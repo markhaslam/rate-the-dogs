@@ -346,7 +346,7 @@
 - [x] Verify `bun run dev` starts all apps
 - [x] Verify `bun run build` builds all packages
 - [x] Verify `bun run test` runs all tests
-- [ ] Verify `bun run test:coverage` shows coverage
+- [x] Verify `bun run test:coverage` shows coverage
 - [x] Verify `bun run lint` passes
 - [x] Verify `bun run format:check` passes
 - [x] Verify `bun run typecheck` passes

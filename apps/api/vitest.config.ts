@@ -20,10 +20,12 @@ export default defineWorkersConfig({
     },
     include: ["src/**/*.test.ts"],
     coverage: {
-      provider: "v8",
+      // V8 coverage not supported in Cloudflare Workers pool - use Istanbul
+      // See: https://developers.cloudflare.com/workers/testing/vitest-integration/known-issues/
+      provider: "istanbul",
       reporter: ["text", "json", "html"],
       include: ["src/**/*.ts"],
-      exclude: ["src/**/*.test.ts", "src/index.ts"],
+      exclude: ["src/**/*.test.ts", "src/index.ts", "src/test/**"],
     },
   },
 });

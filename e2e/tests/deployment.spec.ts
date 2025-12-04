@@ -41,25 +41,30 @@ test.describe("Deployment verification", () => {
 
     test("images load without 404s", async ({ page }) => {
       const failedImages: string[] = [];
-      const baseURL = page.url().split("/").slice(0, 3).join("/"); // Get origin
 
       page.on("requestfailed", (request) => {
         const url = request.url();
         // Only check local static assets, not external images (like Dog CEO API)
-        const isLocalAsset = url.startsWith(baseURL) || url.startsWith("/");
+        // Local assets are served from the same origin or relative paths
+        const isExternalImage =
+          url.includes("dog.ceo") || url.includes("images.dog.ceo");
         const isImage =
           url.includes(".svg") ||
           url.includes(".png") ||
           url.includes(".jpg") ||
           url.includes(".webp");
 
-        if (isLocalAsset && isImage) {
+        if (isImage && !isExternalImage) {
           failedImages.push(url);
         }
       });
 
       await page.goto("/");
-      await page.waitForLoadState("networkidle");
+      // Wait for DOM to load - don't wait for external images (networkidle)
+      // which can timeout if Dog CEO API is slow
+      await page.waitForLoadState("domcontentloaded");
+      // Small buffer for local asset requests to initiate
+      await page.waitForTimeout(1000);
 
       // Local static images should load
       expect(failedImages).toHaveLength(0);

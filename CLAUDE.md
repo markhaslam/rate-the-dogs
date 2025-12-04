@@ -283,6 +283,74 @@ const results = await db.batch([
 - Mock external dependencies (D1, R2, fetch)
 - Prefer `screen` queries from Testing Library
 
+### Test Coverage
+
+The project uses Vitest with code coverage reporting. Each package has its own coverage configuration due to different runtime requirements.
+
+**Coverage Providers by Package:**
+
+| Package           | Provider | Version   | Why                                                                                  |
+| ----------------- | -------- | --------- | ------------------------------------------------------------------------------------ |
+| `apps/api`        | Istanbul | `^3.2.4`  | Cloudflare Workers pool doesn't support V8 (`node:inspector` unavailable in workerd) |
+| `apps/web`        | V8       | `^4.0.15` | Standard jsdom environment supports V8 natively                                      |
+| `packages/shared` | V8       | `^4.0.15` | Node environment supports V8 natively                                                |
+
+**Running Coverage:**
+
+```bash
+# Run coverage for a specific package
+cd apps/api && bun run test:coverage
+cd apps/web && bun run test:coverage
+cd packages/shared && bun run test:coverage
+
+# Or from root (runs all packages)
+bun run --filter=@rate-the-dogs/api test:coverage
+bun run --filter=@rate-the-dogs/web test:coverage
+```
+
+**Coverage Targets:**
+
+| Metric     | Target | Current (API) | Current (Web) |
+| ---------- | ------ | ------------- | ------------- |
+| Lines      | 80%+   | ~86%          | ~72%          |
+| Branches   | 70%+   | ~79%          | ~73%          |
+| Functions  | 70%+   | ~78%          | ~65%          |
+| Statements | 80%+   | ~86%          | ~71%          |
+
+**Coverage Configuration:**
+
+Each package's `vitest.config.ts` contains coverage settings:
+
+```typescript
+// apps/api/vitest.config.ts (Cloudflare Workers)
+coverage: {
+  provider: "istanbul", // Required for Workers pool
+  reporter: ["text", "json", "html"],
+  include: ["src/**/*.ts"],
+  exclude: ["src/**/*.test.ts", "src/index.ts", "src/test/**"],
+}
+
+// apps/web/vitest.config.ts (React/jsdom)
+coverage: {
+  provider: "v8",
+  reporter: ["text", "json", "html"],
+  include: ["src/**/*.{ts,tsx}"],
+  exclude: ["src/**/*.test.{ts,tsx}", "src/test/**", "src/main.tsx"],
+}
+```
+
+**Why Istanbul for API?**
+
+The `@cloudflare/vitest-pool-workers` package runs tests inside the workerd runtime (Cloudflare's JavaScript runtime). V8 coverage requires `node:inspector` which is not available in workerd. Istanbul uses code instrumentation instead, which works in any JavaScript environment. See the [Cloudflare Known Issues](https://developers.cloudflare.com/workers/testing/vitest-integration/known-issues/) documentation.
+
+**Coverage Reports:**
+
+After running coverage, reports are generated in each package's `coverage/` directory:
+
+- `coverage/index.html` - Interactive HTML report
+- `coverage/coverage-final.json` - JSON data for CI tools
+- Terminal output - Summary table
+
 ## Common Commands
 
 ```bash
