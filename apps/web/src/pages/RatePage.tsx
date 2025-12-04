@@ -114,7 +114,10 @@ export function RatePage() {
   const handleSkip = () => {
     if (!currentDog || isRating) return;
     setIsRating(true);
-    fetch(`/api/dogs/${currentDog.id}/skip`, { method: "POST", credentials: "include" })
+    fetch(`/api/dogs/${currentDog.id}/skip`, {
+      method: "POST",
+      credentials: "include",
+    })
       .then(() => {
         // Capture current image for slide-over animation
         if (currentDog) {
