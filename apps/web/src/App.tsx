@@ -76,7 +76,7 @@ function Nav() {
             <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
+              className="p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer"
               aria-label="Toggle menu"
             >
               <svg

@@ -78,7 +78,7 @@ export function LeaderboardPage() {
           <button
             onClick={() => setTab("dogs")}
             className={cn(
-              "px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-200",
+              "px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 cursor-pointer",
               tab === "dogs"
                 ? "bg-card text-primary shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
@@ -94,7 +94,7 @@ export function LeaderboardPage() {
           <button
             onClick={() => setTab("breeds")}
             className={cn(
-              "px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-200",
+              "px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 cursor-pointer",
               tab === "breeds"
                 ? "bg-card text-primary shadow-sm"
                 : "text-muted-foreground hover:text-foreground"

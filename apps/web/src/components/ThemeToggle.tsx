@@ -16,7 +16,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
     <button
       onClick={toggleTheme}
       className={cn(
-        "relative p-2 rounded-lg transition-all duration-300 ease-out",
+        "relative p-2 rounded-lg transition-all duration-300 ease-out cursor-pointer",
         "hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className
       )}

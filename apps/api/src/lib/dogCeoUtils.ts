@@ -231,6 +231,78 @@ export function filterDuplicateImages(breedImages: BreedImages): FilterResult {
   return { filtered, removedCount, emptyBreeds };
 }
 
+export interface MergeResult {
+  merged: BreedImages;
+  mergedBreeds: { canonical: string; merged: string[]; imageCount: number }[];
+}
+
+/**
+ * Merge breeds that have the same human-readable display name
+ *
+ * The Dog CEO API sometimes lists the same breed under multiple categories.
+ * For example, Boston Terrier appears as both "bulldog/boston" and "terrier/boston".
+ *
+ * This function merges such duplicates by:
+ * 1. Using a nameResolver function to get the display name for each breed
+ * 2. Grouping breeds by their display name
+ * 3. Merging images under the breed key that has the most images (canonical)
+ *
+ * @param breedImages - Map of breed -> image URLs
+ * @param nameResolver - Function to get human-readable name from breed key
+ * @returns Merged results with info about what was merged
+ */
+export function mergeDuplicateBreedNames(
+  breedImages: BreedImages,
+  nameResolver: (breed: string) => string
+): MergeResult {
+  // Group breeds by their display name
+  const byDisplayName = new Map<string, { key: string; images: string[] }[]>();
+
+  for (const [breed, images] of Object.entries(breedImages)) {
+    const displayName = nameResolver(breed);
+    const existing = byDisplayName.get(displayName) ?? [];
+    existing.push({ key: breed, images });
+    byDisplayName.set(displayName, existing);
+  }
+
+  const merged: BreedImages = {};
+  const mergedBreeds: MergeResult["mergedBreeds"] = [];
+
+  for (const [displayName, breeds] of byDisplayName) {
+    if (breeds.length === 1) {
+      // No duplicates, keep as-is
+      merged[breeds[0].key] = breeds[0].images;
+    } else {
+      // Multiple breeds with same display name - merge them
+      // Use the one with most images as the canonical key
+      breeds.sort((a, b) => b.images.length - a.images.length);
+      const canonical = breeds[0];
+      const others = breeds.slice(1);
+
+      // Combine all images, removing duplicates
+      const allImages = new Set(canonical.images);
+      for (const other of others) {
+        for (const img of other.images) {
+          allImages.add(img);
+        }
+      }
+
+      merged[canonical.key] = Array.from(allImages);
+      mergedBreeds.push({
+        canonical: canonical.key,
+        merged: others.map((o) => o.key),
+        imageCount: allImages.size,
+      });
+
+      console.log(
+        `  Merged "${displayName}": ${canonical.key} + ${others.map((o) => o.key).join(", ")} = ${allImages.size} images`
+      );
+    }
+  }
+
+  return { merged, mergedBreeds };
+}
+
 /**
  * Calculate statistics about a breed images dataset
  *
