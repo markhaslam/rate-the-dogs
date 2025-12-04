@@ -27,6 +27,9 @@ export interface Variables {
   // Raw client IP for analytics
   clientIP: string;
 
+  // User agent string for analytics
+  userAgent: string | null;
+
   // User ID if logged in (Phase 2)
   userId?: number;
 }

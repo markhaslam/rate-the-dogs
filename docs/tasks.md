@@ -385,20 +385,27 @@
 
 ---
 
-## Phase 8: Dog CEO Content Integration (NEW)
+## Phase 8: Dog CEO Content Integration + Analytics + User Enhancements
 
-This phase adds comprehensive Dog CEO API integration for long-term content.
+This phase adds Dog CEO API integration, analytics fields, and user system prep.
 
 ### 8.1 Database Migration
 
-- [ ] Create `apps/api/src/db/migrations/002_dog_ceo_integration.sql`
-- [ ] Add `dog_ceo_path` column to breeds table
-- [ ] Add `image_count` column to breeds table
-- [ ] Add `last_synced_at` column to breeds table
-- [ ] Add `image_url` column to dogs table
-- [ ] Add `image_source` column to dogs table
-- [ ] Create index `idx_dogs_source` on dogs(image_source)
-- [ ] Create index `idx_dogs_breed_status` on dogs(breed_id, status)
+- [x] Create `apps/api/src/db/migrations/003_dog_ceo_integration.sql`
+- [x] Add `dog_ceo_path` column to breeds table
+- [x] Add `image_count` column to breeds table
+- [x] Add `last_synced_at` column to breeds table
+- [x] Add `image_url` column to dogs table
+- [x] Add `image_source` column to dogs table
+- [x] Add `user_agent` column to ratings table (analytics)
+- [x] Add `user_agent` column to anonymous_users table (analytics)
+- [x] Add `updated_at` column to users table
+- [x] Add `email_verified` column to users table
+- [x] Add `provider` column to users table (OAuth provider)
+- [x] Add `linked_anon_id` column to users table (merge ratings)
+- [x] Create index `idx_dogs_image_source` on dogs(image_source)
+- [x] Create index `idx_users_linked_anon` on users(linked_anon_id)
+- [x] Create index `idx_breeds_last_synced` on breeds(last_synced_at)
 - [ ] Test migration locally with `wrangler d1 migrations apply`
 - [ ] Run migration on production D1
 

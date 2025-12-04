@@ -5,7 +5,10 @@ import {
   dogNameSchema,
   createDogRequestSchema,
   uploadUrlRequestSchema,
+  dogSchema,
+  dogWithDetailsSchema,
 } from "./dog.js";
+import { imageSourceSchema } from "./breed.js";
 
 describe("dogStatusSchema", () => {
   it("accepts valid statuses", () => {
@@ -162,5 +165,167 @@ describe("uploadUrlRequestSchema", () => {
     expect(
       uploadUrlRequestSchema.safeParse({ contentType: "text/plain" }).success
     ).toBe(false);
+  });
+});
+
+describe("imageSourceSchema", () => {
+  it("accepts dog_ceo source", () => {
+    expect(imageSourceSchema.safeParse("dog_ceo").success).toBe(true);
+  });
+
+  it("accepts user_upload source", () => {
+    expect(imageSourceSchema.safeParse("user_upload").success).toBe(true);
+  });
+
+  it("rejects invalid sources", () => {
+    expect(imageSourceSchema.safeParse("external").success).toBe(false);
+    expect(imageSourceSchema.safeParse("").success).toBe(false);
+    expect(imageSourceSchema.safeParse("api").success).toBe(false);
+  });
+});
+
+describe("dogSchema", () => {
+  it("accepts valid user_upload dog record", () => {
+    const dog = {
+      id: 1,
+      name: "Buddy",
+      image_key: "dogs/abc123.jpg",
+      image_url: null,
+      image_source: "user_upload",
+      breed_id: 1,
+      uploader_user_id: null,
+      uploader_anon_id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "approved",
+      moderated_by: "admin@example.com",
+      moderated_at: "2024-01-01T00:00:00.000Z",
+      created_at: "2024-01-01T00:00:00.000Z",
+      updated_at: "2024-01-01T00:00:00.000Z",
+    };
+
+    const result = dogSchema.safeParse(dog);
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts valid dog_ceo dog record", () => {
+    const dog = {
+      id: 1,
+      name: null,
+      image_key: "",
+      image_url:
+        "https://images.dog.ceo/breeds/retriever-golden/n02099601_1234.jpg",
+      image_source: "dog_ceo",
+      breed_id: 5,
+      uploader_user_id: null,
+      uploader_anon_id: null,
+      status: "approved",
+      moderated_by: null,
+      moderated_at: null,
+      created_at: "2024-01-01T00:00:00.000Z",
+      updated_at: "2024-01-01T00:00:00.000Z",
+    };
+
+    const result = dogSchema.safeParse(dog);
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid image_source", () => {
+    const dog = {
+      id: 1,
+      name: null,
+      image_key: "dogs/test.jpg",
+      image_url: null,
+      image_source: "invalid",
+      breed_id: 1,
+      uploader_user_id: null,
+      uploader_anon_id: null,
+      status: "pending",
+      moderated_by: null,
+      moderated_at: null,
+      created_at: "2024-01-01T00:00:00.000Z",
+      updated_at: "2024-01-01T00:00:00.000Z",
+    };
+
+    const result = dogSchema.safeParse(dog);
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("dogWithDetailsSchema", () => {
+  it("accepts valid dog with details", () => {
+    const dog = {
+      id: 1,
+      name: "Buddy",
+      image_key: "dogs/abc123.jpg",
+      image_url: null,
+      image_source: "user_upload",
+      breed_id: 1,
+      uploader_user_id: null,
+      uploader_anon_id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "approved",
+      moderated_by: null,
+      moderated_at: null,
+      created_at: "2024-01-01T00:00:00.000Z",
+      updated_at: "2024-01-01T00:00:00.000Z",
+      breed_name: "Golden Retriever",
+      breed_slug: "golden-retriever",
+      avg_rating: 4.5,
+      rating_count: 10,
+      display_url: "https://example.com/images/abc123.jpg",
+    };
+
+    const result = dogWithDetailsSchema.safeParse(dog);
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts dog_ceo dog with details", () => {
+    const dog = {
+      id: 2,
+      name: null,
+      image_key: "",
+      image_url: "https://images.dog.ceo/breeds/husky/n02110185_5678.jpg",
+      image_source: "dog_ceo",
+      breed_id: 3,
+      uploader_user_id: null,
+      uploader_anon_id: null,
+      status: "approved",
+      moderated_by: null,
+      moderated_at: null,
+      created_at: "2024-01-01T00:00:00.000Z",
+      updated_at: "2024-01-01T00:00:00.000Z",
+      breed_name: "Siberian Husky",
+      breed_slug: "siberian-husky",
+      avg_rating: null,
+      rating_count: 0,
+      display_url: "https://images.dog.ceo/breeds/husky/n02110185_5678.jpg",
+    };
+
+    const result = dogWithDetailsSchema.safeParse(dog);
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid display_url", () => {
+    const dog = {
+      id: 1,
+      name: "Buddy",
+      image_key: "dogs/abc123.jpg",
+      image_url: null,
+      image_source: "user_upload",
+      breed_id: 1,
+      uploader_user_id: null,
+      uploader_anon_id: null,
+      status: "approved",
+      moderated_by: null,
+      moderated_at: null,
+      created_at: "2024-01-01T00:00:00.000Z",
+      updated_at: "2024-01-01T00:00:00.000Z",
+      breed_name: "Golden Retriever",
+      breed_slug: "golden-retriever",
+      avg_rating: 4.5,
+      rating_count: 10,
+      display_url: "not-a-url",
+    };
+
+    const result = dogWithDetailsSchema.safeParse(dog);
+    expect(result.success).toBe(false);
   });
 });

@@ -10,6 +10,7 @@ import { getClientIP } from "../lib/hash.js";
  * - Reads or creates an anonymous ID cookie
  * - Sets the anonId in context variables
  * - Stores the raw client IP for analytics
+ * - Stores the user agent for analytics
  */
 export const anonMiddleware = createMiddleware<{
   Bindings: Env;
@@ -38,6 +39,10 @@ export const anonMiddleware = createMiddleware<{
   const clientIP = getClientIP(c.req.raw);
   c.set("clientIP", clientIP);
 
+  // Store user agent for analytics
+  const userAgent = c.req.header("User-Agent") ?? null;
+  c.set("userAgent", userAgent);
+
   await next();
 });
 
@@ -55,4 +60,13 @@ export function getClientIPFromContext(c: {
   get: (key: "clientIP") => string;
 }): string {
   return c.get("clientIP");
+}
+
+/**
+ * Get the user agent from context
+ */
+export function getUserAgentFromContext(c: {
+  get: (key: "userAgent") => string | null;
+}): string | null {
+  return c.get("userAgent");
 }

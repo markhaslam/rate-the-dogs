@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DOG_STATUS, UPLOAD } from "../constants.js";
+import { imageSourceSchema } from "./breed.js";
 
 /**
  * Dog status enum
@@ -45,7 +46,9 @@ export const createDogRequestSchema = z.object({
 export const dogSchema = z.object({
   id: z.number().int().positive(),
   name: dogNameSchema,
-  image_key: z.string(),
+  image_key: z.string(), // R2 key for user uploads (empty for Dog CEO)
+  image_url: z.string().url().nullable(), // Direct URL for Dog CEO images
+  image_source: imageSourceSchema, // 'dog_ceo' or 'user_upload'
   breed_id: z.number().int().positive(),
   uploader_user_id: z.number().int().positive().nullable(),
   uploader_anon_id: z.string().uuid().nullable(),
@@ -64,7 +67,7 @@ export const dogWithDetailsSchema = dogSchema.extend({
   breed_slug: z.string(),
   avg_rating: z.number().nullable(),
   rating_count: z.number().int().nonnegative(),
-  image_url: z.string().url(), // Full URL constructed from image_key
+  display_url: z.string().url(), // Final URL to display (from Dog CEO or R2)
 });
 
 /**

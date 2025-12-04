@@ -194,9 +194,9 @@ CREATE TABLE breeds (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,
   slug TEXT NOT NULL UNIQUE,
-  dog_ceo_path TEXT,                          -- Dog CEO API path (NEW)
-  image_count INTEGER DEFAULT 0,              -- Synced image count (NEW)
-  last_synced_at TEXT,                        -- Last sync timestamp (NEW)
+  dog_ceo_path TEXT,                          -- Dog CEO API path
+  image_count INTEGER DEFAULT 0,              -- Synced image count
+  last_synced_at TEXT,                        -- Last sync timestamp
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -205,9 +205,8 @@ CREATE TABLE dogs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT,                                  -- Optional dog name
   image_key TEXT,                             -- R2 object key (user uploads)
-  image_url TEXT,                             -- Direct URL (Dog CEO) (NEW)
-  image_source TEXT NOT NULL DEFAULT 'user_upload'
-    CHECK(image_source IN ('dog_ceo', 'user_upload')), -- (NEW)
+  image_url TEXT,                             -- Direct URL (Dog CEO)
+  image_source TEXT DEFAULT 'user_upload',    -- 'dog_ceo' or 'user_upload'
   breed_id INTEGER NOT NULL REFERENCES breeds(id),
   uploader_user_id INTEGER REFERENCES users(id),
   uploader_anon_id TEXT,
@@ -227,6 +226,7 @@ CREATE TABLE ratings (
   user_id INTEGER REFERENCES users(id),
   anon_id TEXT,
   ip_address TEXT,                            -- Raw IP for analytics
+  user_agent TEXT,                            -- Browser/device info
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE(dog_id, anon_id),
   UNIQUE(dog_id, user_id)
@@ -243,14 +243,18 @@ CREATE TABLE skips (
   UNIQUE(dog_id, user_id)
 );
 
--- users: Registered users (Phase 2 ready)
+-- users: Registered users (OAuth ready)
 CREATE TABLE users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT UNIQUE NOT NULL,
   name TEXT,
   avatar_url TEXT,
-  google_id TEXT UNIQUE,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  google_id TEXT UNIQUE,                      -- Google OAuth ID
+  provider TEXT DEFAULT 'google',             -- OAuth provider
+  email_verified INTEGER DEFAULT 0,           -- Email verification flag
+  linked_anon_id TEXT,                        -- Anonymous ID to merge
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))   -- Profile update tracking
 );
 
 -- anonymous_users: Track anonymous visitors (REQUIRED)
@@ -258,17 +262,21 @@ CREATE TABLE anonymous_users (
   anon_id TEXT PRIMARY KEY,
   first_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
   last_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
-  is_banned INTEGER NOT NULL DEFAULT 0
+  is_banned INTEGER NOT NULL DEFAULT 0,
+  user_agent TEXT                             -- Browser/device info
 );
 
 -- Indexes
 CREATE INDEX idx_dogs_status ON dogs(status);
 CREATE INDEX idx_dogs_breed ON dogs(breed_id);
 CREATE INDEX idx_dogs_created ON dogs(created_at DESC);
+CREATE INDEX idx_dogs_image_source ON dogs(image_source);
 CREATE INDEX idx_ratings_dog ON ratings(dog_id);
 CREATE INDEX idx_ratings_anon ON ratings(anon_id);
 CREATE INDEX idx_skips_anon ON skips(anon_id);
 CREATE INDEX idx_users_google ON users(google_id);
+CREATE INDEX idx_users_linked_anon ON users(linked_anon_id);
+CREATE INDEX idx_breeds_last_synced ON breeds(last_synced_at);
 ```
 
 ---
