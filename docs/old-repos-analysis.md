@@ -395,6 +395,13 @@ The main improvements in our current implementation:
 **Next Steps**:
 
 1. Add `?exclude=` param to prefetch endpoint
-2. Add duplicate filtering to sync script
-3. Consider using `breed-images.json` as seed source
+2. ~~Add duplicate filtering to sync script~~ (Done - `fetchDogCeoImages.ts` handles this)
+3. ~~Consider using `breed-images.json` as seed source~~ (Adopted - two-step pipeline uses JSON file)
 4. ~~Optionally add user_agent tracking~~ (Done - ip_address and user_agent now stored in ratings)
+
+**Implementation Status** (Updated December 2025):
+
+- **Two-step pipeline adopted**: `fetchDogCeoImages.ts` (exists) → `seedDogCeoImages.ts` (to be created)
+- **`breed-images.json` exists**: 21,000+ images, 174 breeds, ~2MB
+- **Duplicate filtering implemented**: In `fetchDogCeoImages.ts` via `dogCeoUtils.ts`
+- See `docs/dog-ceo-integration.md` for complete technical architecture

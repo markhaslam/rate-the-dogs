@@ -211,10 +211,26 @@ This section covers the integration of Dog CEO API as a long-term content source
 
 ### Goals
 
-- Scale from ~85 images to 5,000+ images
-- Support 100+ breeds (vs. current 17)
+- Scale from ~85 images to 8,000+ images (configurable up to 21,000+)
+- Support 170+ breeds (vs. current 17)
 - Instant image loading via prefetching
 - Human-readable breed names
+
+### Two-Step Data Pipeline
+
+The integration uses a separated fetch/seed approach for reliability:
+
+| Step | Script                 | Input       | Output              |
+| ---- | ---------------------- | ----------- | ------------------- |
+| 1    | `fetchDogCeoImages.ts` | Dog CEO API | `breed-images.json` |
+| 2    | `seedDogCeoImages.ts`  | JSON file   | D1 Database         |
+
+**Benefits:**
+
+- Faster iteration (no API calls when debugging seeding)
+- Offline capability
+- Matches original 2022 prototype pattern
+- `fetchDogCeoImages.ts` already exists with retry logic, deduplication
 
 ### Database Changes
 
@@ -231,14 +247,17 @@ New columns added to existing tables:
 - `image_url TEXT` - Direct URL for Dog CEO images
 - `image_source TEXT` - 'dog_ceo' or 'user_upload'
 
-### New Files
+### New/Updated Files
 
-| File                                                     | Purpose                          |
-| -------------------------------------------------------- | -------------------------------- |
-| `apps/api/src/lib/dogCeoBreeds.ts`                       | Breed name mapping (120+ breeds) |
-| `apps/api/scripts/syncDogCeo.ts`                         | Seeding script                   |
-| `apps/web/src/hooks/useDogPrefetch.ts`                   | Frontend prefetch hook           |
-| `apps/api/src/db/migrations/002_dog_ceo_integration.sql` | Schema migration                 |
+| File                                                     | Status    | Purpose                            |
+| -------------------------------------------------------- | --------- | ---------------------------------- |
+| `apps/api/scripts/fetchDogCeoImages.ts`                  | Exists    | Fetch from API → JSON              |
+| `apps/api/scripts/seedDogCeoImages.ts`                   | To Create | Seed JSON → D1                     |
+| `apps/api/src/lib/dogCeoBreeds.ts`                       | To Create | Breed name mapping (170+ breeds)   |
+| `apps/api/src/lib/dogCeoUtils.ts`                        | Exists    | Utility functions for fetch script |
+| `apps/api/src/db/breed-images.json`                      | Exists    | Pre-fetched 21,000+ images         |
+| `apps/web/src/hooks/useDogPrefetch.ts`                   | To Create | Frontend prefetch hook             |
+| `apps/api/src/db/migrations/003_dog_ceo_integration.sql` | Exists    | Schema migration                   |
 
 ### API Changes
 
@@ -263,8 +282,11 @@ New hook: `useDogPrefetch`
 
 - Unit tests for breed name mapping
 - Integration tests for prefetch endpoint
+- Integration tests for seed script
 - E2E tests for prefetch queue behavior
 - Performance tests for image loading
+
+See `docs/dog-ceo-integration.md` for complete technical specification.
 
 ---
 
@@ -519,13 +541,13 @@ CREATE INDEX idx_breeds_last_synced ON breeds(last_synced_at);
 - Light/dark mode theme with system preference detection
 - 80%+ test coverage
 
-### Phase 1.5: Dog CEO Content Integration (NEW)
+### Phase 1.5: Dog CEO Content Integration
 
-- Comprehensive Dog CEO API integration
-- 100+ breeds with 5,000+ images
+- Two-step data pipeline (fetch → seed)
+- 170+ breeds with 8,000+ images (configurable up to 21,000+)
 - Frontend prefetching with localStorage
 - Instant image transitions
-- Production-quality content
+- Production-quality content from pre-verified JSON
 
 See `docs/dog-ceo-integration.md` for complete technical specification.
 

@@ -437,10 +437,7 @@ This script reads the pre-fetched `breed-images.json` and populates the D1 datab
  *   - Database migrations must be applied
  */
 
-import {
-  getReadableBreedName,
-  getBreedSlug,
-} from "../src/lib/dogCeoBreeds";
+import { getReadableBreedName, getBreedSlug } from "../src/lib/dogCeoBreeds";
 
 const IMAGES_PER_BREED = 50; // Limit per breed for manageable DB size
 
@@ -448,10 +445,13 @@ interface BreedImages {
   [breed: string]: string[];
 }
 
-async function seedDogCeoImages(db: D1Database, options: {
-  dryRun?: boolean;
-  limit?: number;
-}): Promise<void> {
+async function seedDogCeoImages(
+  db: D1Database,
+  options: {
+    dryRun?: boolean;
+    limit?: number;
+  }
+): Promise<void> {
   const { dryRun = false, limit = IMAGES_PER_BREED } = options;
 
   // 1. Load breed-images.json
@@ -481,9 +481,7 @@ async function seedDogCeoImages(db: D1Database, options: {
     const name = getReadableBreedName(breed);
     const slug = getBreedSlug(breed);
     // Convert breed format: "retriever-golden" -> "retriever/golden"
-    const dogCeoPath = breed.includes("-")
-      ? breed.replace("-", "/")
-      : breed;
+    const dogCeoPath = breed.includes("-") ? breed.replace("-", "/") : breed;
 
     const images = breedImages[breed].slice(0, limit);
 
@@ -497,13 +495,15 @@ async function seedDogCeoImages(db: D1Database, options: {
 
     // 2a. Upsert breed
     await db
-      .prepare(`
+      .prepare(
+        `
         INSERT INTO breeds (name, slug, dog_ceo_path, created_at)
         VALUES (?, ?, ?, datetime('now'))
         ON CONFLICT(slug) DO UPDATE SET
           dog_ceo_path = excluded.dog_ceo_path,
           name = excluded.name
-      `)
+      `
+      )
       .bind(name, slug, dogCeoPath)
       .run();
 
@@ -523,7 +523,8 @@ async function seedDogCeoImages(db: D1Database, options: {
     for (const imageUrl of images) {
       try {
         await db
-          .prepare(`
+          .prepare(
+            `
             INSERT INTO dogs (
               image_url,
               image_source,
@@ -533,7 +534,8 @@ async function seedDogCeoImages(db: D1Database, options: {
               updated_at
             )
             VALUES (?, 'dog_ceo', ?, 'approved', datetime('now'), datetime('now'))
-          `)
+          `
+          )
           .bind(imageUrl, breedRecord.id)
           .run();
 
@@ -548,14 +550,16 @@ async function seedDogCeoImages(db: D1Database, options: {
 
     // 2c. Update breed stats
     await db
-      .prepare(`
+      .prepare(
+        `
         UPDATE breeds
         SET image_count = (
           SELECT COUNT(*) FROM dogs WHERE breed_id = ? AND image_source = 'dog_ceo'
         ),
         last_synced_at = datetime('now')
         WHERE id = ?
-      `)
+      `
+      )
       .bind(breedRecord.id, breedRecord.id)
       .run();
 
@@ -564,7 +568,9 @@ async function seedDogCeoImages(db: D1Database, options: {
     console.log(`  Inserted ${insertedCount} dogs`);
   }
 
-  console.log(`\n${dryRun ? "[DRY RUN] Would have seeded" : "Seeding complete!"}:`);
+  console.log(
+    `\n${dryRun ? "[DRY RUN] Would have seeded" : "Seeding complete!"}:`
+  );
   console.log(`  Breeds: ${totalBreeds}`);
   console.log(`  Dogs: ${totalDogs}`);
 }
@@ -592,13 +598,13 @@ bun run apps/api/scripts/seedDogCeoImages.ts --remote
 
 **From breed-images.json (full dataset):**
 
-| Metric              | Value         |
-| ------------------- | ------------- |
-| Total breeds        | ~174          |
-| Total images        | ~21,000       |
-| Average per breed   | ~121 images   |
-| Top breed (maltese) | 253 images    |
-| File size           | ~2 MB         |
+| Metric              | Value       |
+| ------------------- | ----------- |
+| Total breeds        | ~174        |
+| Total images        | ~21,000     |
+| Average per breed   | ~121 images |
+| Top breed (maltese) | 253 images  |
+| File size           | ~2 MB       |
 
 **After seeding with default 50 limit:**
 
@@ -982,22 +988,31 @@ export function RatePage() {
 
 ### Phase 1: Database Migration
 
-1. Run migration `002_dog_ceo_integration.sql`
+1. Run migration `003_dog_ceo_integration.sql`
 2. Add new columns without breaking existing functionality
 3. Test migration on local D1
 
 ### Phase 2: Backend Updates
 
-1. Deploy new `dogCeoBreeds.ts` mapping
+1. Create `dogCeoBreeds.ts` mapping file
 2. Update `getImageUrl()` to handle both sources
 3. Add `/api/dogs/prefetch` endpoint
 4. Update existing routes to use new schema
 
-### Phase 3: Seeding
+### Phase 3: Data Pipeline (Two-Step)
 
-1. Run `syncDogCeo.ts` script locally
-2. Verify data integrity
-3. Run on production D1
+**Step 3a: Fetch images (if needed)**
+
+1. Run `fetchDogCeoImages.ts` to refresh `breed-images.json`
+2. Verify JSON file integrity with `--validate-only`
+3. Note: This step is optional if `breed-images.json` already exists and is up to date
+
+**Step 3b: Seed database**
+
+1. Run `seedDogCeoImages.ts --dry-run` to preview changes
+2. Run `seedDogCeoImages.ts` on local D1
+3. Verify data integrity (breed count, dog count)
+4. Run on production D1 with `--remote`
 
 ### Phase 4: Frontend Updates
 
@@ -1113,6 +1128,7 @@ https://images.dog.ceo/breeds/{breed-subbreed}/{filename}.jpg
 
 ## Document History
 
-| Version | Date     | Author | Changes                       |
-| ------- | -------- | ------ | ----------------------------- |
-| 1.0     | Dec 2025 | Claude | Initial architecture document |
+| Version | Date     | Author | Changes                                                                                      |
+| ------- | -------- | ------ | -------------------------------------------------------------------------------------------- |
+| 1.0     | Dec 2025 | Claude | Initial architecture document                                                                |
+| 1.1     | Dec 2025 | Claude | Updated to two-step data pipeline (separate fetch/seed scripts), aligned with 2022 prototype |

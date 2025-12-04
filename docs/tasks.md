@@ -482,21 +482,39 @@ This phase adds Dog CEO API integration, analytics fields, and user system prep.
 - [ ] Write unit tests for all breed mappings
 - [ ] Handle edge cases (unknown breeds, special characters)
 
-### 8.3 Dog CEO Sync Script
+### 8.3 Dog CEO Data Pipeline (Two-Step Approach)
 
-- [ ] Create `apps/api/scripts/syncDogCeo.ts`
-- [ ] Implement `fetchBreedList()` - fetch all breeds from API
-- [ ] Implement `fetchBreedImages()` - fetch images per breed
-- [ ] Implement `verifyImageUrl()` - verify image URLs are valid
-- [ ] Implement rate limiting (100ms between API calls)
-- [ ] Implement image deduplication
-- [ ] Limit to 50 images per breed (configurable)
-- [ ] Auto-approve all Dog CEO dogs
+> **Architecture**: Separated fetch/seed scripts for faster iteration and offline capability.
+> See `docs/dog-ceo-integration.md` for full details.
+
+#### Step 1: Fetch Script (Already Exists)
+
+- [x] Create `apps/api/scripts/fetchDogCeoImages.ts`
+- [x] Implement `fetchBreedList()` - fetch all breeds from API
+- [x] Implement `fetchBreedImages()` - fetch images per breed
+- [x] Implement retry logic with exponential backoff
+- [x] Implement rate limiting (10 concurrent, 50ms delay)
+- [x] Implement duplicate image filtering (sub-breed deduplication)
+- [x] Create `apps/api/src/lib/dogCeoUtils.ts` utility functions
+- [x] Generate `apps/api/src/db/breed-images.json` (~21,000 images, 174 breeds)
+- [x] Add `--validate-only` and `--dry-run` options
+- [ ] Add npm script: `"db:fetch-dog-ceo": "bun run scripts/fetchDogCeoImages.ts"`
+
+#### Step 2: Seed Script (To Be Created)
+
+- [ ] Create `apps/api/scripts/seedDogCeoImages.ts`
+- [ ] Read `breed-images.json` file
+- [ ] Use `dogCeoBreeds.ts` for human-readable breed names
+- [ ] Upsert breeds into D1 with `dog_ceo_path`
+- [ ] Insert dogs with `image_source = 'dog_ceo'` and `status = 'approved'`
+- [ ] Limit images per breed (configurable, default: 50)
 - [ ] Update breed `image_count` and `last_synced_at`
-- [ ] Write integration tests with mocked API
-- [ ] Add npm script: `"db:sync-dog-ceo": "bun run scripts/syncDogCeo.ts"`
-- [ ] Run sync locally and verify data integrity
-- [ ] Run sync on production D1
+- [ ] Skip duplicate images (UNIQUE constraint handling)
+- [ ] Add `--dry-run`, `--limit=N`, `--local`, `--remote` options
+- [ ] Write integration tests for seed script
+- [ ] Add npm script: `"db:seed-dog-ceo": "bun run scripts/seedDogCeoImages.ts"`
+- [ ] Run seed locally and verify data integrity
+- [ ] Run seed on production D1 with `--remote`
 
 ### 8.4 API Updates
 
@@ -539,11 +557,12 @@ This phase adds Dog CEO API integration, analytics fields, and user system prep.
 
 ### 8.6 Testing & Verification
 
-- [ ] Unit tests: breed name mapping (all 120+ breeds)
+- [ ] Unit tests: breed name mapping (all 170+ breeds)
 - [ ] Unit tests: `getImageUrl()` for both sources
 - [ ] Unit tests: `useDogPrefetch` hook
 - [ ] Integration tests: prefetch endpoint with mocked D1
-- [ ] Integration tests: sync script with mocked Dog CEO API
+- [ ] Integration tests: seed script (`seedDogCeoImages.ts`)
+- [ ] Integration tests: fetch script (`fetchDogCeoImages.ts`) with mocked API
 - [ ] E2E tests: rating flow with prefetch queue
 - [ ] E2E tests: queue refill behavior
 - [ ] E2E tests: localStorage persistence
@@ -553,9 +572,9 @@ This phase adds Dog CEO API integration, analytics fields, and user system prep.
 ### 8.7 Production Rollout
 
 - [ ] Run migration on production D1
-- [ ] Run sync script on production D1
-- [ ] Verify breed data integrity (120+ breeds)
-- [ ] Verify dog data integrity (5,000+ dogs)
+- [ ] Run seed script on production D1 (`seedDogCeoImages.ts --remote`)
+- [ ] Verify breed data integrity (170+ breeds)
+- [ ] Verify dog data integrity (8,000+ dogs with default limit)
 - [ ] Deploy updated API
 - [ ] Deploy updated frontend
 - [ ] Monitor prefetch endpoint latency
@@ -779,5 +798,5 @@ Before considering MVP complete:
 - [x] Code formatted with Prettier
 - [ ] Production deployed and functional
 - [x] Documentation up to date
-- [ ] Dog CEO sync complete (5,000+ dogs, 100+ breeds)
+- [ ] Dog CEO seed complete (8,000+ dogs, 170+ breeds)
 - [ ] Prefetching working in production
