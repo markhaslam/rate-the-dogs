@@ -90,7 +90,7 @@ describe("LeaderboardPage", () => {
 
       // Wait for async state updates to complete
       await waitFor(() => {
-        expect(screen.getByText("Charlie")).toBeInTheDocument();
+        expect(screen.getByText("French Bulldog")).toBeInTheDocument();
       });
     });
 
@@ -116,13 +116,13 @@ describe("LeaderboardPage", () => {
 
       // Wait for async state updates to complete
       await waitFor(() => {
-        expect(screen.getByText("Charlie")).toBeInTheDocument();
+        expect(screen.getByText("French Bulldog")).toBeInTheDocument();
       });
     });
   });
 
   describe("dogs tab", () => {
-    it("fetches and displays dogs", async () => {
+    it("fetches and displays dogs by breed name", async () => {
       mockFetch.mockResolvedValueOnce({
         json: () => Promise.resolve(mockDogsResponse),
       });
@@ -130,10 +130,10 @@ describe("LeaderboardPage", () => {
       render(<LeaderboardPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("Charlie")).toBeInTheDocument();
+        expect(screen.getByText("French Bulldog")).toBeInTheDocument();
       });
 
-      expect(screen.getByText("French Bulldog")).toBeInTheDocument();
+      expect(screen.getByText("Corgi")).toBeInTheDocument();
       expect(screen.getByText("5.0")).toBeInTheDocument();
     });
 
@@ -219,7 +219,7 @@ describe("LeaderboardPage", () => {
       render(<LeaderboardPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("Charlie")).toBeInTheDocument();
+        expect(screen.getByText("French Bulldog")).toBeInTheDocument();
       });
 
       mockFetch.mockResolvedValueOnce({
@@ -228,11 +228,10 @@ describe("LeaderboardPage", () => {
 
       fireEvent.click(screen.getByText("Top Breeds"));
 
+      // French Bulldog appears in both dogs and breeds response
       await waitFor(() => {
-        expect(screen.getByText("French Bulldog")).toBeInTheDocument();
+        expect(screen.getByText("Corgi")).toBeInTheDocument();
       });
-
-      expect(screen.getByText("Corgi")).toBeInTheDocument();
     });
 
     it("displays dog count for breeds", async () => {
@@ -304,7 +303,7 @@ describe("LeaderboardPage", () => {
       render(<LeaderboardPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("Charlie")).toBeInTheDocument();
+        expect(screen.getByText("French Bulldog")).toBeInTheDocument();
       });
 
       const images = screen.getAllByRole("img");

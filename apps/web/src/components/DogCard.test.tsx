@@ -13,19 +13,14 @@ const mockDog = {
 
 describe("DogCard", () => {
   describe("rendering", () => {
-    it("displays dog name", () => {
-      render(<DogCard dog={mockDog} />);
-      expect(screen.getByText("Max")).toBeInTheDocument();
-    });
-
-    it("displays 'Unnamed Pup' when name is null", () => {
-      const unnamedDog = { ...mockDog, name: null };
-      render(<DogCard dog={unnamedDog} />);
-      expect(screen.getByText("Unnamed Pup")).toBeInTheDocument();
-    });
-
     it("displays breed name", () => {
       render(<DogCard dog={mockDog} />);
+      expect(screen.getByText("Labrador Retriever")).toBeInTheDocument();
+    });
+
+    it("displays breed name for unnamed dog", () => {
+      const unnamedDog = { ...mockDog, name: null };
+      render(<DogCard dog={unnamedDog} />);
       expect(screen.getByText("Labrador Retriever")).toBeInTheDocument();
     });
 
@@ -148,16 +143,24 @@ describe("DogCard", () => {
       expect(screen.getByText("Golden Retriever")).toBeInTheDocument();
     });
 
-    it("handles very long dog name", () => {
-      const longNameDog = { ...mockDog, name: "A".repeat(50) };
-      render(<DogCard dog={longNameDog} />);
-      expect(screen.getByText("A".repeat(50))).toBeInTheDocument();
+    it("handles very long breed name", () => {
+      const longBreedDog = {
+        ...mockDog,
+        breed_name: "Australian Shepherd Mix with Long Name",
+      };
+      render(<DogCard dog={longBreedDog} />);
+      expect(
+        screen.getByText("Australian Shepherd Mix with Long Name")
+      ).toBeInTheDocument();
     });
 
-    it("handles special characters in name", () => {
-      const specialDog = { ...mockDog, name: "Max & Luna's Friend" };
+    it("handles special characters in breed name", () => {
+      const specialDog = {
+        ...mockDog,
+        breed_name: "St. Bernard & Poodle Mix",
+      };
       render(<DogCard dog={specialDog} />);
-      expect(screen.getByText("Max & Luna's Friend")).toBeInTheDocument();
+      expect(screen.getByText("St. Bernard & Poodle Mix")).toBeInTheDocument();
     });
   });
 });

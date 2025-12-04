@@ -165,11 +165,8 @@ export function LeaderboardPage() {
                 {/* Dog info */}
                 <div className="flex-1 ml-4 min-w-0">
                   <h3 className="font-semibold text-foreground truncate">
-                    {dog.name ?? "Unnamed Pup"}
-                  </h3>
-                  <p className="text-sm text-muted-foreground truncate">
                     {dog.breed_name}
-                  </p>
+                  </h3>
                 </div>
 
                 {/* Rating */}
