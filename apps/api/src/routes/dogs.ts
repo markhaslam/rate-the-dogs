@@ -92,14 +92,16 @@ dogs.post(
     const id = parseInt(c.req.param("id"));
     const { value } = c.req.valid("json");
     const anonId = c.get("anonId");
+    const clientIP = c.get("clientIP");
+    const userAgent = c.get("userAgent");
 
     try {
       await c.env.DB.prepare(
         `
-      INSERT INTO ratings (dog_id, value, anon_id) VALUES (?, ?, ?)
+      INSERT INTO ratings (dog_id, value, anon_id, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)
     `
       )
-        .bind(id, value, anonId)
+        .bind(id, value, anonId, clientIP, userAgent)
         .run();
 
       return c.json(success({ rated: true }));

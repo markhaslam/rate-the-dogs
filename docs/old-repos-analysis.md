@@ -397,4 +397,4 @@ The main improvements in our current implementation:
 1. Add `?exclude=` param to prefetch endpoint
 2. Add duplicate filtering to sync script
 3. Consider using `breed-images.json` as seed source
-4. Optionally add user_agent tracking
+4. ~~Optionally add user_agent tracking~~ (Done - ip_address and user_agent now stored in ratings)

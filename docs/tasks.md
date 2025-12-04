@@ -462,6 +462,7 @@ This phase adds Dog CEO API integration, analytics fields, and user system prep.
 - [x] Add `image_source` column to dogs table
 - [x] Add `user_agent` column to ratings table (analytics)
 - [x] Add `user_agent` column to anonymous_users table (analytics)
+- [x] Store `ip_address` and `user_agent` in ratings INSERT (was missing)
 - [x] Add `updated_at` column to users table
 - [x] Add `email_verified` column to users table
 - [x] Add `provider` column to users table (OAuth provider)

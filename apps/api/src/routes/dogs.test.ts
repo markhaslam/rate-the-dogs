@@ -261,6 +261,48 @@ describe("Dogs API", () => {
       const json = await res.json();
       expect(json.error.code).toBe("ALREADY_RATED");
     });
+
+    it("stores ip_address and user_agent with rating", async () => {
+      let capturedParams: unknown[] = [];
+
+      const trackingEnv = createMockEnv({
+        DB: {
+          prepare: (sql: string) => ({
+            bind: (...params: unknown[]) => {
+              if (sql.includes("INSERT INTO ratings")) {
+                capturedParams = params;
+              }
+              return {
+                run: async () => ({ success: true }),
+              };
+            },
+          }),
+        },
+      });
+
+      const res = await app.request(
+        "/api/dogs/1/rate",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "User-Agent": "TestBrowser/1.0",
+            "CF-Connecting-IP": "192.168.1.100",
+          },
+          body: JSON.stringify({ value: 4.5 }),
+        },
+        trackingEnv
+      );
+
+      expect(res.status).toBe(200);
+      // Params should be: dog_id, value, anon_id, ip_address, user_agent
+      expect(capturedParams).toHaveLength(5);
+      expect(capturedParams[0]).toBe(1); // dog_id
+      expect(capturedParams[1]).toBe(4.5); // value
+      expect(typeof capturedParams[2]).toBe("string"); // anon_id (UUID)
+      expect(capturedParams[3]).toBe("192.168.1.100"); // ip_address
+      expect(capturedParams[4]).toBe("TestBrowser/1.0"); // user_agent
+    });
   });
 
   describe("POST /api/dogs/:id/skip", () => {
