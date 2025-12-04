@@ -135,7 +135,6 @@
     "https://images.dog.ceo/breeds/affenpinscher/n02110627_9634.jpg",
     "https://images.dog.ceo/breeds/affenpinscher/n02110627_9822.jpg"
   ],
-  "african": [],
   "african-wild": [
     "https://images.dog.ceo/breeds/african-wild/n02116738_10024.jpg",
     "https://images.dog.ceo/breeds/african-wild/n02116738_10038.jpg",
@@ -644,7 +643,6 @@
     "https://images.dog.ceo/breeds/appenzeller/n02107908_933.jpg",
     "https://images.dog.ceo/breeds/appenzeller/n02107908_94.jpg"
   ],
-  "australian": [],
   "australian-kelpie": [
     "https://images.dog.ceo/breeds/australian-kelpie/IMG_2599.jpg",
     "https://images.dog.ceo/breeds/australian-kelpie/IMG_3675.jpg",
@@ -662,7 +660,6 @@
     "https://images.dog.ceo/breeds/australian-shepherd/pepper2.jpg",
     "https://images.dog.ceo/breeds/australian-shepherd/sadie.jpg"
   ],
-  "bakharwal": [],
   "bakharwal-indian": [
     "https://images.dog.ceo/breeds/bakharwal-indian/Bakharwal.jpg"
   ],
@@ -1824,13 +1821,11 @@
     "https://images.dog.ceo/breeds/briard/n02105251_9020.jpg",
     "https://images.dog.ceo/breeds/briard/n02105251_917.jpg"
   ],
-  "buhund": [],
   "buhund-norwegian": [
     "https://images.dog.ceo/breeds/buhund-norwegian/hakon1.jpg",
     "https://images.dog.ceo/breeds/buhund-norwegian/hakon2.jpg",
     "https://images.dog.ceo/breeds/buhund-norwegian/hakon3.jpg"
   ],
-  "bulldog": [],
   "bulldog-boston": [
     "https://images.dog.ceo/breeds/bulldog-boston/20200710_175933.jpg",
     "https://images.dog.ceo/breeds/bulldog-boston/20200710_175944.jpg",
@@ -2162,7 +2157,6 @@
     "https://images.dog.ceo/breeds/bulldog-french/n02108915_9899.jpg",
     "https://images.dog.ceo/breeds/bulldog-french/vite.jpg"
   ],
-  "bullterrier": [],
   "bullterrier-staffordshire": [
     "https://images.dog.ceo/breeds/bullterrier-staffordshire/20200820_131119.jpg",
     "https://images.dog.ceo/breeds/bullterrier-staffordshire/caesar.jpg",
@@ -2297,7 +2291,6 @@
     "https://images.dog.ceo/breeds/bullterrier-staffordshire/n02093256_9753.jpg",
     "https://images.dog.ceo/breeds/bullterrier-staffordshire/n02093256_9796.jpg"
   ],
-  "cattledog": [],
   "cattledog-australian": [
     "https://images.dog.ceo/breeds/cattledog-australian/IMG_0206.jpg",
     "https://images.dog.ceo/breeds/cattledog-australian/IMG_1042.jpg",
@@ -2457,7 +2450,6 @@
     "https://images.dog.ceo/breeds/chihuahua/n02085620_952.jpg",
     "https://images.dog.ceo/breeds/chihuahua/n02085620_9654.jpg"
   ],
-  "chippiparai": [],
   "chippiparai-indian": [
     "https://images.dog.ceo/breeds/chippiparai-indian/Indian-Chippiparai.jpg"
   ],
@@ -3404,7 +3396,6 @@
     "https://images.dog.ceo/breeds/dalmatian/cooper1.jpg",
     "https://images.dog.ceo/breeds/dalmatian/cooper2.jpg"
   ],
-  "dane": [],
   "dane-great": [
     "https://images.dog.ceo/breeds/dane-great/dane-0.jpg",
     "https://images.dog.ceo/breeds/dane-great/dane-1.jpg",
@@ -3534,9 +3525,6 @@
     "https://images.dog.ceo/breeds/dane-great/viber_image_2019-02-04_,_13.33.10.jpg",
     "https://images.dog.ceo/breeds/dane-great/viber_image_2019-03-17_,_00.27.40.jpg"
   ],
-  "danish": [],
-  "danish-swedish": [],
-  "deerhound": [],
   "deerhound-scottish": [
     "https://images.dog.ceo/breeds/deerhound-scottish/n02092002_1029.jpg",
     "https://images.dog.ceo/breeds/deerhound-scottish/n02092002_10693.jpg",
@@ -4120,7 +4108,6 @@
     "https://images.dog.ceo/breeds/doberman/n02107142_971.jpg",
     "https://images.dog.ceo/breeds/doberman/n02107142_9772.jpg"
   ],
-  "elkhound": [],
   "elkhound-norwegian": [
     "https://images.dog.ceo/breeds/elkhound-norwegian/n02091467_1110.jpg",
     "https://images.dog.ceo/breeds/elkhound-norwegian/n02091467_1144.jpg",
@@ -4642,12 +4629,10 @@
     "https://images.dog.ceo/breeds/eskimo/n02109961_997.jpg",
     "https://images.dog.ceo/breeds/eskimo/n02109961_9973.jpg"
   ],
-  "finnish": [],
   "finnish-lapphund": [
     "https://images.dog.ceo/breeds/finnish-lapphund/img_3801.jpg",
     "https://images.dog.ceo/breeds/finnish-lapphund/mochilamvan.jpg"
   ],
-  "frise": [],
   "frise-bichon": [
     "https://images.dog.ceo/breeds/frise-bichon/1.jpg",
     "https://images.dog.ceo/breeds/frise-bichon/2.jpg",
@@ -4664,9 +4649,9 @@
     "https://images.dog.ceo/breeds/frise-bichon/jh-ezio-3.jpg",
     "https://images.dog.ceo/breeds/frise-bichon/stevebaxter_bichon_frise.jpg"
   ],
-  "gaddi": [],
-  "gaddi-indian": ["https://images.dog.ceo/breeds/gaddi-indian/Gaddi.jpg"],
-  "german": [],
+  "gaddi-indian": [
+    "https://images.dog.ceo/breeds/gaddi-indian/Gaddi.jpg"
+  ],
   "german-shepherd": [
     "https://images.dog.ceo/breeds/german-shepherd/Bagira_site.jpg",
     "https://images.dog.ceo/breeds/german-shepherd/Hannah.jpg",
@@ -4805,7 +4790,9 @@
     "https://images.dog.ceo/breeds/german-shepherd/n02106662_9994.jpg",
     "https://images.dog.ceo/breeds/german-shepherd/pic1_g.jpg"
   ],
-  "greyhound": ["https://images.dog.ceo/breeds/greyhound/Cordelia.jpg"],
+  "greyhound": [
+    "https://images.dog.ceo/breeds/greyhound/Cordelia.jpg"
+  ],
   "greyhound-indian": [
     "https://images.dog.ceo/breeds/greyhound-indian/rampur-greyhound.jpg"
   ],
@@ -5088,7 +5075,6 @@
     "https://images.dog.ceo/breeds/havanese/00100trPORTRAIT_00100_BURST20191126134713895_COVER.jpg",
     "https://images.dog.ceo/breeds/havanese/00100trPORTRAIT_00100_BURST20191222103956878_COVER.jpg"
   ],
-  "hound": [],
   "hound-afghan": [
     "https://images.dog.ceo/breeds/hound-afghan/n02088094_1003.jpg",
     "https://images.dog.ceo/breeds/hound-afghan/n02088094_10263.jpg",
@@ -6389,7 +6375,9 @@
     "https://images.dog.ceo/breeds/kelpie/n02105412_855.jpg",
     "https://images.dog.ceo/breeds/kelpie/n02105412_893.jpg"
   ],
-  "kombai": ["https://images.dog.ceo/breeds/kombai/Kombai-indian-Dog.jpg"],
+  "kombai": [
+    "https://images.dog.ceo/breeds/kombai/Kombai-indian-Dog.jpg"
+  ],
   "komondor": [
     "https://images.dog.ceo/breeds/komondor/n02105505_1024.jpg",
     "https://images.dog.ceo/breeds/komondor/n02105505_1077.jpg",
@@ -7610,7 +7598,6 @@
     "https://images.dog.ceo/breeds/maltese/n02085936_9927.jpg",
     "https://images.dog.ceo/breeds/maltese/n20201012_img_0437.jpg"
   ],
-  "mastiff": [],
   "mastiff-bull": [
     "https://images.dog.ceo/breeds/mastiff-bull/n02108422_1013.jpg",
     "https://images.dog.ceo/breeds/mastiff-bull/n02108422_1016.jpg",
@@ -8195,7 +8182,6 @@
     "https://images.dog.ceo/breeds/mix/xeshaBelka_(8).jpg",
     "https://images.dog.ceo/breeds/mix/xeshaBelka_(9).jpg"
   ],
-  "mountain": [],
   "mountain-bernese": [
     "https://images.dog.ceo/breeds/mountain-bernese/IMG_20190828_122716.jpg",
     "https://images.dog.ceo/breeds/mountain-bernese/n02107683_1003.jpg",
@@ -8515,7 +8501,6 @@
     "https://images.dog.ceo/breeds/mountain-swiss/n02107574_986.jpg",
     "https://images.dog.ceo/breeds/mountain-swiss/n02107574_988.jpg"
   ],
-  "mudhol": [],
   "mudhol-indian": [
     "https://images.dog.ceo/breeds/mudhol-indian/Indian-Mudhol.jpg"
   ],
@@ -8787,7 +8772,6 @@
     "https://images.dog.ceo/breeds/otterhound/n02091635_971.jpg",
     "https://images.dog.ceo/breeds/otterhound/n02091635_979.jpg"
   ],
-  "ovcharka": [],
   "ovcharka-caucasian": [
     "https://images.dog.ceo/breeds/ovcharka-caucasian/IMG_20190528_194200.jpg",
     "https://images.dog.ceo/breeds/ovcharka-caucasian/IMG_20190601_185700.jpg",
@@ -9006,7 +8990,6 @@
     "https://images.dog.ceo/breeds/papillon/n02086910_984.jpg",
     "https://images.dog.ceo/breeds/papillon/n02086910_9883.jpg"
   ],
-  "pariah": [],
   "pariah-indian": [
     "https://images.dog.ceo/breeds/pariah-indian/The_Indian_Pariah_Dog.jpg"
   ],
@@ -9523,7 +9506,6 @@
     "https://images.dog.ceo/breeds/pitbull/louie.jpg",
     "https://images.dog.ceo/breeds/pitbull/pitbull_dog.jpg"
   ],
-  "pointer": [],
   "pointer-german": [
     "https://images.dog.ceo/breeds/pointer-german/GSP-Jake.jpg",
     "https://images.dog.ceo/breeds/pointer-german/n02100236_1054.jpg",
@@ -9865,7 +9847,6 @@
     "https://images.dog.ceo/breeds/pomeranian/rafi.jpg",
     "https://images.dog.ceo/breeds/pomeranian/rafi_with_glasses.jpg"
   ],
-  "poodle": [],
   "poodle-medium": [
     "https://images.dog.ceo/breeds/poodle-medium/PXL_20210220_100624962.jpg",
     "https://images.dog.ceo/breeds/poodle-medium/WhatsApp_Image_2022-08-06_at_4.48.38_PM.jpg"
@@ -10690,7 +10671,6 @@
     "https://images.dog.ceo/breeds/pyrenees/sarge2.jpg",
     "https://images.dog.ceo/breeds/pyrenees/zoey1.jpg"
   ],
-  "rajapalayam": [],
   "rajapalayam-indian": [
     "https://images.dog.ceo/breeds/rajapalayam-indian/Rajapalayam-dog.jpg"
   ],
@@ -10827,7 +10807,6 @@
     "https://images.dog.ceo/breeds/redbone/n02090379_957.jpg",
     "https://images.dog.ceo/breeds/redbone/n02090379_980.jpg"
   ],
-  "retriever": [],
   "retriever-chesapeake": [
     "https://images.dog.ceo/breeds/retriever-chesapeake/n02099849_1024.jpg",
     "https://images.dog.ceo/breeds/retriever-chesapeake/n02099849_1050.jpg",
@@ -11426,7 +11405,6 @@
     "https://images.dog.ceo/breeds/retriever-golden/sasha3_delgado.jpg",
     "https://images.dog.ceo/breeds/retriever-golden/sasha_delgado.jpg"
   ],
-  "ridgeback": [],
   "ridgeback-rhodesian": [
     "https://images.dog.ceo/breeds/ridgeback-rhodesian/20190720_161000-01.jpg",
     "https://images.dog.ceo/breeds/ridgeback-rhodesian/20190721_203803.jpg",
@@ -11721,7 +11699,6 @@
     "https://images.dog.ceo/breeds/rottweiler/n02106550_9432.jpg",
     "https://images.dog.ceo/breeds/rottweiler/n02106550_982.jpg"
   ],
-  "rough": [],
   "rough-collie": [
     "https://images.dog.ceo/breeds/rough-collie/1Dog-rough-collie-portrait.jpg",
     "https://images.dog.ceo/breeds/rough-collie/Collie-Rough.jpg",
@@ -12605,12 +12582,10 @@
     "https://images.dog.ceo/breeds/schnauzer-miniature/wilma1.jpg",
     "https://images.dog.ceo/breeds/schnauzer-miniature/wilma2.jpg"
   ],
-  "segugio": [],
   "segugio-italian": [
     "https://images.dog.ceo/breeds/segugio-italian/n02090722_001.jpg",
     "https://images.dog.ceo/breeds/segugio-italian/n02090722_002.jpg"
   ],
-  "setter": [],
   "setter-english": [
     "https://images.dog.ceo/breeds/setter-english/englishsetter-mabel.jpg",
     "https://images.dog.ceo/breeds/setter-english/n02100735_10030.jpg",
@@ -13036,8 +13011,9 @@
     "https://images.dog.ceo/breeds/setter-irish/n02100877_916.jpg",
     "https://images.dog.ceo/breeds/setter-irish/n02100877_985.jpg"
   ],
-  "sharpei": ["https://images.dog.ceo/breeds/sharpei/noel.jpg"],
-  "sheepdog": [],
+  "sharpei": [
+    "https://images.dog.ceo/breeds/sharpei/noel.jpg"
+  ],
   "sheepdog-english": [
     "https://images.dog.ceo/breeds/sheepdog-english/Finnigan_Chair_sml.jpg",
     "https://images.dog.ceo/breeds/sheepdog-english/Finnigan_Old_English_Sheepdog_sml.jpg",
@@ -13553,7 +13529,6 @@
     "https://images.dog.ceo/breeds/shihtzu/n02086240_9750.jpg",
     "https://images.dog.ceo/breeds/shihtzu/oscar.jpg"
   ],
-  "spaniel": [],
   "spaniel-blenheim": [
     "https://images.dog.ceo/breeds/spaniel-blenheim/n02086646_1002.jpg",
     "https://images.dog.ceo/breeds/spaniel-blenheim/n02086646_1023.jpg",
@@ -14576,7 +14551,6 @@
     "https://images.dog.ceo/breeds/spaniel-welsh/n02102177_964.jpg",
     "https://images.dog.ceo/breeds/spaniel-welsh/n02102177_967.jpg"
   ],
-  "spitz": [],
   "spitz-indian": [
     "https://images.dog.ceo/breeds/spitz-indian/Indian_Spitz.jpg"
   ],
@@ -14588,7 +14562,6 @@
     "https://images.dog.ceo/breeds/spitz-japanese/beet-005.jpg",
     "https://images.dog.ceo/breeds/spitz-japanese/tofu.jpg"
   ],
-  "springer": [],
   "springer-english": [
     "https://images.dog.ceo/breeds/springer-english/n02100735_216.jpg",
     "https://images.dog.ceo/breeds/springer-english/n02102040_1055.jpg",
@@ -14882,7 +14855,6 @@
     "https://images.dog.ceo/breeds/stbernard/n02109525_9872.jpg",
     "https://images.dog.ceo/breeds/stbernard/n02109525_997.jpg"
   ],
-  "terrier": [],
   "terrier-american": [
     "https://images.dog.ceo/breeds/terrier-american/n02093428_10164.jpg",
     "https://images.dog.ceo/breeds/terrier-american/n02093428_10245.jpg",
@@ -17596,7 +17568,9 @@
     "https://images.dog.ceo/breeds/terrier-toy/n02087046_9864.jpg",
     "https://images.dog.ceo/breeds/terrier-toy/roni_toy_2147483648.jpg"
   ],
-  "terrier-welsh": ["https://images.dog.ceo/breeds/terrier-welsh/lucy.jpg"],
+  "terrier-welsh": [
+    "https://images.dog.ceo/breeds/terrier-welsh/lucy.jpg"
+  ],
   "terrier-westhighland": [
     "https://images.dog.ceo/breeds/terrier-westhighland/0B8855BD-51DD-48DB-B39E-14510B379441.jpg",
     "https://images.dog.ceo/breeds/terrier-westhighland/4B3A04A2-E38F-4CD8-AE12-31F1F456DD05.jpg",
@@ -18191,7 +18165,6 @@
     "https://images.dog.ceo/breeds/vizsla/n02100583_9960.jpg",
     "https://images.dog.ceo/breeds/vizsla/n02100583_9969.jpg"
   ],
-  "waterdog": [],
   "waterdog-spanish": [
     "https://images.dog.ceo/breeds/waterdog-spanish/20180706_194432.jpg",
     "https://images.dog.ceo/breeds/waterdog-spanish/20180714_201544.jpg",
@@ -18509,7 +18482,6 @@
     "https://images.dog.ceo/breeds/whippet/n02091134_9793.jpg",
     "https://images.dog.ceo/breeds/whippet/n02091134_9806.jpg"
   ],
-  "wolfhound": [],
   "wolfhound-irish": [
     "https://images.dog.ceo/breeds/wolfhound-irish/n02090721_1002.jpg",
     "https://images.dog.ceo/breeds/wolfhound-irish/n02090721_1026.jpg",
