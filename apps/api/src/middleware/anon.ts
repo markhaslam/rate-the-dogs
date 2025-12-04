@@ -23,11 +23,13 @@ export const anonMiddleware = createMiddleware<{
     anonId = crypto.randomUUID();
 
     // Set cookie with secure settings
+    // Use SameSite=Lax to allow cookies on fetch() requests while still
+    // preventing cross-site form submission attacks
     setCookie(c, COOKIE.ANON_ID_NAME, anonId, {
       path: "/",
       httpOnly: true,
       secure: c.env.ENVIRONMENT === "production",
-      sameSite: "Strict",
+      sameSite: "Lax",
       maxAge: COOKIE.MAX_AGE_SECONDS,
     });
   }

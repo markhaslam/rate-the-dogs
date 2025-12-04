@@ -56,6 +56,8 @@ export function StatsPage() {
 
       try {
         // Fetch all endpoints in parallel
+        // Use credentials: "include" to ensure cookies are sent with requests
+        const fetchOpts = { credentials: "include" as const };
         const [
           statsRes,
           topBreedsRes,
@@ -63,11 +65,11 @@ export function StatsPage() {
           recentRes,
           achievementsRes,
         ] = await Promise.all([
-          fetch("/api/me/stats"),
-          fetch("/api/me/top-breeds"),
-          fetch("/api/me/rating-distribution"),
-          fetch("/api/me/recent"),
-          fetch("/api/me/achievements"),
+          fetch("/api/me/stats", fetchOpts),
+          fetch("/api/me/top-breeds", fetchOpts),
+          fetch("/api/me/rating-distribution", fetchOpts),
+          fetch("/api/me/recent", fetchOpts),
+          fetch("/api/me/achievements", fetchOpts),
         ]);
 
         const [stats, topBreeds, distribution, recent, achievements] =

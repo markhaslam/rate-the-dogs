@@ -57,7 +57,7 @@ export function RatePage() {
 
   // Fetch user's rating count on mount to persist across page refreshes
   useEffect(() => {
-    fetch("/api/me/stats")
+    fetch("/api/me/stats", { credentials: "include" })
       .then((res) => res.json())
       .then((data: { success: boolean; data?: { ratingsCount: number } }) => {
         if (data.success && data.data) {
@@ -73,6 +73,7 @@ export function RatePage() {
     fetch(`/api/dogs/${currentDog.id}/rate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ value }),
     })
       .then((res) => res.json())
@@ -113,7 +114,7 @@ export function RatePage() {
   const handleSkip = () => {
     if (!currentDog || isRating) return;
     setIsRating(true);
-    fetch(`/api/dogs/${currentDog.id}/skip`, { method: "POST" })
+    fetch(`/api/dogs/${currentDog.id}/skip`, { method: "POST", credentials: "include" })
       .then(() => {
         // Capture current image for slide-over animation
         if (currentDog) {

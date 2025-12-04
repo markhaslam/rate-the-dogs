@@ -184,7 +184,8 @@ export function useDogPrefetch(
         excludeIds.length > 0 ? `&exclude=${excludeIds.join(",")}` : "";
 
       const res = await fetch(
-        `/api/dogs/prefetch?count=${prefetchCount}${excludeParam}`
+        `/api/dogs/prefetch?count=${prefetchCount}${excludeParam}`,
+        { credentials: "include" }
       );
 
       if (!res.ok) {
