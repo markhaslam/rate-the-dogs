@@ -74,9 +74,16 @@
 
 ### 2.2 R2 Storage
 
+> **Status**: Upload feature disabled with "Coming Soon" overlay until these items are complete.
+
 - [x] Configure R2 bucket binding in wrangler.toml
 - [x] Implement presigned URL generation in `apps/api/src/lib/r2.ts`
 - [ ] Test presigned upload flow manually
+- [ ] **BLOCKER**: Add image serving endpoint (`GET /api/images/*`) to proxy R2 images
+- [ ] **BLOCKER**: Configure R2 public URL or add proxy route for user-uploaded images
+- [ ] Add server-side file size validation (currently client-only)
+- [ ] Add rate limiting for uploads (constants defined: 5/hour, not enforced)
+- [ ] Consider moderation queue (currently auto-approved)
 
 ### 2.3 Database Utilities
 
@@ -217,6 +224,9 @@
 
 ### 4.5 UploadForm Component
 
+> **Status**: Disabled with "Coming Soon" overlay until backend is complete.
+> **Feature Flag**: `UPLOAD_ENABLED` in `apps/web/src/pages/UploadPage.tsx`
+
 - [x] Create `components/UploadForm.tsx`
 - [x] Implement drag & drop zone
 - [x] Add file validation (type, size)
@@ -226,7 +236,8 @@
 - [x] Add BreedCombobox
 - [ ] Add upload progress indicator
 - [x] Handle success/error states
-- [ ] Write component tests
+- [x] Add "Coming Soon" overlay when disabled
+- [x] Write component tests (11 passing, 3 skipped for disabled state)
 
 ### 4.6 BreedCombobox Component
 

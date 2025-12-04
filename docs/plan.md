@@ -442,7 +442,7 @@ CREATE INDEX idx_breeds_last_synced ON breeds(last_synced_at);
 | Route           | Component       | Description                |
 | --------------- | --------------- | -------------------------- |
 | `/`             | RatePage        | Main rating flow + Skip    |
-| `/upload`       | UploadPage      | Upload with name & breed   |
+| `/upload`       | UploadPage      | Upload with name & breed (Coming Soon)  |
 | `/leaderboard`  | LeaderboardPage | Top Dogs / Top Breeds tabs |
 | `/breeds`       | BreedsPage      | All breeds with search     |
 | `/breeds/:slug` | BreedDetailPage | Breed rankings             |
@@ -463,6 +463,10 @@ CREATE INDEX idx_breeds_last_synced ON breeds(last_synced_at);
 - Framer Motion animations
 
 ### UploadForm
+
+> **Status**: Currently disabled with "Coming Soon" overlay.
+> Requires: Image serving endpoint, R2 public URL config, rate limiting.
+> **Feature Flag**: `UPLOAD_ENABLED` in `apps/web/src/pages/UploadPage.tsx`
 
 - Drag & drop zone
 - Client compression

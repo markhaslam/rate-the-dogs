@@ -491,6 +491,10 @@ Check `docs/tasks.md` Phase 8 for detailed task checklist.
 
 ## File Upload Constraints
 
+> **Status**: Upload feature is currently disabled with "Coming Soon" overlay.
+> **Feature Flag**: `UPLOAD_ENABLED` in `apps/web/src/pages/UploadPage.tsx`
+> **Blockers**: Missing image serving endpoint (`GET /api/images/*`), R2 public URL config, rate limiting.
+
 - Max size: 10MB
 - Types: `image/jpeg`, `image/png`, `image/webp`
 - Max dimension: 4096px

@@ -53,6 +53,50 @@ describe("UploadPage", () => {
     mockNavigate.mockClear();
   });
 
+  describe("coming soon state", () => {
+    it("displays Coming Soon overlay when upload is disabled", async () => {
+      mockFetch.mockResolvedValueOnce({
+        json: () => Promise.resolve(mockBreedsResponse),
+      });
+
+      renderWithRouter(<UploadPage />);
+
+      expect(screen.getByText("Coming Soon!")).toBeInTheDocument();
+
+      // Form should still be visible but disabled
+      expect(screen.getByText("Upload Your Dog")).toBeInTheDocument();
+
+      // Submit button should be disabled
+      const submitButton = screen.getByText("Upload Dog");
+      expect(submitButton).toBeDisabled();
+    });
+
+    it("has disabled form elements when upload is disabled", async () => {
+      mockFetch.mockResolvedValueOnce({
+        json: () => Promise.resolve(mockBreedsResponse),
+      });
+
+      renderWithRouter(<UploadPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("combobox")).toBeInTheDocument();
+      });
+
+      // All form elements should be disabled
+      const fileInput = document.querySelector(
+        'input[type="file"]'
+      ) as HTMLInputElement;
+      const nameInput = screen.getByPlaceholderText(
+        "e.g., Max, Bella, Charlie..."
+      );
+      const selectTrigger = screen.getByRole("combobox");
+
+      expect(fileInput).toBeDisabled();
+      expect(nameInput).toBeDisabled();
+      expect(selectTrigger).toBeDisabled();
+    });
+  });
+
   describe("rendering", () => {
     it("displays the upload form", async () => {
       mockFetch.mockResolvedValueOnce({
@@ -204,7 +248,8 @@ describe("UploadPage", () => {
       expect(submitButton).toBeDisabled();
     });
 
-    it("enables submit button when file and breed are selected", async () => {
+    // Skip: Upload feature is currently disabled with "Coming Soon" overlay
+    it.skip("enables submit button when file and breed are selected", async () => {
       const user = userEvent.setup();
       mockFetch.mockResolvedValueOnce({
         json: () => Promise.resolve(mockBreedsResponse),
@@ -245,7 +290,8 @@ describe("UploadPage", () => {
   });
 
   describe("successful upload", () => {
-    it("navigates to home page on successful upload", async () => {
+    // Skip: Upload feature is currently disabled with "Coming Soon" overlay
+    it.skip("navigates to home page on successful upload", async () => {
       const user = userEvent.setup();
       mockFetch
         .mockResolvedValueOnce({
@@ -356,7 +402,8 @@ describe("UploadPage", () => {
       consoleSpy.mockRestore();
     });
 
-    it("shows error message on upload failure", async () => {
+    // Skip: Upload feature is currently disabled with "Coming Soon" overlay
+    it.skip("shows error message on upload failure", async () => {
       const user = userEvent.setup();
       mockFetch
         .mockResolvedValueOnce({

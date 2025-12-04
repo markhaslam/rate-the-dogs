@@ -31,6 +31,9 @@ interface CreateDogResponse {
   data: { id: number };
 }
 
+// Feature flag - set to true when upload functionality is ready
+const UPLOAD_ENABLED = false;
+
 export function UploadPage() {
   const [breeds, setBreeds] = useState<Breed[]>([]);
   const [selectedBreed, setSelectedBreed] = useState<number | null>(null);
@@ -128,7 +131,19 @@ export function UploadPage() {
 
   return (
     <div className="max-w-md mx-auto py-8 px-4">
-      <Card className="bg-card/50 border-border/50">
+      <Card className="bg-card/50 border-border/50 relative overflow-hidden">
+        {/* Coming Soon Overlay */}
+        {!UPLOAD_ENABLED && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+            <div className="transform -rotate-12">
+              <div className="bg-primary px-8 py-4 rounded-lg shadow-lg">
+                <span className="text-2xl font-bold text-primary-foreground tracking-wide">
+                  Coming Soon!
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
         <CardHeader>
           <CardTitle className="text-center text-foreground">
             Upload Your Dog
@@ -138,7 +153,7 @@ export function UploadPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Image Upload */}
             <div
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => UPLOAD_ENABLED && fileInputRef.current?.click()}
               className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors bg-muted/50"
             >
               {preview ? (
@@ -159,6 +174,7 @@ export function UploadPage() {
                 accept="image/jpeg,image/png,image/webp"
                 onChange={handleFileChange}
                 className="hidden"
+                disabled={!UPLOAD_ENABLED}
               />
             </div>
 
@@ -174,6 +190,7 @@ export function UploadPage() {
                 maxLength={50}
                 placeholder="e.g., Max, Bella, Charlie..."
                 className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+                disabled={!UPLOAD_ENABLED}
               />
             </div>
 
@@ -185,6 +202,7 @@ export function UploadPage() {
               <Select
                 value={selectedBreed?.toString() ?? ""}
                 onValueChange={(value) => setSelectedBreed(parseInt(value))}
+                disabled={!UPLOAD_ENABLED}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a breed..." />
@@ -204,7 +222,7 @@ export function UploadPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={uploading || !file || !selectedBreed}
+              disabled={!UPLOAD_ENABLED || uploading || !file || !selectedBreed}
             >
               {uploading ? "Uploading..." : "Upload Dog"}
             </Button>

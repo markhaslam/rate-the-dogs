@@ -85,7 +85,7 @@ export function DogCard({
         {/* Breed tag overlay */}
         <div className="absolute bottom-3 left-3">
           <div className="bg-card/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-border">
-            <p className="text-base font-semibold text-foreground">
+            <p className="text-base font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
               {dog.breed_name}
             </p>
           </div>
