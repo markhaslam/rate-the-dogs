@@ -7,31 +7,33 @@
 import { $ } from "bun";
 
 // Use exact slugs that match Dog CEO format (breed/sub-breed → breed-subbreed)
+// URLs are from breed-images.json to ensure they exist and won't 404
 const TEST_DOGS = [
   {
     breed: "Golden Retriever",
     slug: "retriever-golden",
-    image: "https://images.dog.ceo/breeds/retriever-golden/n02099601_1.jpg",
+    image:
+      "https://images.dog.ceo/breeds/retriever-golden/20200731_180910_200731.jpg",
   },
   {
     breed: "Labrador Retriever",
     slug: "labrador",
-    image: "https://images.dog.ceo/breeds/labrador/n02099712_1.jpg",
+    image: "https://images.dog.ceo/breeds/labrador/Fury_01.jpg",
   },
   {
     breed: "Beagle",
     slug: "beagle",
-    image: "https://images.dog.ceo/breeds/beagle/n02088364_1.jpg",
+    image: "https://images.dog.ceo/breeds/beagle/01-12Brady.jpg.jpg",
   },
   {
     breed: "Standard Poodle",
     slug: "poodle-standard",
-    image: "https://images.dog.ceo/breeds/poodle-standard/n02113799_1.jpg",
+    image: "https://images.dog.ceo/breeds/poodle-standard/n02113799_1057.jpg",
   },
   {
     breed: "English Bulldog",
     slug: "bulldog-english",
-    image: "https://images.dog.ceo/breeds/bulldog-english/jager-1.jpg",
+    image: "https://images.dog.ceo/breeds/bulldog-english/bunz.jpg",
   },
 ];
 
