@@ -150,6 +150,62 @@ The app must be built on **Cloudflare Workers**, **D1**, **R2**, and modern Type
 - OKLCH color space for perceptually uniform colors.
 - Smooth transitions when switching themes.
 
+## 4.8 My Stats Page
+
+Personal statistics page (`/stats`) showing users their rating activity, preferences, and fun engagement metrics.
+
+### Core Statistics
+
+- **Dogs Rated**: Total number of dogs the user has rated
+- **Average Rating**: User's average rating given (0.5-5.0)
+- **vs Global**: Comparison to global average (+/- difference)
+- **Dogs Skipped**: Number of dogs the user has skipped
+
+### Rater Personality System
+
+Fun, dog-themed personality badges based on rating patterns:
+
+| Personality      | Criteria     | Icon | Tagline                           |
+| ---------------- | ------------ | ---- | --------------------------------- |
+| Puppy Trainee    | < 10 ratings | 🐾   | "Still learning the ropes!"       |
+| Treat Dispenser  | avg > 4.2    | 🦴   | "Every pup deserves a treat!"     |
+| Belly Rub Expert | avg 3.5-4.2  | 🐕   | "Knows exactly where to scratch"  |
+| Bark Inspector   | avg 2.5-3.5  | 🔍   | "Investigating all the good boys" |
+| Picky Pup Parent | avg < 2.5    | 👑   | "Only the finest floofs allowed"  |
+| Top Dog          | 100+ ratings | 🏆   | "A true dog rating champion!"     |
+
+### Milestones
+
+Progress tracking with celebration at key milestones:
+
+- 1 rating: "Your dog rating journey begins!"
+- 10 ratings: "You're officially a dog rater!"
+- 50 ratings: "50 dogs rated! You're on fire!"
+- 100 ratings: "100 ratings! Legendary status!"
+- 250 ratings: "250 dogs! You speak fluent woof!"
+- 500 ratings: "500 ratings! Bow before the king/queen!"
+
+### Achievements
+
+Unlockable badges for special accomplishments:
+
+| Achievement    | Criteria                        | Icon |
+| -------------- | ------------------------------- | ---- |
+| Perfect Score  | Give a 5.0 rating               | ⭐   |
+| Breed Explorer | Rate dogs from 10+ breeds       | 🗺️   |
+| Variety Pack   | Use all rating values (0.5-5.0) | 🎨   |
+| Streak Master  | Rate 7 days in a row            | 🔥   |
+| All-Star Rater | Rate 20+ dogs with 4.0+         | 💖   |
+| Tough Crowd    | Give a rating below 2.0         | 😬   |
+| Early Bird     | Rate 5 dogs within 30 minutes   | 🐦   |
+
+### Additional Features
+
+- **Rating Distribution**: Visual bar chart of rating patterns (0.5-5.0)
+- **Top Breeds**: User's 3 highest-rated breeds with images
+- **Recent Ratings**: Last 10 rated dogs with thumbnails
+- **Empty State**: Friendly prompt for new users to start rating
+
 ---
 
 # 5. Technical Requirements & Architecture
@@ -189,6 +245,7 @@ The app must be built on **Cloudflare Workers**, **D1**, **R2**, and modern Type
 - `/leaderboard` → Top Dogs + Top Breeds
 - `/breeds` → List of breeds
 - `/breeds/:breedSlug` → Breed-specific rankings
+- `/stats` → Personal rating statistics and achievements
 - `/my/ratings` → (future logged-in users)
 - `/admin/moderation` → Admin-only moderation panel
 
@@ -349,6 +406,28 @@ Top dogs for given breed.
 
 Rating history for current anon_id/user.
 
+## 7.9 My Stats Endpoints
+
+### GET /api/me/stats
+
+Enhanced user statistics including ratings count, skips count, average rating, and comparison to global average.
+
+### GET /api/me/top-breeds
+
+User's top 3 highest-rated breeds with average ratings and images.
+
+### GET /api/me/rating-distribution
+
+Breakdown of user's ratings by value (0.5 to 5.0) with counts and percentages.
+
+### GET /api/me/recent
+
+Last 10 dogs rated by the user with thumbnails and timestamps.
+
+### GET /api/me/achievements
+
+User's milestone progress and unlocked achievement badges.
+
 ## Admin Endpoints
 
 - GET /api/admin/pending-dogs
@@ -464,6 +543,29 @@ This phase adds thousands of dog images from the Dog CEO API as long-term conten
 ### Technical Details
 
 See `docs/dog-ceo-integration.md` for complete technical architecture.
+
+## Phase 1.6: My Stats Page (Completed)
+
+Personal statistics page showing users their rating journey with fun, gamified elements.
+
+### Features Delivered
+
+- **Personal Statistics**: Dogs rated, average rating, vs global comparison, dogs skipped
+- **Rater Personality**: 6 dog-themed personality types based on rating patterns
+- **Milestone Progress**: Visual progress bar with 6 milestone tiers (1 to 500 ratings)
+- **Achievement Badges**: 7 unlockable achievements with locked/unlocked states
+- **Rating Distribution**: Visual bar chart of rating patterns
+- **Top Breeds**: User's 3 favorite breeds with images and ratings
+- **Recent Ratings**: Last 10 rated dogs with thumbnails
+- **Empty State**: Friendly onboarding for new users
+- **Responsive Design**: Optimized for mobile and desktop
+
+### Technical Details
+
+- 5 new API endpoints (`/api/me/stats`, `/api/me/top-breeds`, `/api/me/rating-distribution`, `/api/me/recent`, `/api/me/achievements`)
+- 8 new React components with loading skeletons
+- Shared types and constants in `packages/shared`
+- Full test coverage (API and E2E tests)
 
 ## Phase 2
 

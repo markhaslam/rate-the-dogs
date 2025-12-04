@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { RatePage } from "@/pages/RatePage";
 import { UploadPage } from "@/pages/UploadPage";
 import { LeaderboardPage } from "@/pages/LeaderboardPage";
+import { StatsPage } from "@/pages/StatsPage";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ function Nav() {
   const navLinks = [
     { to: "/", label: "Rate", icon: "rate" },
     { to: "/leaderboard", label: "Leaderboard", icon: "trophy" },
+    { to: "/stats", label: "My Stats", icon: "stats" },
     { to: "/upload", label: "Upload", icon: "upload" },
   ];
 
@@ -123,6 +125,20 @@ function Nav() {
                     <path d="M8 21h8M12 17v4M7 4h10l-1 9H8L7 4zM12 4V2" />
                   </svg>
                 )}
+                {link.icon === "stats" && (
+                  <svg
+                    className="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M3 3v18h18" />
+                    <path d="M18 17V9" />
+                    <path d="M13 17V5" />
+                    <path d="M8 17v-3" />
+                  </svg>
+                )}
                 {link.icon === "upload" && (
                   <svg
                     className="w-5 h-5"
@@ -155,6 +171,7 @@ function AppContent() {
           <Route path="/" element={<RatePage />} />
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/stats" element={<StatsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

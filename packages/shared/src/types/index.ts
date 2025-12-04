@@ -13,3 +13,20 @@ export type {
   PaginatedData,
   PaginatedResponse,
 } from "../schemas/index.js";
+
+// Stats page types
+export type {
+  AchievementDefinition,
+  AchievementStatus,
+  PersonalityDefinition,
+  UserPersonality,
+  MilestoneDefinition,
+  MilestoneProgress,
+  EnhancedStatsResponse,
+  TopBreed,
+  TopBreedsResponse,
+  RatingDistributionResponse,
+  RecentRating,
+  RecentRatingsResponse,
+  AchievementsResponse,
+} from "./stats.js";

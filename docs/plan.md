@@ -439,16 +439,16 @@ CREATE INDEX idx_breeds_last_synced ON breeds(last_synced_at);
 
 ## Frontend Pages
 
-| Route           | Component       | Description                |
-| --------------- | --------------- | -------------------------- |
-| `/`             | RatePage        | Main rating flow + Skip    |
-| `/upload`       | UploadPage      | Upload with name & breed (Coming Soon)  |
-| `/leaderboard`  | LeaderboardPage | Top Dogs / Top Breeds tabs |
-| `/breeds`       | BreedsPage      | All breeds with search     |
-| `/breeds/:slug` | BreedDetailPage | Breed rankings             |
-| `/dogs/:id`     | DogDetailPage   | Individual dog (shareable) |
-| `/my/ratings`   | MyRatingsPage   | Rating history             |
-| `/admin`        | AdminPage       | Moderation queue           |
+| Route           | Component       | Description                            |
+| --------------- | --------------- | -------------------------------------- |
+| `/`             | RatePage        | Main rating flow + Skip                |
+| `/upload`       | UploadPage      | Upload with name & breed (Coming Soon) |
+| `/leaderboard`  | LeaderboardPage | Top Dogs / Top Breeds tabs             |
+| `/breeds`       | BreedsPage      | All breeds with search                 |
+| `/breeds/:slug` | BreedDetailPage | Breed rankings                         |
+| `/dogs/:id`     | DogDetailPage   | Individual dog (shareable)             |
+| `/my/ratings`   | MyRatingsPage   | Rating history                         |
+| `/admin`        | AdminPage       | Moderation queue                       |
 
 ---
 

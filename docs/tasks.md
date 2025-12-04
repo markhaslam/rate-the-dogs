@@ -750,6 +750,91 @@ This phase adds Dog CEO API integration, analytics fields, and user system prep.
 
 ---
 
+## Phase 12: My Stats Page (Completed)
+
+> **Status**: Completed December 2025
+> **Purpose**: Personal statistics page showing user's rating activity, achievements, and personality
+
+### 12.1 Shared Types & Constants
+
+- [x] Create `packages/shared/src/types/stats.ts` - TypeScript interfaces for stats data
+- [x] Add `MILESTONES` constant array (6 milestones)
+- [x] Add `ACHIEVEMENTS` constant array (7 achievements)
+- [x] Add `PERSONALITIES` constant array (5 personality types)
+- [x] Add `TOP_DOG_PERSONALITY` constant
+- [x] Add `STATS_THRESHOLDS` constant
+- [x] Export all stats types from `packages/shared/src/types/index.ts`
+
+### 12.2 API Endpoints
+
+- [x] Enhance `GET /api/me/stats` - Add avg rating, timestamps, global comparison
+- [x] Create `GET /api/me/top-breeds` - User's top 3 highest-rated breeds
+- [x] Create `GET /api/me/rating-distribution` - Breakdown by rating value
+- [x] Create `GET /api/me/recent` - Last 10 rated dogs
+- [x] Create `GET /api/me/achievements` - Milestone progress + achievement badges
+- [x] Create `apps/api/src/services/achievements.ts` - Achievement checking logic
+- [x] Write comprehensive API tests for all new endpoints
+
+### 12.3 Frontend Components
+
+- [x] Create `apps/web/src/components/stats/` directory
+- [x] Create `StatCard.tsx` - Reusable stat card with icon, value, label
+- [x] Create `RaterPersonality.tsx` - Personality badge based on rating patterns
+- [x] Create `RatingDistribution.tsx` - Horizontal bar chart of ratings
+- [x] Create `TopBreedsList.tsx` - Top 3 breeds with medal badges
+- [x] Create `RecentRatings.tsx` - Responsive grid of recent ratings
+- [x] Create `AchievementsBadges.tsx` - Grid of achievement badges
+- [x] Create `MilestoneProgress.tsx` - Progress bar with milestone markers
+- [x] Create `index.ts` - Barrel export file
+
+### 12.4 Stats Page
+
+- [x] Create `apps/web/src/pages/StatsPage.tsx`
+- [x] Implement parallel data fetching from all 5 endpoints
+- [x] Add loading skeleton states for all sections
+- [x] Add empty state for new users (0 ratings)
+- [x] Add error state with retry button
+- [x] Make layout responsive (mobile/desktop)
+
+### 12.5 Navigation & Routing
+
+- [x] Add `/stats` route in `apps/web/src/App.tsx`
+- [x] Add "My Stats" link to navigation (desktop and mobile)
+- [x] Add chart icon for stats nav link
+
+### 12.6 Testing
+
+- [x] Write API tests for all 5 endpoints (19 tests)
+- [x] Write E2E tests for stats page (`e2e/tests/stats.spec.ts`)
+- [x] Run full test suite (227 tests passing)
+- [x] Run typecheck, lint, format:check - all passing
+
+### 12.7 Features Implemented
+
+- **Basic Stats**: Ratings count, skips count, avg rating given
+- **Global Comparison**: Shows how user rates vs global average
+- **Rater Personality**: 5 fun dog-themed personalities based on rating patterns
+  - Puppy Trainee (< 10 ratings)
+  - Treat Dispenser (avg > 4.2)
+  - Belly Rub Expert (avg 3.5-4.2)
+  - Bark Inspector (avg 2.5-3.5)
+  - Picky Pup Parent (avg < 2.5)
+  - Top Dog bonus badge (100+ ratings)
+- **Milestones**: 6 milestone celebrations (1, 10, 50, 100, 250, 500 ratings)
+- **Achievements**: 7 unlockable badges
+  - Perfect Score (5.0 rating)
+  - Breed Explorer (10+ breeds)
+  - Variety Pack (all rating values)
+  - Early Bird (5 ratings in 30 min)
+  - Streak Master (7 day streak)
+  - All-Star Rater (20+ ratings >= 4.0)
+  - Tough Crowd (rating < 2.0)
+- **Rating Distribution**: Bar chart showing rating pattern
+- **Top Breeds**: User's 3 highest-rated breeds with images
+- **Recent Ratings**: Grid of last 10 rated dogs
+
+---
+
 ## Future Phases (Record for Later)
 
 ### Phase 2: User Accounts
@@ -802,8 +887,9 @@ Before considering MVP complete:
 - [x] Phase 9 (UI/UX Improvements) completed
 - [x] Phase 10 (Light/Dark Mode Theme) completed
 - [x] Phase 11 (Drizzle ORM Migration) completed
+- [x] Phase 12 (My Stats Page) completed
 - [x] Test coverage >80%
-- [x] All tests passing (339+ unit/integration tests, 51 E2E tests)
+- [x] All tests passing (227 unit/integration tests)
 - [x] No TypeScript errors
 - [x] No ESLint errors
 - [x] Code formatted with Prettier
