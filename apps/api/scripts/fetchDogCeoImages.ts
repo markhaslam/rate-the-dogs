@@ -8,16 +8,44 @@
  * 2. Duplicate images where parent breeds contain sub-breed images
  * 3. Misplaced images (e.g., "pug" containing "puggle" images)
  *
+ * Features:
+ * - Retry logic with exponential backoff
+ * - Rate limiting to avoid overwhelming the API
+ * - Progress reporting
+ * - Validation of fetched data
+ * - Detailed statistics
+ *
  * Usage:
  *   bun run apps/api/scripts/fetchDogCeoImages.ts
  *
+ * Options:
+ *   --validate-only   Only validate existing breed-images.json
+ *   --dry-run         Fetch but don't write to file
+ *
  * Output:
  *   apps/api/src/db/breed-images.json
- *
- * Original script from 2022, modernized for current project.
+ *   apps/api/src/db/breed-stats.json
  */
 
+import {
+  flattenBreedList,
+  getBreedImagesUrl,
+  filterDuplicateImages,
+  calculateStats,
+  findInvalidUrls,
+  type BreedImages,
+  type Stats,
+} from "../src/lib/dogCeoUtils";
+
 const DOG_CEO_API = "https://dog.ceo/api";
+
+// Configuration
+const CONFIG = {
+  maxRetries: 3,
+  retryDelayMs: 1000,
+  concurrentRequests: 10, // Limit concurrent requests to be nice to the API
+  requestDelayMs: 50, // Small delay between batches
+};
 
 interface BreedsResponse {
   message: Record<string, string[]>;
@@ -29,241 +57,305 @@ interface ImagesResponse {
   status: string;
 }
 
-interface BreedImages {
-  [breed: string]: string[];
+interface FetchResult {
+  breed: string;
+  images: string[];
+  error?: string;
+  retries: number;
 }
 
-interface Stats {
-  totalBreeds: number;
-  totalImages: number;
-  duplicatesRemoved: number;
-  breedStats: Array<{ breed: string; count: number }>;
+/**
+ * Sleep for specified milliseconds
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Fetch with retry logic and exponential backoff
+ */
+async function fetchWithRetry<T>(
+  url: string,
+  maxRetries = CONFIG.maxRetries
+): Promise<{ data: T | null; error?: string; retries: number }> {
+  let lastError: Error | null = null;
+  let retries = 0;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = (await response.json()) as T;
+      return { data, retries };
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      retries = attempt + 1;
+
+      if (attempt < maxRetries) {
+        const delay = CONFIG.retryDelayMs * Math.pow(2, attempt);
+        console.warn(
+          `  Retry ${attempt + 1}/${maxRetries} for ${url} in ${delay}ms...`
+        );
+        await sleep(delay);
+      }
+    }
+  }
+
+  return {
+    data: null,
+    error: lastError?.message ?? "Unknown error",
+    retries,
+  };
 }
 
 /**
  * Fetch all breeds from Dog CEO API
- * Returns nested structure like { "bulldog": ["french", "english"] }
  */
 async function fetchBreedList(): Promise<Record<string, string[]>> {
   console.log("Fetching breed list...");
-  const response = await fetch(`${DOG_CEO_API}/breeds/list/all`);
-  const data = (await response.json()) as BreedsResponse;
 
-  if (data.status !== "success" || !data.message) {
-    throw new Error("Failed to fetch breed list from Dog CEO API");
+  const { data, error } = await fetchWithRetry<BreedsResponse>(
+    `${DOG_CEO_API}/breeds/list/all`
+  );
+
+  if (!data || data.status !== "success" || !data.message) {
+    throw new Error(
+      `Failed to fetch breed list: ${error ?? "Invalid response"}`
+    );
   }
 
   return data.message;
-}
-
-/**
- * Flatten nested breed structure into array
- * Input: { "bulldog": ["french", "english"] }
- * Output: ["bulldog", "bulldog-french", "bulldog-english"]
- */
-function flattenBreedList(breeds: Record<string, string[]>): string[] {
-  const breedList: string[] = [];
-
-  for (const [breed, subBreeds] of Object.entries(breeds)) {
-    // Add parent breed
-    breedList.push(breed);
-
-    // Add sub-breeds with hyphen format
-    for (const subBreed of subBreeds) {
-      breedList.push(`${breed}-${subBreed}`);
-    }
-  }
-
-  console.log(`Found ${breedList.length} breeds (including sub-breeds)`);
-  return breedList;
-}
-
-/**
- * Build Dog CEO API URL for a breed
- * "bulldog" -> /breed/bulldog/images
- * "bulldog-french" -> /breed/bulldog/french/images
- */
-function getBreedImagesUrl(breed: string): string {
-  if (breed.includes("-")) {
-    const [parent, sub] = breed.split("-");
-    return `${DOG_CEO_API}/breed/${parent}/${sub}/images`;
-  }
-  return `${DOG_CEO_API}/breed/${breed}/images`;
 }
 
 /**
  * Fetch images for a single breed
  */
-async function fetchBreedImages(breed: string): Promise<string[]> {
-  const url = getBreedImagesUrl(breed);
-  const response = await fetch(url);
-  const data = (await response.json()) as ImagesResponse;
+async function fetchBreedImages(breed: string): Promise<FetchResult> {
+  const url = getBreedImagesUrl(breed, DOG_CEO_API);
+  const { data, error, retries } = await fetchWithRetry<ImagesResponse>(url);
 
-  if (data.status !== "success") {
-    console.warn(`Failed to fetch images for ${breed}`);
-    return [];
+  if (!data || data.status !== "success") {
+    return { breed, images: [], error: error ?? "Invalid response", retries };
   }
 
-  return data.message;
+  return { breed, images: data.message ?? [], retries };
 }
 
 /**
- * Filter out duplicate/misplaced images
- *
- * Dog CEO API has a bug where parent breed images sometimes contain
- * sub-breed images. For example:
- * - "corgi" images contain "corgi-cardigan" images
- * - "pug" images contain "puggle" images
- * - "pointer-german" contains "pointer-germanlonghair" images
- *
- * We filter by checking that the URL path matches the breed name.
+ * Fetch images in batches to limit concurrent requests
  */
-function filterDuplicateImages(breedImages: BreedImages): {
-  filtered: BreedImages;
-  removedCount: number;
-  emptyBreeds: string[];
-} {
-  let removedCount = 0;
-  const filtered: BreedImages = {};
-  const emptyBreeds: string[] = [];
+async function fetchAllImagesInBatches(
+  breedList: string[]
+): Promise<FetchResult[]> {
+  const results: FetchResult[] = [];
+  const total = breedList.length;
+  let completed = 0;
+  let totalRetries = 0;
+  let errors = 0;
 
-  for (const [breed, images] of Object.entries(breedImages)) {
-    const originalCount = images.length;
+  console.log(`\nFetching images for ${total} breeds...`);
+  console.log(
+    `(Batch size: ${CONFIG.concurrentRequests}, with ${CONFIG.requestDelayMs}ms delay)\n`
+  );
 
-    const filteredImages = images.filter((imageUrl) => {
-      try {
-        const url = new URL(imageUrl);
-        // URL format: /breeds/{breed-name}/{filename}
-        // Extract breed from path: ["", "breeds", "breed-name", "filename"]
-        const breedPath = url.pathname.split("/")[2];
-        return breedPath === breed;
-      } catch {
-        // Invalid URL, keep it anyway
-        return true;
+  // Process in batches
+  for (let i = 0; i < total; i += CONFIG.concurrentRequests) {
+    const batch = breedList.slice(i, i + CONFIG.concurrentRequests);
+    const batchResults = await Promise.all(batch.map(fetchBreedImages));
+
+    for (const result of batchResults) {
+      results.push(result);
+      completed++;
+      totalRetries += result.retries;
+
+      if (result.error) {
+        errors++;
+        console.warn(`  ✗ ${result.breed}: ${result.error}`);
       }
-    });
-
-    const removed = originalCount - filteredImages.length;
-    if (removed > 0) {
-      console.log(`  ${breed}: removed ${removed} duplicate images`);
-      removedCount += removed;
     }
 
-    // Only keep breeds that have at least 1 image after filtering
-    if (filteredImages.length > 0) {
-      filtered[breed] = filteredImages;
-    } else {
-      emptyBreeds.push(breed);
+    // Progress update every 20 breeds
+    if (completed % 20 === 0 || completed === total) {
+      const percent = Math.round((completed / total) * 100);
+      const imageCount = results.reduce((sum, r) => sum + r.images.length, 0);
+      console.log(
+        `  Progress: ${completed}/${total} breeds (${percent}%), ${imageCount.toLocaleString()} images`
+      );
+    }
+
+    // Small delay between batches
+    if (i + CONFIG.concurrentRequests < total) {
+      await sleep(CONFIG.requestDelayMs);
     }
   }
 
-  return { filtered, removedCount, emptyBreeds };
+  console.log(
+    `\nFetch complete: ${errors} errors, ${totalRetries} total retries`
+  );
+
+  return results;
 }
 
 /**
- * Fetch all images for all breeds with progress reporting
+ * Convert fetch results to breed images map
  */
-async function fetchAllImages(breedList: string[]): Promise<BreedImages> {
-  console.log(`\nFetching images for ${breedList.length} breeds...`);
-  console.log("(This may take a minute - fetching in parallel)\n");
-
-  // Fetch all breeds in parallel
-  const imagePromises = breedList.map((breed) => fetchBreedImages(breed));
-  const imageResults = await Promise.all(imagePromises);
-
-  // Build breed -> images map
+function resultsToBreedImages(results: FetchResult[]): BreedImages {
   const breedImages: BreedImages = {};
-  for (let i = 0; i < breedList.length; i++) {
-    breedImages[breedList[i]] = imageResults[i];
+  for (const result of results) {
+    breedImages[result.breed] = result.images;
   }
-
   return breedImages;
-}
-
-/**
- * Calculate statistics about the image dataset
- */
-function calculateStats(
-  breedImages: BreedImages,
-  duplicatesRemoved: number
-): Stats {
-  const breedStats = Object.entries(breedImages)
-    .map(([breed, images]) => ({ breed, count: images.length }))
-    .sort((a, b) => b.count - a.count);
-
-  const totalImages = breedStats.reduce((sum, b) => sum + b.count, 0);
-
-  return {
-    totalBreeds: Object.keys(breedImages).length,
-    totalImages,
-    duplicatesRemoved,
-    breedStats,
-  };
 }
 
 /**
  * Print statistics to console
  */
-function printStats(stats: Stats): void {
+function printStats(stats: Stats, emptyBreeds: string[]): void {
   console.log("\n" + "=".repeat(50));
   console.log("STATISTICS");
   console.log("=".repeat(50));
-  console.log(`Total breeds: ${stats.totalBreeds}`);
+  console.log(`Total breeds with images: ${stats.totalBreeds}`);
   console.log(`Total images: ${stats.totalImages.toLocaleString()}`);
   console.log(`Duplicates removed: ${stats.duplicatesRemoved}`);
-  console.log(
-    `Average images per breed: ${Math.round(stats.totalImages / stats.totalBreeds)}`
-  );
+  console.log(`Empty breeds removed: ${emptyBreeds.length}`);
+
+  if (stats.totalBreeds > 0) {
+    console.log(
+      `Average images per breed: ${Math.round(stats.totalImages / stats.totalBreeds)}`
+    );
+  }
+
   console.log("\nTop 10 breeds by image count:");
   stats.breedStats.slice(0, 10).forEach((b, i) => {
     console.log(`  ${i + 1}. ${b.breed}: ${b.count} images`);
   });
+
   console.log("\nBottom 5 breeds by image count:");
   stats.breedStats.slice(-5).forEach((b) => {
     console.log(`  - ${b.breed}: ${b.count} images`);
   });
+
+  if (emptyBreeds.length > 0) {
+    console.log(
+      `\nEmpty breeds (no images after filtering): ${emptyBreeds.join(", ")}`
+    );
+  }
+}
+
+/**
+ * Validate existing breed-images.json file
+ */
+async function validateExisting(): Promise<void> {
+  console.log("Validating existing breed-images.json...\n");
+
+  const inputPath = new URL("../src/db/breed-images.json", import.meta.url);
+  const file = Bun.file(inputPath.pathname);
+
+  if (!(await file.exists())) {
+    console.error("Error: breed-images.json not found");
+    process.exit(1);
+  }
+
+  const breedImages = (await file.json()) as BreedImages;
+  const stats = calculateStats(breedImages);
+  const invalidUrls = findInvalidUrls(breedImages);
+
+  console.log("=".repeat(50));
+  console.log("VALIDATION RESULTS");
+  console.log("=".repeat(50));
+  console.log(`Total breeds: ${stats.totalBreeds}`);
+  console.log(`Total images: ${stats.totalImages.toLocaleString()}`);
+
+  const invalidCount = Object.values(invalidUrls).flat().length;
+  if (invalidCount > 0) {
+    console.log(`\n⚠ Found ${invalidCount} invalid URLs:`);
+    for (const [breed, urls] of Object.entries(invalidUrls)) {
+      console.log(`  ${breed}: ${urls.length} invalid`);
+      urls.slice(0, 3).forEach((url) => console.log(`    - ${url}`));
+      if (urls.length > 3) {
+        console.log(`    ... and ${urls.length - 3} more`);
+      }
+    }
+  } else {
+    console.log("\n✓ All URLs are valid");
+  }
+
+  printStats(stats, []);
 }
 
 /**
  * Main function - fetch all images and save to file
  */
 async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+  const validateOnly = args.includes("--validate-only");
+  const dryRun = args.includes("--dry-run");
+
+  if (validateOnly) {
+    await validateExisting();
+    return;
+  }
+
   const startTime = Date.now();
 
   try {
     // 1. Fetch breed list
     const breeds = await fetchBreedList();
     const breedList = flattenBreedList(breeds);
+    console.log(`Found ${breedList.length} breeds (including sub-breeds)`);
 
     // 2. Fetch all images
-    const rawImages = await fetchAllImages(breedList);
+    const results = await fetchAllImagesInBatches(breedList);
+    const rawImages = resultsToBreedImages(results);
 
     // 3. Filter duplicates
     console.log("\nFiltering duplicate images...");
-    const { filtered: breedImages, removedCount } =
-      filterDuplicateImages(rawImages);
+    const {
+      filtered: breedImages,
+      removedCount,
+      emptyBreeds,
+    } = filterDuplicateImages(rawImages);
 
-    // 4. Calculate and print stats
-    const stats = calculateStats(breedImages, removedCount);
-    printStats(stats);
+    // 4. Validate URLs
+    const invalidUrls = findInvalidUrls(breedImages);
+    const invalidCount = Object.values(invalidUrls).flat().length;
+    if (invalidCount > 0) {
+      console.warn(`\n⚠ Warning: ${invalidCount} invalid URLs found`);
+    }
 
-    // 5. Write to file
-    const outputPath = new URL("../src/db/breed-images.json", import.meta.url);
-    const outputFile = outputPath.pathname;
+    // 5. Calculate and print stats
+    const stats = calculateStats(breedImages, removedCount, emptyBreeds.length);
+    printStats(stats, emptyBreeds);
 
-    console.log(`\nWriting to ${outputFile}...`);
-    await Bun.write(outputFile, JSON.stringify(breedImages, null, 2));
+    // 6. Write to files (unless dry run)
+    if (dryRun) {
+      console.log("\n[DRY RUN] Skipping file write");
+    } else {
+      const outputPath = new URL(
+        "../src/db/breed-images.json",
+        import.meta.url
+      );
+      const statsPath = new URL("../src/db/breed-stats.json", import.meta.url);
+
+      console.log(`\nWriting to ${outputPath.pathname}...`);
+      await Bun.write(
+        outputPath.pathname,
+        JSON.stringify(breedImages, null, 2)
+      );
+
+      await Bun.write(statsPath.pathname, JSON.stringify(stats, null, 2));
+      console.log(`Stats written to breed-stats.json`);
+    }
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`\nDone! Completed in ${elapsed}s`);
     console.log(
       `File size: ${(JSON.stringify(breedImages).length / 1024 / 1024).toFixed(2)} MB`
     );
-
-    // 6. Also write stats to separate file for reference
-    const statsPath = new URL("../src/db/breed-stats.json", import.meta.url);
-    await Bun.write(statsPath.pathname, JSON.stringify(stats, null, 2));
-    console.log(`Stats written to breed-stats.json`);
   } catch (error) {
     console.error("Error:", error);
     process.exit(1);
