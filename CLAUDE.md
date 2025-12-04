@@ -6,17 +6,17 @@ RateTheDogs is a dog rating web application built on Cloudflare's edge infrastru
 
 ## Tech Stack
 
-| Layer           | Technology                                      |
-| --------------- | ----------------------------------------------- |
-| Runtime         | Cloudflare Workers + Static Assets (unified)    |
-| Backend         | Hono 4.10+ + D1 + R2                            |
-| Frontend        | React 19 + Vite 7.x + TailwindCSS 4.x + shadcn  |
-| Validation      | Zod 4.x (shared schemas)                        |
-| Type Safety     | Hono RPC for end-to-end types                   |
-| Testing         | Vitest 4.x + Playwright 1.57+                   |
-| Package Manager | Bun                                             |
-| Monorepo        | Bun workspaces + Turborepo                      |
-| Observability   | Cloudflare Workers Logs                         |
+| Layer           | Technology                                     |
+| --------------- | ---------------------------------------------- |
+| Runtime         | Cloudflare Workers + Static Assets (unified)   |
+| Backend         | Hono 4.10+ + D1 + R2                           |
+| Frontend        | React 19 + Vite 7.x + TailwindCSS 4.x + shadcn |
+| Validation      | Zod 4.x (shared schemas)                       |
+| Type Safety     | Hono RPC for end-to-end types                  |
+| Testing         | Vitest 4.x + Playwright 1.57+                  |
+| Package Manager | Bun                                            |
+| Monorepo        | Bun workspaces + Turborepo                     |
+| Observability   | Cloudflare Workers Logs                        |
 
 > **Note**: Cloudflare Pages is in maintenance mode. This project uses the recommended Cloudflare Workers with Static Assets approach. See `docs/deployment-migration-plan.md`.
 
@@ -302,8 +302,8 @@ Single Worker deployment:
   "assets": {
     "directory": "../web/dist",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/"]
-  }
+    "run_worker_first": ["/api/*", "/"],
+  },
 }
 ```
 

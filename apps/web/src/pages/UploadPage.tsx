@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 
 interface Breed {
@@ -175,25 +182,21 @@ export function UploadPage() {
               <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Breed *
               </label>
-              <select
-                value={selectedBreed ?? ""}
-                onChange={(e) => setSelectedBreed(parseInt(e.target.value))}
-                required
-                className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+              <Select
+                value={selectedBreed?.toString() ?? ""}
+                onValueChange={(value) => setSelectedBreed(parseInt(value))}
               >
-                <option value="" className="text-muted-foreground">
-                  Select a breed...
-                </option>
-                {breeds.map((breed) => (
-                  <option
-                    key={breed.id}
-                    value={breed.id}
-                    className="bg-card text-foreground"
-                  >
-                    {breed.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a breed..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {breeds.map((breed) => (
+                    <SelectItem key={breed.id} value={breed.id.toString()}>
+                      {breed.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {error && <p className="text-destructive text-sm">{error}</p>}

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { UploadPage } from "./UploadPage";
 import { BrowserRouter } from "react-router-dom";
 
@@ -204,6 +205,7 @@ describe("UploadPage", () => {
     });
 
     it("enables submit button when file and breed are selected", async () => {
+      const user = userEvent.setup();
       mockFetch.mockResolvedValueOnce({
         json: () => Promise.resolve(mockBreedsResponse),
       });
@@ -211,7 +213,7 @@ describe("UploadPage", () => {
       renderWithRouter(<UploadPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("Labrador Retriever")).toBeInTheDocument();
+        expect(screen.getByRole("combobox")).toBeInTheDocument();
       });
 
       // Select a file
@@ -227,9 +229,15 @@ describe("UploadPage", () => {
         expect(screen.queryByAltText("Preview")).toBeInTheDocument();
       });
 
-      // Select a breed
-      const select = screen.getByRole("combobox");
-      fireEvent.change(select, { target: { value: "1" } });
+      // Select a breed using Radix Select - click trigger then option
+      const selectTrigger = screen.getByRole("combobox");
+      await user.click(selectTrigger);
+
+      // Wait for dropdown to open and click the option
+      const option = await screen.findByRole("option", {
+        name: "Labrador Retriever",
+      });
+      await user.click(option);
 
       const submitButton = screen.getByText("Upload Dog");
       expect(submitButton).not.toBeDisabled();
@@ -238,6 +246,7 @@ describe("UploadPage", () => {
 
   describe("successful upload", () => {
     it("navigates to home page on successful upload", async () => {
+      const user = userEvent.setup();
       mockFetch
         .mockResolvedValueOnce({
           json: () => Promise.resolve(mockBreedsResponse),
@@ -256,7 +265,7 @@ describe("UploadPage", () => {
       renderWithRouter(<UploadPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("Labrador Retriever")).toBeInTheDocument();
+        expect(screen.getByRole("combobox")).toBeInTheDocument();
       });
 
       // Select a file
@@ -272,13 +281,18 @@ describe("UploadPage", () => {
         expect(screen.queryByAltText("Preview")).toBeInTheDocument();
       });
 
-      // Select a breed
-      const select = screen.getByRole("combobox");
-      fireEvent.change(select, { target: { value: "1" } });
+      // Select a breed using Radix Select
+      const selectTrigger = screen.getByRole("combobox");
+      await user.click(selectTrigger);
+
+      const option = await screen.findByRole("option", {
+        name: "Labrador Retriever",
+      });
+      await user.click(option);
 
       // Submit form
       const submitButton = screen.getByText("Upload Dog");
-      fireEvent.click(submitButton);
+      await user.click(submitButton);
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith("/");
@@ -343,6 +357,7 @@ describe("UploadPage", () => {
     });
 
     it("shows error message on upload failure", async () => {
+      const user = userEvent.setup();
       mockFetch
         .mockResolvedValueOnce({
           json: () => Promise.resolve(mockBreedsResponse),
@@ -356,7 +371,7 @@ describe("UploadPage", () => {
       renderWithRouter(<UploadPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("Labrador Retriever")).toBeInTheDocument();
+        expect(screen.getByRole("combobox")).toBeInTheDocument();
       });
 
       // Select a file
@@ -372,13 +387,18 @@ describe("UploadPage", () => {
         expect(screen.queryByAltText("Preview")).toBeInTheDocument();
       });
 
-      // Select a breed
-      const select = screen.getByRole("combobox");
-      fireEvent.change(select, { target: { value: "1" } });
+      // Select a breed using Radix Select
+      const selectTrigger = screen.getByRole("combobox");
+      await user.click(selectTrigger);
+
+      const option = await screen.findByRole("option", {
+        name: "Labrador Retriever",
+      });
+      await user.click(option);
 
       // Submit form
       const submitButton = screen.getByText("Upload Dog");
-      fireEvent.click(submitButton);
+      await user.click(submitButton);
 
       await waitFor(() => {
         expect(

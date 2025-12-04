@@ -12,21 +12,21 @@ RateTheDogs is a dog rating web application where users upload dog photos and ra
 
 ## Tech Stack
 
-| Layer           | Technology                        | Rationale                                          |
-| --------------- | --------------------------------- | -------------------------------------------------- |
-| Runtime         | Cloudflare Workers + Static Assets | Unified deployment (API + frontend), global CDN    |
-| Backend         | Hono ^4.10                        | Lightweight, TypeScript-first, built-in RPC        |
-| Database        | Cloudflare D1                     | Serverless SQLite, automatic replication           |
-| Storage         | Cloudflare R2                     | S3-compatible, zero egress fees                    |
-| Validation      | Zod ^4.1                          | TypeScript inference, runtime validation           |
-| Frontend        | React ^19                         | Latest stable, improved performance                |
-| Build           | Vite ^7.2                         | Fast HMR, native ESM, TailwindCSS v4 plugin        |
-| CSS             | TailwindCSS ^4.1                  | Utility-first, new Vite plugin                     |
-| Components      | shadcn/ui                         | Accessible, customizable, owned code               |
-| Package Manager | Bun ^1.1                          | Fast installs, native TypeScript                   |
-| Monorepo        | Turborepo ^2.6                    | Task orchestration, caching                        |
-| Testing         | Vitest ^4 + Playwright ^1.57     | Vite-native, comprehensive coverage                |
-| Observability   | Cloudflare Workers Logs           | Structured logging, dashboard queries              |
+| Layer           | Technology                         | Rationale                                       |
+| --------------- | ---------------------------------- | ----------------------------------------------- |
+| Runtime         | Cloudflare Workers + Static Assets | Unified deployment (API + frontend), global CDN |
+| Backend         | Hono ^4.10                         | Lightweight, TypeScript-first, built-in RPC     |
+| Database        | Cloudflare D1                      | Serverless SQLite, automatic replication        |
+| Storage         | Cloudflare R2                      | S3-compatible, zero egress fees                 |
+| Validation      | Zod ^4.1                           | TypeScript inference, runtime validation        |
+| Frontend        | React ^19                          | Latest stable, improved performance             |
+| Build           | Vite ^7.2                          | Fast HMR, native ESM, TailwindCSS v4 plugin     |
+| CSS             | TailwindCSS ^4.1                   | Utility-first, new Vite plugin                  |
+| Components      | shadcn/ui                          | Accessible, customizable, owned code            |
+| Package Manager | Bun ^1.1                           | Fast installs, native TypeScript                |
+| Monorepo        | Turborepo ^2.6                     | Task orchestration, caching                     |
+| Testing         | Vitest ^4 + Playwright ^1.57       | Vite-native, comprehensive coverage             |
+| Observability   | Cloudflare Workers Logs            | Structured logging, dashboard queries           |
 
 > **Note**: Cloudflare Pages is now in maintenance mode. This project uses the recommended Cloudflare Workers with Static Assets approach for unified deployment.
 
