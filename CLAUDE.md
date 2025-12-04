@@ -238,20 +238,29 @@ const results = await db.batch([
 ]);
 ```
 
+**Migration Commands:**
+
+| Command                    | Description                                              |
+| -------------------------- | -------------------------------------------------------- |
+| `bun run db:generate`      | Generate SQL migration from schema changes (Drizzle Kit) |
+| `bun run db:migrate:local` | Apply migrations to local D1                             |
+| `bun run db:migrate`       | Apply migrations to production D1                        |
+| `bun run db:studio`        | Open Drizzle Studio GUI                                  |
+| `bun run db:push`          | Push schema directly (dev only, no migration file)       |
+| `bun run db:seed`          | Seed database with initial data                          |
+
 **Adding New Tables:**
 
 1. Create table file in `apps/api/src/db/schema/`
 2. Export from `schema/index.ts`
 3. Add relations in `relations.ts` if needed
 4. Create/update Zod schemas in `zodSchemas.ts`
-5. Generate migration with `bunx drizzle-kit generate`
-6. Apply migration with `wrangler d1 migrations apply`
+5. Generate migration: `bun run db:generate`
+6. Review generated SQL in `src/db/migrations/`
+7. Apply locally: `bun run db:migrate:local`
+8. Test, then apply to production: `bun run db:migrate`
 
-**SQL Migrations:**
-
-- Still maintained in `apps/api/src/db/migrations/`
-- Naming: `XXX_description.sql` (e.g., `001_initial_schema.sql`)
-- Applied by wrangler, not drizzle-kit push
+> **See `docs/database.md` for comprehensive migration workflow and best practices.**
 
 ### Frontend Components
 

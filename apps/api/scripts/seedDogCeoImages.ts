@@ -111,7 +111,7 @@ async function executeSql(
 
     // Use wrangler d1 execute to run the SQL
     const result =
-      await $`cd apps/api && bunx wrangler d1 execute rate-the-dogs-db ${remoteFlag} --command=${sql}`.quiet();
+      await $`cd apps/api && bunx wrangler d1 execute rate-the-dogs ${remoteFlag} --command=${sql}`.quiet();
 
     return { success: true };
   } catch (error) {
@@ -139,7 +139,7 @@ async function executeBatchSql(
     const tempFile = `/tmp/seed-dog-ceo-${Date.now()}.sql`;
     await Bun.write(tempFile, batchSql);
 
-    await $`cd apps/api && bunx wrangler d1 execute rate-the-dogs-db ${remoteFlag} --file=${tempFile}`.quiet();
+    await $`cd apps/api && bunx wrangler d1 execute rate-the-dogs ${remoteFlag} --file=${tempFile}`.quiet();
 
     // Clean up temp file
     await $`rm ${tempFile}`.quiet();
