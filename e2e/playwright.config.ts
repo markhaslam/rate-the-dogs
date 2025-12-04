@@ -30,7 +30,7 @@ export default defineConfig({
   forbidOnly: isCI,
 
   // Global setup verifies server is healthy before running any tests
-  globalSetup: require.resolve("./global-setup"),
+  globalSetup: "./global-setup.ts",
 
   // Retries: 2 in CI/CI-sim to handle transient failures, 0 locally for fast feedback
   retries: useCISettings ? 2 : 0,
