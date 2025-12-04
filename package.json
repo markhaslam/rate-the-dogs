@@ -15,6 +15,7 @@
     "test": "turbo test",
     "test:coverage": "turbo test:coverage",
     "test:e2e": "playwright test --config=e2e/playwright.config.ts",
+    "test:e2e:ci": "CI_SIM=true playwright test --config=e2e/playwright.config.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

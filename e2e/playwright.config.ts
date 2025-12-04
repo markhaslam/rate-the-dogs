@@ -3,20 +3,38 @@ import { defineConfig, devices } from "@playwright/test";
 /**
  * Playwright configuration for E2E tests
  *
- * Supports two modes:
- * - CI: Uses unified wrangler server (requires pre-built web app)
- * - Local dev: Uses separate servers for hot reload
+ * Supports three modes:
+ * 1. Local dev (default): Fast iteration with hot reload, parallel execution
+ * 2. CI simulation (CI_SIM=true): Mimics CI environment locally to catch issues before push
+ * 3. CI (CI=true): Full CI environment with all browsers including webkit
+ *
+ * Usage:
+ *   bun run test:e2e          # Local dev mode (fast, parallel)
+ *   bun run test:e2e:ci       # CI simulation (serial, retries, built assets)
+ *   CI=true bun run test:e2e  # Full CI mode (includes webkit - requires system deps)
  */
+
+// CI simulation mode: run like CI but without webkit (not available on WSL)
+const isCI = !!process.env.CI;
+const isCISim = !!process.env.CI_SIM;
+const useCISettings = isCI || isCISim;
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  forbidOnly: isCI,
+
+  // Retries: 2 in CI/CI-sim to handle transient failures, 0 locally for fast feedback
+  retries: useCISettings ? 2 : 0,
+
+  // Workers: 1 in CI/CI-sim for stability, unlimited locally for speed
+  workers: useCISettings ? 1 : undefined,
+
   reporter: "html",
 
   use: {
-    baseURL: process.env.CI ? "http://localhost:8787" : "http://localhost:3000",
+    // CI/CI-sim use wrangler (8787), local dev uses vite (3000)
+    baseURL: useCISettings ? "http://localhost:8787" : "http://localhost:3000",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -31,8 +49,8 @@ export default defineConfig({
       use: { ...devices["Desktop Firefox"] },
     },
     // Webkit requires system libraries not available on WSL
-    // Only run webkit in CI where dependencies are installed
-    ...(process.env.CI
+    // Only run webkit in actual CI (not CI simulation) where dependencies are installed
+    ...(isCI
       ? [
           {
             name: "webkit",
@@ -45,8 +63,8 @@ export default defineConfig({
       name: "Mobile Chrome",
       use: { ...devices["Pixel 5"] },
     },
-    // Mobile Safari also uses webkit engine
-    ...(process.env.CI
+    // Mobile Safari also uses webkit engine - only in actual CI
+    ...(isCI
       ? [
           {
             name: "Mobile Safari",
@@ -56,16 +74,17 @@ export default defineConfig({
       : []),
   ],
 
-  // Start local servers before running tests
-  webServer: process.env.CI
+  // Server configuration
+  webServer: useCISettings
     ? [
-        // CI: Use unified wrangler server (requires pre-built web app + D1 migrations + seed data)
+        // CI/CI-sim: Use unified wrangler server with built assets
+        // This matches production behavior more closely
         {
           command:
             "bun run --cwd ../apps/web build && bun run --cwd ../apps/api db:migrate:local && bun run ../apps/api/scripts/seedTestData.ts --local && bun run --cwd ../apps/api dev",
           port: 8787,
           reuseExistingServer: false,
-          timeout: 120000, // Allow more time for build + migrate + seed
+          timeout: 120000, // Allow time for build + migrate + seed
         },
       ]
     : [
@@ -73,12 +92,12 @@ export default defineConfig({
         {
           command: "bun run --cwd ../apps/api dev",
           port: 8787,
-          reuseExistingServer: !process.env.CI,
+          reuseExistingServer: true,
         },
         {
           command: "bun run --cwd ../apps/web dev",
           port: 3000,
-          reuseExistingServer: !process.env.CI,
+          reuseExistingServer: true,
         },
       ],
 });

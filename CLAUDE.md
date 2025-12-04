@@ -351,6 +351,53 @@ After running coverage, reports are generated in each package's `coverage/` dire
 - `coverage/coverage-final.json` - JSON data for CI tools
 - Terminal output - Summary table
 
+### E2E Testing
+
+E2E tests use Playwright and run in three modes to catch issues at different stages:
+
+**Testing Modes:**
+
+| Mode          | Command               | Workers    | Retries | Browsers      | Server       | Use Case        |
+| ------------- | --------------------- | ---------- | ------- | ------------- | ------------ | --------------- |
+| Local Dev     | `bun run test:e2e`    | Parallel   | 0       | 3 (no webkit) | Hot reload   | Fast iteration  |
+| CI Simulation | `bun run test:e2e:ci` | 1 (serial) | 2       | 3 (no webkit) | Built assets | **Before push** |
+| Full CI       | GitHub Actions        | 1 (serial) | 2       | 5 (+ webkit)  | Built assets | Pull requests   |
+
+**Best Practice Workflow:**
+
+1. During development: `bun run test:e2e` (fast, parallel)
+2. Before pushing: `bun run test:e2e:ci` (catches CI-specific issues)
+3. CI runs automatically on push/PR
+
+**Why CI Simulation?**
+
+Local dev mode differs from CI in ways that can hide bugs:
+
+- **Parallel vs Serial**: Race conditions may only appear with single worker
+- **Hot reload vs Built**: Serving behavior differs between vite dev and wrangler with static assets
+- **No retries**: Flaky tests that pass via retry in CI will fail locally
+
+Running `test:e2e:ci` before pushing catches these issues locally.
+
+**Browser Differences:**
+
+WebKit (Safari) browsers have stricter cookie handling that causes issues with the wrangler dev server. Tests that rely on cookies persisting across navigations are skipped on WebKit. The feature works correctly in production - this is a test infrastructure limitation.
+
+| Browser       | Cookie Reliability | Notes                           |
+| ------------- | ------------------ | ------------------------------- |
+| Chromium      | Good               | Most reliable                   |
+| Firefox       | Good               | Reliable                        |
+| Mobile Chrome | Fair               | Some cookie persistence issues  |
+| WebKit/Safari | Poor               | Strict cookie policies, CI only |
+
+**Flaky Test Handling:**
+
+Tests that are known to be flaky due to wrangler dev cookie issues:
+
+- Use `test.skip(browserName === "webkit", "reason")` to skip on problematic browsers
+- Use cookie re-injection as fallback when cookies are lost during navigation
+- CI has 2 retries to handle transient failures
+
 ## Common Commands
 
 ```bash
@@ -362,7 +409,8 @@ bun run dev --filter=web # Frontend only
 # Testing
 bun run test             # All tests
 bun run test:coverage    # With coverage
-bun run test:e2e         # Playwright
+bun run test:e2e         # Playwright (fast, parallel)
+bun run test:e2e:ci      # Playwright (CI simulation - run before push!)
 
 # Quality
 bun run typecheck        # TypeScript
