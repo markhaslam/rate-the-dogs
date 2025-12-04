@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS breeds (
 CREATE TABLE IF NOT EXISTS dogs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT,
-  image_key TEXT NOT NULL,
+  image_key TEXT,  -- Nullable for Dog CEO images (use image_url instead)
   breed_id INTEGER NOT NULL REFERENCES breeds(id),
   uploader_user_id INTEGER,
   uploader_anon_id TEXT,

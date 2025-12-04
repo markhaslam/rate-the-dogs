@@ -15,7 +15,7 @@ describe("dogCeoBreeds", () => {
   describe("DOG_CEO_BREED_MAP", () => {
     it("contains at least 169 breeds", () => {
       const count = Object.keys(DOG_CEO_BREED_MAP).length;
-      expect(count).toBeGreaterThanOrEqual(169);
+      expect(count).toBeGreaterThanOrEqual(168);
     });
 
     it("contains key popular breeds", () => {
@@ -38,7 +38,8 @@ describe("dogCeoBreeds", () => {
       expect(DOG_CEO_BREED_MAP["terrier-yorkshire"]).toBe("Yorkshire Terrier");
       expect(DOG_CEO_BREED_MAP["terrier-scottish"]).toBe("Scottish Terrier");
       expect(DOG_CEO_BREED_MAP["terrier-russell"]).toBe("Jack Russell Terrier");
-      expect(DOG_CEO_BREED_MAP["terrier-boston"]).toBe("Boston Terrier");
+      // Note: terrier-boston was removed as duplicate of bulldog-boston
+      expect(DOG_CEO_BREED_MAP["bulldog-boston"]).toBe("Boston Terrier");
     });
 
     it("contains all retriever breeds", () => {
@@ -221,7 +222,7 @@ describe("dogCeoBreeds", () => {
   describe("getAllBreedKeys", () => {
     it("returns all breed keys", () => {
       const keys = getAllBreedKeys();
-      expect(keys.length).toBeGreaterThanOrEqual(169);
+      expect(keys.length).toBeGreaterThanOrEqual(168);
       expect(keys).toContain("retriever-golden");
       expect(keys).toContain("beagle");
       expect(keys).toContain("mix");
@@ -238,7 +239,7 @@ describe("dogCeoBreeds", () => {
   describe("getAllBreeds", () => {
     it("returns all breeds as [key, name] tuples", () => {
       const breeds = getAllBreeds();
-      expect(breeds.length).toBeGreaterThanOrEqual(169);
+      expect(breeds.length).toBeGreaterThanOrEqual(168);
 
       for (const [key, name] of breeds) {
         expect(typeof key).toBe("string");
@@ -315,7 +316,7 @@ describe("dogCeoBreeds", () => {
   describe("getBreedCount", () => {
     it("returns correct count", () => {
       const count = getBreedCount();
-      expect(count).toBeGreaterThanOrEqual(169);
+      expect(count).toBeGreaterThanOrEqual(168);
       expect(count).toBe(Object.keys(DOG_CEO_BREED_MAP).length);
     });
   });
