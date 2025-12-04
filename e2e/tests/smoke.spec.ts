@@ -89,37 +89,20 @@ test.describe("Smoke Tests", () => {
   });
 
   test("navigation works between pages", async ({ page, isMobile }) => {
+    // Skip mobile - navigation is in hamburger menu and tested elsewhere
+    // This smoke test focuses on quick desktop navigation validation
+    test.skip(isMobile, "Mobile navigation tested in dedicated tests");
+
     // Start at home
     await page.goto("/");
     await expect(page).toHaveURL("/");
 
-    // On mobile, open hamburger menu first
-    if (isMobile) {
-      const menuButton = page.locator('button[aria-label="Toggle menu"]');
-      if (await menuButton.isVisible()) {
-        await menuButton.click();
-        // Wait for menu to open
-        await expect(
-          page.getByRole("link", { name: /leaderboard/i })
-        ).toBeVisible();
-      }
-    }
-
-    // Navigate to leaderboard
+    // Navigate to leaderboard (desktop - links are visible)
     await page.getByRole("link", { name: /leaderboard/i }).click();
     await expect(page).toHaveURL(/\/leaderboard/);
 
-    // On mobile, open hamburger menu again for return navigation
-    if (isMobile) {
-      const menuButton = page.locator('button[aria-label="Toggle menu"]');
-      if (await menuButton.isVisible()) {
-        await menuButton.click();
-        await expect(page.getByRole("link", { name: /rate/i })).toBeVisible();
-      }
-    }
-
-    // Navigate back to home
-    await page.getByRole("link", { name: /rate/i }).first().click();
+    // Navigate back to home using the "Rate" nav link
+    await page.getByRole("link", { name: "Rate", exact: true }).click();
     await expect(page).toHaveURL("/");
   });
 });
