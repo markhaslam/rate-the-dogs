@@ -146,12 +146,112 @@ const route = app.post('/path', zValidator('json', schema), (c) => {...});
 export type RouteType = typeof route;
 ```
 
-### Database (D1)
+### Database (D1 + Drizzle ORM)
 
-- Use parameterized queries (never string concatenation)
-- Migrations in `apps/api/src/db/migrations/`
+The API uses **Drizzle ORM** for type-safe database access with **drizzle-zod** for automatic Zod schema generation.
+
+**Key Files:**
+
+```
+apps/api/src/db/
+├── schema/           # Drizzle table definitions
+│   ├── breeds.ts     # breeds table
+│   ├── dogs.ts       # dogs table
+│   ├── ratings.ts    # ratings table
+│   ├── skips.ts      # skips table
+│   ├── users.ts      # users table
+│   ├── anonymousUsers.ts
+│   ├── relations.ts  # Drizzle relations
+│   └── index.ts      # Exports all tables
+├── drizzle.ts        # Client factory
+├── zodSchemas.ts     # drizzle-zod generated schemas + custom validation
+└── migrations/       # SQL migrations (still used by wrangler)
+```
+
+**Accessing the Database:**
+
+```typescript
+// In route handlers, get db from context (set by middleware)
+const db = c.get("db");
+
+// Queries use Drizzle's query builder
+const result = await db
+  .select()
+  .from(dogsTable)
+  .where(eq(dogsTable.status, "approved"))
+  .limit(10);
+```
+
+**Query Patterns:**
+
+```typescript
+// Simple select
+const breeds = await db
+  .select()
+  .from(breedsTable)
+  .orderBy(asc(breedsTable.name));
+
+// Select with join
+const dogs = await db
+  .select({
+    id: dogsTable.id,
+    name: dogsTable.name,
+    breed_name: breedsTable.name,
+  })
+  .from(dogsTable)
+  .innerJoin(breedsTable, eq(dogsTable.breedId, breedsTable.id));
+
+// Insert with returning
+const [newDog] = await db
+  .insert(dogsTable)
+  .values({ name, imageKey, breedId })
+  .returning({ id: dogsTable.id });
+
+// Aggregations
+const topDogs = await db
+  .select({
+    id: dogsTable.id,
+    avg_rating: avg(ratingsTable.value),
+    rating_count: count(ratingsTable.id),
+  })
+  .from(dogsTable)
+  .innerJoin(ratingsTable, eq(dogsTable.id, ratingsTable.dogId))
+  .groupBy(dogsTable.id)
+  .orderBy(desc(avg(ratingsTable.value)));
+```
+
+**D1 Transaction Gotcha (CRITICAL):**
+
+D1 does NOT support `BEGIN TRANSACTION`. Drizzle's `db.transaction()` will fail on D1. Use `db.batch()` instead:
+
+```typescript
+// WRONG - Will fail on D1
+await db.transaction(async (tx) => {
+  await tx.insert(users).values(...);
+  await tx.update(accounts).set(...);
+});
+
+// CORRECT - Use batch for D1
+const results = await db.batch([
+  db.insert(users).values(...),
+  db.update(accounts).set(...).where(...),
+]);
+```
+
+**Adding New Tables:**
+
+1. Create table file in `apps/api/src/db/schema/`
+2. Export from `schema/index.ts`
+3. Add relations in `relations.ts` if needed
+4. Create/update Zod schemas in `zodSchemas.ts`
+5. Generate migration with `bunx drizzle-kit generate`
+6. Apply migration with `wrangler d1 migrations apply`
+
+**SQL Migrations:**
+
+- Still maintained in `apps/api/src/db/migrations/`
 - Naming: `XXX_description.sql` (e.g., `001_initial_schema.sql`)
-- Always include timestamps
+- Applied by wrangler, not drizzle-kit push
 
 ### Frontend Components
 

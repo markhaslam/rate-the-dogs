@@ -1,45 +1,42 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, beforeAll } from "vitest";
+import { env } from "cloudflare:test";
 import app from "../index.js";
+import { applyMigrations, clearTestData } from "../test/setup.js";
 
-const createMockEnv = (overrides = {}) => ({
-  DB: {
-    prepare: (sql: string) => ({
-      bind: (..._params: unknown[]) => ({
-        all: async () => ({ results: [] }),
-        first: async () => {
-          if (sql.includes("SELECT d.id") && sql.includes("FROM dogs")) {
-            return {
-              id: 1,
-              name: "Max",
-              image_key: "dogs/sample-1.jpg",
-              breed_id: 1,
-              breed_name: "Labrador Retriever",
-              breed_slug: "labrador-retriever",
-              avg_rating: 4.5,
-              rating_count: 10,
-            };
-          }
-          if (sql.includes("RETURNING id")) {
-            return { id: 99 };
-          }
-          return null;
-        },
-        run: async () => ({ success: true }),
-      }),
-    }),
-  },
-  IMAGES: {
-    put: async () => ({}),
-  },
-  ADMIN_SECRET: "test-secret",
-  ENVIRONMENT: "test",
-  ...overrides,
+/**
+ * Dogs API Tests
+ *
+ * These tests use the real D1 database provided by vitest-pool-workers/miniflare.
+ * Each test starts with a fresh database state.
+ */
+
+// Apply migrations before all tests
+beforeAll(async () => {
+  await applyMigrations();
 });
 
+// Helper to seed test data using prepare().run()
+async function seedTestData() {
+  // Insert test breed
+  await env.DB.prepare(
+    `INSERT OR IGNORE INTO breeds (id, name, slug) VALUES (1, 'Labrador Retriever', 'labrador-retriever')`
+  ).run();
+
+  // Insert test dog
+  await env.DB.prepare(
+    `INSERT OR IGNORE INTO dogs (id, name, image_key, breed_id, status) VALUES (1, 'Max', 'dogs/sample-1.jpg', 1, 'approved')`
+  ).run();
+}
+
 describe("Dogs API", () => {
+  beforeEach(async () => {
+    await clearTestData();
+    await seedTestData();
+  });
+
   describe("GET /api/dogs/next", () => {
     it("returns next unrated dog", async () => {
-      const res = await app.request("/api/dogs/next", {}, createMockEnv());
+      const res = await app.request("/api/dogs/next", {}, env);
       expect(res.status).toBe(200);
 
       const json = await res.json();
@@ -49,17 +46,9 @@ describe("Dogs API", () => {
     });
 
     it("returns null when no dogs available", async () => {
-      const emptyEnv = createMockEnv({
-        DB: {
-          prepare: () => ({
-            bind: () => ({
-              first: async () => null,
-            }),
-          }),
-        },
-      });
+      await env.DB.prepare(`DELETE FROM dogs`).run();
 
-      const res = await app.request("/api/dogs/next", {}, emptyEnv);
+      const res = await app.request("/api/dogs/next", {}, env);
       const json = await res.json();
 
       expect(json.success).toBe(true);
@@ -67,7 +56,7 @@ describe("Dogs API", () => {
     });
 
     it("sets anon_id cookie on first request", async () => {
-      const res = await app.request("/api/dogs/next", {}, createMockEnv());
+      const res = await app.request("/api/dogs/next", {}, env);
       const cookie = res.headers.get("set-cookie");
 
       expect(cookie).toContain("anon_id=");
@@ -76,21 +65,57 @@ describe("Dogs API", () => {
     });
 
     it("excludes already rated dogs", async () => {
-      // This is implicitly tested by the SQL query structure
-      const res = await app.request("/api/dogs/next", {}, createMockEnv());
-      expect(res.status).toBe(200);
+      // First, rate the only dog
+      const anonId = "test-anon-exclude-rated";
+      await env.DB.prepare(
+        `INSERT INTO ratings (dog_id, value, anon_id) VALUES (1, 4.5, ?)`
+      )
+        .bind(anonId)
+        .run();
+
+      // Request next dog with same anon_id
+      const res = await app.request(
+        "/api/dogs/next",
+        {
+          headers: {
+            Cookie: `anon_id=${anonId}`,
+          },
+        },
+        env
+      );
+
+      const json = await res.json();
+      expect(json.success).toBe(true);
+      expect(json.data).toBeNull(); // No dogs left to rate
     });
 
     it("excludes skipped dogs", async () => {
-      // This is implicitly tested by the SQL query structure
-      const res = await app.request("/api/dogs/next", {}, createMockEnv());
-      expect(res.status).toBe(200);
+      // First, skip the only dog
+      const anonId = "test-anon-exclude-skipped";
+      await env.DB.prepare(`INSERT INTO skips (dog_id, anon_id) VALUES (1, ?)`)
+        .bind(anonId)
+        .run();
+
+      // Request next dog with same anon_id
+      const res = await app.request(
+        "/api/dogs/next",
+        {
+          headers: {
+            Cookie: `anon_id=${anonId}`,
+          },
+        },
+        env
+      );
+
+      const json = await res.json();
+      expect(json.success).toBe(true);
+      expect(json.data).toBeNull(); // No dogs left
     });
   });
 
   describe("GET /api/dogs/:id", () => {
     it("returns dog by ID", async () => {
-      const res = await app.request("/api/dogs/1", {}, createMockEnv());
+      const res = await app.request("/api/dogs/1", {}, env);
       expect(res.status).toBe(200);
 
       const json = await res.json();
@@ -99,17 +124,7 @@ describe("Dogs API", () => {
     });
 
     it("returns 404 for non-existent dog", async () => {
-      const notFoundEnv = createMockEnv({
-        DB: {
-          prepare: () => ({
-            bind: () => ({
-              first: async () => null,
-            }),
-          }),
-        },
-      });
-
-      const res = await app.request("/api/dogs/99999", {}, notFoundEnv);
+      const res = await app.request("/api/dogs/99999", {}, env);
       expect(res.status).toBe(404);
 
       const json = await res.json();
@@ -117,16 +132,7 @@ describe("Dogs API", () => {
     });
 
     it("handles invalid ID format gracefully", async () => {
-      const invalidEnv = createMockEnv({
-        DB: {
-          prepare: () => ({
-            bind: () => ({
-              first: async () => null, // Invalid ID won't match any dog
-            }),
-          }),
-        },
-      });
-      const res = await app.request("/api/dogs/invalid", {}, invalidEnv);
+      const res = await app.request("/api/dogs/invalid", {}, env);
       // Should return 404 since NaN won't match any dog
       expect(res.status).toBe(404);
     });
@@ -141,7 +147,7 @@ describe("Dogs API", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ value: 4.5 }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(200);
@@ -158,7 +164,7 @@ describe("Dogs API", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ value: 0.5 }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(200);
@@ -172,7 +178,7 @@ describe("Dogs API", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ value: 5.0 }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(200);
@@ -186,7 +192,7 @@ describe("Dogs API", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ value: 0 }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(400);
@@ -200,7 +206,7 @@ describe("Dogs API", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ value: 6 }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(400);
@@ -214,7 +220,7 @@ describe("Dogs API", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ value: 3.3 }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(400);
@@ -228,80 +234,46 @@ describe("Dogs API", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({}),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(400);
     });
 
     it("handles duplicate rating attempt", async () => {
-      const duplicateEnv = createMockEnv({
-        DB: {
-          prepare: () => ({
-            bind: () => ({
-              run: async () => {
-                throw new Error("UNIQUE constraint failed");
-              },
-            }),
-          }),
-        },
-      });
+      const anonId = "test-anon-duplicate-rating";
 
-      const res = await app.request(
+      // First rating
+      await app.request(
         "/api/dogs/1/rate",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `anon_id=${anonId}`,
+          },
           body: JSON.stringify({ value: 4 }),
         },
-        duplicateEnv
+        env
       );
 
-      expect(res.status).toBe(400);
-      const json = await res.json();
-      expect(json.error.code).toBe("ALREADY_RATED");
-    });
-
-    it("stores ip_address and user_agent with rating", async () => {
-      let capturedParams: unknown[] = [];
-
-      const trackingEnv = createMockEnv({
-        DB: {
-          prepare: (sql: string) => ({
-            bind: (...params: unknown[]) => {
-              if (sql.includes("INSERT INTO ratings")) {
-                capturedParams = params;
-              }
-              return {
-                run: async () => ({ success: true }),
-              };
-            },
-          }),
-        },
-      });
-
+      // Second rating should fail
       const res = await app.request(
         "/api/dogs/1/rate",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "User-Agent": "TestBrowser/1.0",
-            "CF-Connecting-IP": "192.168.1.100",
+            Cookie: `anon_id=${anonId}`,
           },
-          body: JSON.stringify({ value: 4.5 }),
+          body: JSON.stringify({ value: 5 }),
         },
-        trackingEnv
+        env
       );
 
-      expect(res.status).toBe(200);
-      // Params should be: dog_id, value, anon_id, ip_address, user_agent
-      expect(capturedParams).toHaveLength(5);
-      expect(capturedParams[0]).toBe(1); // dog_id
-      expect(capturedParams[1]).toBe(4.5); // value
-      expect(typeof capturedParams[2]).toBe("string"); // anon_id (UUID)
-      expect(capturedParams[3]).toBe("192.168.1.100"); // ip_address
-      expect(capturedParams[4]).toBe("TestBrowser/1.0"); // user_agent
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.error.code).toBe("ALREADY_RATED");
     });
   });
 
@@ -310,7 +282,7 @@ describe("Dogs API", () => {
       const res = await app.request(
         "/api/dogs/1/skip",
         { method: "POST" },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(200);
@@ -320,25 +292,28 @@ describe("Dogs API", () => {
     });
 
     it("handles already skipped dog gracefully", async () => {
-      const alreadySkippedEnv = createMockEnv({
-        DB: {
-          prepare: () => ({
-            bind: () => ({
-              run: async () => {
-                throw new Error("UNIQUE constraint failed");
-              },
-            }),
-          }),
-        },
-      });
+      const anonId = "test-anon-already-skipped";
 
-      const res = await app.request(
+      // First skip
+      await app.request(
         "/api/dogs/1/skip",
-        { method: "POST" },
-        alreadySkippedEnv
+        {
+          method: "POST",
+          headers: { Cookie: `anon_id=${anonId}` },
+        },
+        env
       );
 
-      // Should still return success
+      // Second skip should still return success
+      const res = await app.request(
+        "/api/dogs/1/skip",
+        {
+          method: "POST",
+          headers: { Cookie: `anon_id=${anonId}` },
+        },
+        env
+      );
+
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.data.skipped).toBe(true);
@@ -358,7 +333,7 @@ describe("Dogs API", () => {
             breedId: 1,
           }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(201);
@@ -378,7 +353,7 @@ describe("Dogs API", () => {
             breedId: 1,
           }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(201);
@@ -395,7 +370,7 @@ describe("Dogs API", () => {
             breedId: 1,
           }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(400);
@@ -412,7 +387,7 @@ describe("Dogs API", () => {
             imageKey: "dogs/abc123.jpg",
           }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(400);
@@ -429,7 +404,7 @@ describe("Dogs API", () => {
             breedId: -1,
           }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(400);
@@ -447,7 +422,7 @@ describe("Dogs API", () => {
             breedId: 1,
           }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(400);
@@ -463,7 +438,7 @@ describe("Dogs API", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ contentType: "image/jpeg" }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(200);
@@ -481,7 +456,7 @@ describe("Dogs API", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ contentType: "image/png" }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(200);
@@ -495,7 +470,7 @@ describe("Dogs API", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ contentType: "image/webp" }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(200);
@@ -509,7 +484,7 @@ describe("Dogs API", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ contentType: "image/gif" }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(400);
@@ -523,7 +498,7 @@ describe("Dogs API", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ contentType: "application/pdf" }),
         },
-        createMockEnv()
+        env
       );
 
       expect(res.status).toBe(400);

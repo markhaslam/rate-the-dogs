@@ -4,38 +4,36 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-01-01",
   "compatibility_flags": ["nodejs_compat"],
-
   "assets": {
     "directory": "../web/dist",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/"],
+    "run_worker_first": ["/api/*"],
   },
-
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "rate-the-dogs",
-      "database_id": "local",
+      "database_id": "f04b9f00-8c93-4cfc-8a79-c32ab7aa0fd0",
       "migrations_dir": "src/db/migrations",
     },
   ],
-
   "r2_buckets": [
     {
       "binding": "IMAGES",
       "bucket_name": "rate-the-dogs-images",
     },
   ],
-
   "vars": {
     "ENVIRONMENT": "production",
   },
-
   "observability": {
     "enabled": true,
     "head_sampling_rate": 0.1,
   },
-
+  "routes": [
+    { "pattern": "ratethedogs.com", "custom_domain": true },
+    { "pattern": "www.ratethedogs.com", "custom_domain": true },
+  ],
   "env": {
     "dev": {
       "name": "rate-the-dogs-dev",

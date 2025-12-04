@@ -1,7 +1,8 @@
 # Dog CEO API Integration - Technical Architecture
 
-> **Version**: 1.0
+> **Version**: 1.1
 > **Created**: December 2025
+> **Updated**: December 2025
 > **Status**: Design Complete - Ready for Implementation
 
 ---
@@ -36,9 +37,25 @@ This document outlines the architecture for integrating the Dog CEO API as a lon
 
 - `apps/api/src/lib/r2.ts` - Current Dog CEO mapping (to be refactored)
 - `apps/api/src/db/migrations/001_initial_schema.sql` - Needs migration
-- `apps/api/src/db/seed.sql` - Needs major expansion
 - `apps/api/src/routes/dogs.ts` - Needs prefetch endpoint
 - `apps/web/src/pages/RatePage.tsx` - Needs prefetch integration
+
+### Two-Step Data Pipeline
+
+The Dog CEO integration uses a **separated two-step approach** for reliability and development speed:
+
+| Step     | Script                 | Input               | Output              | When to Run                 |
+| -------- | ---------------------- | ------------------- | ------------------- | --------------------------- |
+| 1. Fetch | `fetchDogCeoImages.ts` | Dog CEO API         | `breed-images.json` | Occasionally (refresh data) |
+| 2. Seed  | `seedDogCeoImages.ts`  | `breed-images.json` | D1 Database         | Development/deployment      |
+
+**Why separated?**
+
+- **Faster iteration** - No API calls when debugging seeding logic
+- **Offline capability** - Seed database without internet
+- **Single responsibility** - Each script does one thing well
+- **Already done** - `fetchDogCeoImages.ts` exists and works, JSON is generated
+- **Matches original pattern** - The 2022 prototype used the same approach successfully
 
 ---
 
@@ -368,215 +385,231 @@ function titleCase(str: string): string {
 | `GET /breed/{breed}/images`            | Get all images for a breed | Returns array of image URLs                                   |
 | `GET /breed/{breed}/{subbreed}/images` | Get images for sub-breed   | Returns array of image URLs                                   |
 
-### Seeding Script: `apps/api/scripts/syncDogCeo.ts`
+### Step 1: Fetch Script (Already Exists)
+
+**File:** `apps/api/scripts/fetchDogCeoImages.ts`
+
+This script fetches all images from the Dog CEO API and saves them to a JSON file. It already exists and includes:
+
+- Retry logic with exponential backoff
+- Rate limiting (10 concurrent requests, 50ms delay between batches)
+- Duplicate image filtering (removes sub-breed images from parent breeds)
+- Progress reporting
+- Validation mode (`--validate-only`)
+- Dry run mode (`--dry-run`)
+
+```bash
+# Fetch all images from Dog CEO API
+bun run apps/api/scripts/fetchDogCeoImages.ts
+
+# Validate existing breed-images.json
+bun run apps/api/scripts/fetchDogCeoImages.ts --validate-only
+```
+
+**Output:** `apps/api/src/db/breed-images.json` (~2MB, 20,000+ images)
+
+See `apps/api/src/lib/dogCeoUtils.ts` for utility functions used by this script.
+
+### Step 2: Seed Script (To Be Created)
+
+**File:** `apps/api/scripts/seedDogCeoImages.ts`
+
+This script reads the pre-fetched `breed-images.json` and populates the D1 database. It's the equivalent of the old `db-setup.ts` from the 2022 prototype.
 
 ```typescript
 /**
- * Dog CEO API Sync Script
+ * Dog CEO Database Seeding Script
  *
- * Fetches all breeds and images from Dog CEO API and populates the database.
+ * Reads breed-images.json and populates the D1 database with breeds and dogs.
+ * This is the second step in the two-step data pipeline.
  *
  * Usage:
- *   bun run apps/api/scripts/syncDogCeo.ts
+ *   bun run apps/api/scripts/seedDogCeoImages.ts
  *
- * Environment:
- *   - Uses local D1 database via Wrangler
- *   - Rate-limited to respect Dog CEO API
+ * Options:
+ *   --dry-run       Show what would be inserted without writing
+ *   --limit=N       Limit images per breed (default: 50)
+ *   --local         Use local D1 database (default)
+ *   --remote        Use remote D1 database (production)
+ *
+ * Prerequisites:
+ *   - breed-images.json must exist (run fetchDogCeoImages.ts first)
+ *   - Database migrations must be applied
  */
 
 import {
-  DOG_CEO_BREED_MAP,
   getReadableBreedName,
   getBreedSlug,
 } from "../src/lib/dogCeoBreeds";
 
-const DOG_CEO_BASE = "https://dog.ceo/api";
-const IMAGES_PER_BREED = 50; // Limit images per breed for manageable size
-const RATE_LIMIT_MS = 100; // 100ms between API calls
+const IMAGES_PER_BREED = 50; // Limit per breed for manageable DB size
 
-interface DogCeoListResponse {
-  message: Record<string, string[]>;
-  status: string;
+interface BreedImages {
+  [breed: string]: string[];
 }
 
-interface DogCeoImagesResponse {
-  message: string[];
-  status: string;
-}
+async function seedDogCeoImages(db: D1Database, options: {
+  dryRun?: boolean;
+  limit?: number;
+}): Promise<void> {
+  const { dryRun = false, limit = IMAGES_PER_BREED } = options;
 
-async function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+  // 1. Load breed-images.json
+  const inputPath = new URL("../src/db/breed-images.json", import.meta.url);
+  const file = Bun.file(inputPath.pathname);
 
-async function fetchBreedList(): Promise<string[]> {
-  const res = await fetch(`${DOG_CEO_BASE}/breeds/list/all`);
-  const data = (await res.json()) as DogCeoListResponse;
-
-  if (data.status !== "success") {
-    throw new Error("Failed to fetch breed list");
+  if (!(await file.exists())) {
+    throw new Error(
+      "breed-images.json not found. Run fetchDogCeoImages.ts first."
+    );
   }
 
-  const paths: string[] = [];
+  const breedImages = (await file.json()) as BreedImages;
+  const breeds = Object.keys(breedImages);
 
-  for (const [breed, subBreeds] of Object.entries(data.message)) {
-    if (subBreeds.length === 0) {
-      paths.push(breed);
-    } else {
-      for (const sub of subBreeds) {
-        paths.push(`${breed}/${sub}`);
-      }
-    }
+  console.log(`Loaded ${breeds.length} breeds from breed-images.json`);
+
+  if (dryRun) {
+    console.log("[DRY RUN] No database changes will be made\n");
   }
 
-  return paths;
-}
-
-async function fetchBreedImages(path: string): Promise<string[]> {
-  const url = path.includes("/")
-    ? `${DOG_CEO_BASE}/breed/${path}/images`
-    : `${DOG_CEO_BASE}/breed/${path}/images`;
-
-  const res = await fetch(url);
-  const data = (await res.json()) as DogCeoImagesResponse;
-
-  if (data.status !== "success") {
-    console.warn(`Failed to fetch images for ${path}`);
-    return [];
-  }
-
-  // Limit and shuffle images
-  const shuffled = data.message.sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, IMAGES_PER_BREED);
-}
-
-async function verifyImageUrl(url: string): Promise<boolean> {
-  try {
-    const res = await fetch(url, { method: "HEAD" });
-    return res.ok && res.headers.get("content-type")?.startsWith("image/");
-  } catch {
-    return false;
-  }
-}
-
-async function syncDogCeo(db: D1Database): Promise<void> {
-  console.log("Starting Dog CEO sync...");
-
-  // 1. Fetch all breed paths
-  const paths = await fetchBreedList();
-  console.log(`Found ${paths.length} breeds`);
-
-  let totalImages = 0;
   let totalDogs = 0;
+  let totalBreeds = 0;
 
   // 2. Process each breed
-  for (const path of paths) {
-    const name = getReadableBreedName(path);
-    const slug = getBreedSlug(path);
+  for (const breed of breeds) {
+    const name = getReadableBreedName(breed);
+    const slug = getBreedSlug(breed);
+    // Convert breed format: "retriever-golden" -> "retriever/golden"
+    const dogCeoPath = breed.includes("-")
+      ? breed.replace("-", "/")
+      : breed;
 
-    console.log(`Processing ${name} (${path})...`);
+    const images = breedImages[breed].slice(0, limit);
+
+    console.log(`Processing ${name} (${breed}): ${images.length} images`);
+
+    if (dryRun) {
+      totalBreeds++;
+      totalDogs += images.length;
+      continue;
+    }
 
     // 2a. Upsert breed
     await db
-      .prepare(
-        `
-      INSERT INTO breeds (name, slug, dog_ceo_path, created_at)
-      VALUES (?, ?, ?, datetime('now'))
-      ON CONFLICT(slug) DO UPDATE SET
-        dog_ceo_path = excluded.dog_ceo_path
-    `
-      )
-      .bind(name, slug, path)
+      .prepare(`
+        INSERT INTO breeds (name, slug, dog_ceo_path, created_at)
+        VALUES (?, ?, ?, datetime('now'))
+        ON CONFLICT(slug) DO UPDATE SET
+          dog_ceo_path = excluded.dog_ceo_path,
+          name = excluded.name
+      `)
+      .bind(name, slug, dogCeoPath)
       .run();
 
     // Get breed ID
-    const breed = await db
+    const breedRecord = await db
       .prepare("SELECT id FROM breeds WHERE slug = ?")
       .bind(slug)
       .first<{ id: number }>();
 
-    if (!breed) continue;
+    if (!breedRecord) {
+      console.warn(`  Failed to get breed ID for ${slug}`);
+      continue;
+    }
 
-    // 2b. Fetch images
-    await sleep(RATE_LIMIT_MS);
-    const images = await fetchBreedImages(path);
-
-    console.log(`  Found ${images.length} images`);
-
-    // 2c. Create dog records for each image
-    let validImages = 0;
+    // 2b. Insert dogs (skip duplicates)
+    let insertedCount = 0;
     for (const imageUrl of images) {
-      // Verify image exists (sample 10% to avoid rate limiting)
-      const shouldVerify = Math.random() < 0.1;
-      if (shouldVerify) {
-        const isValid = await verifyImageUrl(imageUrl);
-        if (!isValid) {
-          console.log(`  Skipping broken image: ${imageUrl}`);
-          continue;
-        }
-      }
-
-      // Create dog record
       try {
         await db
-          .prepare(
-            `
-          INSERT INTO dogs (
-            image_url,
-            image_source,
-            breed_id,
-            status,
-            created_at,
-            updated_at
-          )
-          VALUES (?, 'dog_ceo', ?, 'approved', datetime('now'), datetime('now'))
-        `
-          )
-          .bind(imageUrl, breed.id)
+          .prepare(`
+            INSERT INTO dogs (
+              image_url,
+              image_source,
+              breed_id,
+              status,
+              created_at,
+              updated_at
+            )
+            VALUES (?, 'dog_ceo', ?, 'approved', datetime('now'), datetime('now'))
+          `)
+          .bind(imageUrl, breedRecord.id)
           .run();
 
-        validImages++;
-        totalDogs++;
+        insertedCount++;
       } catch (e) {
-        // Ignore duplicates
+        // Skip duplicates (UNIQUE constraint on image_url)
         if (!(e instanceof Error && e.message.includes("UNIQUE"))) {
           throw e;
         }
       }
     }
 
-    // 2d. Update breed stats
+    // 2c. Update breed stats
     await db
-      .prepare(
-        `
-      UPDATE breeds
-      SET image_count = ?, last_synced_at = datetime('now')
-      WHERE id = ?
-    `
-      )
-      .bind(validImages, breed.id)
+      .prepare(`
+        UPDATE breeds
+        SET image_count = (
+          SELECT COUNT(*) FROM dogs WHERE breed_id = ? AND image_source = 'dog_ceo'
+        ),
+        last_synced_at = datetime('now')
+        WHERE id = ?
+      `)
+      .bind(breedRecord.id, breedRecord.id)
       .run();
 
-    totalImages += validImages;
-    console.log(`  Added ${validImages} dogs`);
+    totalBreeds++;
+    totalDogs += insertedCount;
+    console.log(`  Inserted ${insertedCount} dogs`);
   }
 
-  console.log(`\nSync complete!`);
-  console.log(`  Breeds: ${paths.length}`);
+  console.log(`\n${dryRun ? "[DRY RUN] Would have seeded" : "Seeding complete!"}:`);
+  console.log(`  Breeds: ${totalBreeds}`);
   console.log(`  Dogs: ${totalDogs}`);
 }
 
-// Export for use with Wrangler
-export { syncDogCeo };
+export { seedDogCeoImages };
+```
+
+**Usage:**
+
+```bash
+# Seed local D1 database
+bun run apps/api/scripts/seedDogCeoImages.ts
+
+# Preview what would be inserted
+bun run apps/api/scripts/seedDogCeoImages.ts --dry-run
+
+# Limit to 25 images per breed
+bun run apps/api/scripts/seedDogCeoImages.ts --limit=25
+
+# Seed remote/production D1
+bun run apps/api/scripts/seedDogCeoImages.ts --remote
 ```
 
 ### Expected Data Volume
 
+**From breed-images.json (full dataset):**
+
+| Metric              | Value         |
+| ------------------- | ------------- |
+| Total breeds        | ~174          |
+| Total images        | ~21,000       |
+| Average per breed   | ~121 images   |
+| Top breed (maltese) | 253 images    |
+| File size           | ~2 MB         |
+
+**After seeding with default 50 limit:**
+
 | Metric           | Estimate     |
 | ---------------- | ------------ |
-| Total breeds     | ~120         |
+| Total breeds     | ~174         |
 | Images per breed | 50 (limited) |
-| Total dogs       | ~6,000       |
+| Total dogs       | ~8,700       |
 | Database size    | ~1-2 MB      |
+
+> **Note:** The `--limit` option in `seedDogCeoImages.ts` controls how many images per breed are seeded. Use `--limit=0` for unlimited (all ~21,000 images).
 
 ---
 
@@ -930,10 +963,11 @@ export function RatePage() {
 
 ### Integration Tests
 
-| Test              | File                 | Coverage                   |
-| ----------------- | -------------------- | -------------------------- |
-| Prefetch endpoint | `dogs.test.ts`       | Query params, pagination   |
-| Sync script       | `syncDogCeo.test.ts` | API mocking, DB operations |
+| Test              | File                        | Coverage                         |
+| ----------------- | --------------------------- | -------------------------------- |
+| Prefetch endpoint | `dogs.test.ts`              | Query params, pagination         |
+| Seed script       | `seedDogCeoImages.test.ts`  | JSON parsing, DB operations      |
+| Fetch script      | `fetchDogCeoImages.test.ts` | API mocking, duplicate filtering |
 
 ### E2E Tests
 

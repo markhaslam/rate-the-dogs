@@ -1,4 +1,5 @@
 import type { D1Database, R2Bucket } from "@cloudflare/workers-types";
+import type { Database } from "../db/drizzle.js";
 
 /**
  * Environment bindings for Cloudflare Workers
@@ -21,6 +22,9 @@ export interface Env {
  * Context variables set by middleware
  */
 export interface Variables {
+  // Drizzle database client
+  db: Database;
+
   // Anonymous user ID from cookie
   anonId: string;
 

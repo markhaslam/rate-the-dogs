@@ -644,6 +644,82 @@ This phase adds Dog CEO API integration, analytics fields, and user system prep.
 
 ---
 
+## Phase 11: Drizzle ORM Migration (Completed)
+
+> **Status**: Completed December 2025
+> **Purpose**: Migrate from raw D1 SQL to Drizzle ORM with drizzle-zod integration
+
+### 11.1 Setup & Dependencies
+
+- [x] Install `drizzle-orm` package
+- [x] Install `drizzle-kit` dev dependency
+- [x] Install `drizzle-zod` dev dependency
+- [x] Create `apps/api/drizzle.config.ts` for Drizzle Kit
+
+### 11.2 Schema Definition
+
+- [x] Create `apps/api/src/db/schema/breeds.ts` - breeds table with indexes
+- [x] Create `apps/api/src/db/schema/dogs.ts` - dogs table with status enum
+- [x] Create `apps/api/src/db/schema/ratings.ts` - ratings table with constraints
+- [x] Create `apps/api/src/db/schema/skips.ts` - skips table
+- [x] Create `apps/api/src/db/schema/users.ts` - users table with OAuth fields
+- [x] Create `apps/api/src/db/schema/anonymousUsers.ts` - anonymous_users table
+- [x] Create `apps/api/src/db/schema/relations.ts` - Drizzle relations
+- [x] Create `apps/api/src/db/schema/index.ts` - Re-exports all tables
+
+### 11.3 Client & Middleware
+
+- [x] Create `apps/api/src/db/drizzle.ts` - Database client factory
+- [x] Create `apps/api/src/db/zodSchemas.ts` - drizzle-zod generated schemas
+- [x] Create `apps/api/src/middleware/db.ts` - DB middleware
+- [x] Update `apps/api/src/lib/env.ts` - Add db to Variables type
+- [x] Update `apps/api/src/index.ts` - Add db middleware
+
+### 11.4 Route Conversion
+
+- [x] Convert `apps/api/src/routes/breeds.ts` to use Drizzle
+- [x] Convert `apps/api/src/routes/dogs.ts` to use Drizzle
+- [x] Convert `apps/api/src/routes/leaderboard.ts` to use Drizzle
+- [x] Preserve snake_case field names in API responses
+
+### 11.5 Testing
+
+- [x] Create `apps/api/src/test/setup.ts` - Test setup with migrations
+- [x] Update `apps/api/src/routes/breeds.test.ts` - Use real D1 via miniflare
+- [x] Update `apps/api/src/routes/dogs.test.ts` - Use real D1 via miniflare
+- [x] Update `apps/api/src/routes/leaderboard.test.ts` - Use real D1 via miniflare
+- [x] All 132 tests passing
+
+### 11.6 Cleanup
+
+- [x] Delete `packages/shared/src/schemas/dog.ts`
+- [x] Delete `packages/shared/src/schemas/dog.test.ts`
+- [x] Delete `packages/shared/src/schemas/breed.ts`
+- [x] Delete `packages/shared/src/schemas/rating.ts`
+- [x] Delete `packages/shared/src/schemas/rating.test.ts`
+- [x] Delete `packages/shared/src/schemas/user.ts`
+- [x] Delete `packages/shared/src/schemas/user.test.ts`
+- [x] Update `packages/shared/src/schemas/index.ts` - Only export api.js
+- [x] Update `packages/shared/src/types/index.ts` - Only export API types
+- [x] Delete unused `apps/api/src/test/mockDb.ts`
+
+### 11.7 Configuration & Documentation
+
+- [x] Update `apps/api/tsconfig.json` - Exclude src/test/\*\*
+- [x] Update `eslint.config.mjs` - Disable type checking for test files
+- [x] Update `CLAUDE.md` with Drizzle ORM patterns section
+- [x] Update `docs/plan.md` with Database Layer section
+- [x] Update `docs/tasks.md` with Phase 11 (this section)
+
+### 11.8 Validation
+
+- [x] `bun run typecheck` - All passing
+- [x] `bun run lint` - All passing
+- [x] `bun run format:check` - All passing
+- [x] `bun run test` - 132 tests passing
+
+---
+
 ## Future Phases (Record for Later)
 
 ### Phase 2: User Accounts
@@ -694,8 +770,10 @@ Before considering MVP complete:
 - [ ] All Phase 1-7 tasks completed
 - [ ] All Phase 8 (Dog CEO Integration) tasks completed
 - [x] Phase 9 (UI/UX Improvements) completed
+- [x] Phase 10 (Light/Dark Mode Theme) completed
+- [x] Phase 11 (Drizzle ORM Migration) completed
 - [x] Test coverage >80%
-- [x] All tests passing (unit tests)
+- [x] All tests passing (132 unit/integration tests)
 - [x] No TypeScript errors
 - [x] No ESLint errors
 - [x] Code formatted with Prettier

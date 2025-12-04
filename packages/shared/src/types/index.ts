@@ -1,4 +1,5 @@
-// Re-export types from schemas
+// Re-export API types only
+// Database-specific types are now inferred from apps/api/src/db/schema (powered by Drizzle)
 export type {
   // API types
   PaginationQuery,
@@ -11,23 +12,4 @@ export type {
   SuccessResponse,
   PaginatedData,
   PaginatedResponse,
-  // Breed types
-  BreedSlug,
-  Breed,
-  BreedWithStats,
-  // Dog types
-  ImageKey,
-  DogName,
-  CreateDogRequest,
-  Dog,
-  DogWithDetails,
-  UploadUrlRequest,
-  UploadUrlResponse,
-  // Rating types
-  RatingValue,
-  RateRequest,
-  Rating,
-  RatingWithDog,
 } from "../schemas/index.js";
-
-// Note: DogStatus and AllowedContentType are exported from constants.ts

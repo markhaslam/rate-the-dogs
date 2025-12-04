@@ -16,9 +16,9 @@ RateTheDogs is a dog rating web application where users upload dog photos and ra
 | --------------- | ---------------------------------- | ----------------------------------------------- |
 | Runtime         | Cloudflare Workers + Static Assets | Unified deployment (API + frontend), global CDN |
 | Backend         | Hono ^4.10                         | Lightweight, TypeScript-first, built-in RPC     |
-| Database        | Cloudflare D1                      | Serverless SQLite, automatic replication        |
+| Database        | Cloudflare D1 + Drizzle ORM        | Serverless SQLite with type-safe ORM            |
 | Storage         | Cloudflare R2                      | S3-compatible, zero egress fees                 |
-| Validation      | Zod ^4.1                           | TypeScript inference, runtime validation        |
+| Validation      | Zod ^4.1 + drizzle-zod             | TypeScript inference, schema-first validation   |
 | Frontend        | React ^19                          | Latest stable, improved performance             |
 | Build           | Vite ^7.2                          | Fast HMR, native ESM, TailwindCSS v4 plugin     |
 | CSS             | TailwindCSS ^4.1                   | Utility-first, new Vite plugin                  |
@@ -93,13 +93,18 @@ rate-the-dogs/
 │   ├── api/                     # Cloudflare Worker (Hono)
 │   │   ├── package.json
 │   │   ├── wrangler.jsonc       # Cloudflare Workers config (unified deployment)
+│   │   ├── drizzle.config.ts    # Drizzle Kit config
 │   │   ├── tsconfig.json
 │   │   └── src/
 │   │       ├── index.ts         # Main entry, exports AppType
 │   │       ├── routes/          # dogs, breeds, leaderboard, upload, me, admin
-│   │       ├── middleware/      # anon, admin, rateLimit, logger
+│   │       ├── middleware/      # anon, admin, db, rateLimit, logger
 │   │       ├── services/        # Business logic
-│   │       ├── db/              # migrations, queries, seed
+│   │       ├── db/
+│   │       │   ├── schema/      # Drizzle table definitions
+│   │       │   ├── drizzle.ts   # Database client factory
+│   │       │   ├── zodSchemas.ts # drizzle-zod generated schemas
+│   │       │   └── migrations/  # SQL migrations
 │   │       └── lib/             # r2, hash, errors utilities
 │   └── web/                     # React SPA
 │       ├── package.json
@@ -114,13 +119,88 @@ rate-the-dogs/
 │           ├── hooks/           # useNextDog, useRating, etc.
 │           └── lib/             # Utilities
 ├── packages/
-│   └── shared/                  # Shared Zod schemas & types
+│   └── shared/                  # Shared constants & API schemas
 │       └── src/
-│           ├── schemas/         # dog, rating, breed, api schemas
-│           ├── types/           # Inferred TypeScript types
-│           └── constants.ts     # Shared constants
+│           ├── schemas/         # API response schemas (api.ts only)
+│           ├── types/           # Inferred API types
+│           └── constants.ts     # Shared constants (RATING, UPLOAD, etc.)
 └── e2e/                         # Playwright E2E tests
     └── tests/                   # rating, upload, leaderboard, admin specs
+```
+
+---
+
+## Database Layer (Drizzle ORM)
+
+The database layer uses Drizzle ORM for type-safe database access with drizzle-zod for automatic Zod schema generation.
+
+### Architecture
+
+```
+apps/api/src/db/
+├── schema/           # Drizzle table definitions
+│   ├── breeds.ts     # breeds table
+│   ├── dogs.ts       # dogs table with status enum
+│   ├── ratings.ts    # ratings table with constraints
+│   ├── skips.ts      # skips table
+│   ├── users.ts      # users table with OAuth fields
+│   ├── anonymousUsers.ts # anonymous_users table
+│   ├── relations.ts  # All relation definitions
+│   └── index.ts      # Re-exports all tables
+├── drizzle.ts        # Database client factory
+├── zodSchemas.ts     # drizzle-zod generated schemas
+└── migrations/       # SQL migrations (unchanged)
+```
+
+### Key Patterns
+
+**Database Access:**
+
+```typescript
+// In route handlers, get db from context (injected by middleware)
+const db = c.get("db");
+
+// Query with Drizzle
+const result = await db.select().from(dogs).where(eq(dogs.status, "approved"));
+```
+
+**Schema-First Validation:**
+
+```typescript
+// Zod schemas auto-generated from Drizzle tables
+import { createInsertSchema } from "drizzle-zod";
+export const dogInsertSchema = createInsertSchema(dogs);
+
+// Custom request schemas with refinements
+export const rateRequestSchema = z.object({
+  value: z.number().min(0.5).max(5).multipleOf(0.5),
+});
+```
+
+**D1 Transaction Gotcha (CRITICAL):**
+D1 does NOT support `BEGIN TRANSACTION`. Use `db.batch()` instead:
+
+```typescript
+// WRONG - Will fail on D1
+await db.transaction(async (tx) => { /* ... */ });
+
+// CORRECT - Use batch
+const results = await db.batch([
+  db.insert(users).values(...),
+  db.update(accounts).set(...).where(...),
+]);
+```
+
+### Response Field Naming
+
+API responses use snake_case for backwards compatibility:
+
+```typescript
+.select({
+  id: dogs.id,
+  avg_rating: sql<number>`AVG(...)`,  // snake_case preserved
+  breed_name: breeds.name,
+})
 ```
 
 ---
@@ -500,6 +580,9 @@ See `docs/dog-ceo-integration.md` for complete technical specification.
 
 - [Cloudflare D1 Docs](https://developers.cloudflare.com/d1/)
 - [Cloudflare Workers Logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/)
+- [Drizzle ORM D1 Docs](https://orm.drizzle.team/docs/connect-cloudflare-d1)
+- [Drizzle-Zod Docs](https://orm.drizzle.team/docs/zod)
+- [Drizzle Batch API (D1 transactions)](https://orm.drizzle.team/docs/batch-api)
 - [Hono Documentation](https://hono.dev/)
 - [Hono RPC Guide](https://hono.dev/docs/guides/rpc)
 - [Hono Zod Validator](https://github.com/honojs/middleware/tree/main/packages/zod-validator)

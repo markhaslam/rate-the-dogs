@@ -21,6 +21,7 @@
   "dependencies": {
     "@hono/zod-validator": "^0.7.5",
     "@rate-the-dogs/shared": "workspace:*",
+    "drizzle-orm": "^0.44.7",
     "hono": "^4.10.7",
     "zod": "^4.1.13"
   },
@@ -28,6 +29,8 @@
     "@cloudflare/vitest-pool-workers": "^0.10.13",
     "@cloudflare/workers-types": "^4.20251202.0",
     "@types/node": "^22.10.1",
+    "drizzle-kit": "^0.31.7",
+    "drizzle-zod": "^0.8.3",
     "typescript": "^5.9.3",
     "vitest": "^3.2",
     "wrangler": "4"

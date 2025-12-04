@@ -1,6 +1,3 @@
-// Re-export all schemas
+// Re-export API schemas only
+// Database-specific schemas are now in apps/api/src/db/zodSchemas.ts (powered by drizzle-zod)
 export * from "./api.js";
-export * from "./breed.js";
-export * from "./dog.js";
-export * from "./rating.js";
-export * from "./user.js";

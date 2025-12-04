@@ -1,66 +1,108 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { z } from "zod";
+import { eq, and, notInArray, sql } from "drizzle-orm";
 import type { Env, Variables } from "../lib/env.js";
 import { success } from "../lib/response.js";
 import { generateImageKey, getImageUrl } from "../lib/r2.js";
+import {
+  dogs as dogsTable,
+  breeds as breedsTable,
+  ratings as ratingsTable,
+  skips as skipsTable,
+} from "../db/schema/index.js";
+import {
+  rateRequestSchema,
+  createDogRequestSchema,
+  uploadUrlRequestSchema,
+} from "../db/zodSchemas.js";
 
 const dogs = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// GET /api/dogs/next - Get next unrated dog
+/**
+ * GET /api/dogs/next - Get next unrated dog
+ * Returns a random approved dog that the user hasn't rated or skipped
+ */
 dogs.get("/next", async (c) => {
+  const db = c.get("db");
   const anonId = c.get("anonId");
 
-  const result = await c.env.DB.prepare(
-    `
-    SELECT d.id, d.name, d.image_key, d.breed_id, b.name as breed_name, b.slug as breed_slug,
-           (SELECT AVG(value) FROM ratings WHERE dog_id = d.id) as avg_rating,
-           (SELECT COUNT(*) FROM ratings WHERE dog_id = d.id) as rating_count
-    FROM dogs d
-    JOIN breeds b ON d.breed_id = b.id
-    WHERE d.status = 'approved'
-      AND d.id NOT IN (SELECT dog_id FROM ratings WHERE anon_id = ?)
-      AND d.id NOT IN (SELECT dog_id FROM skips WHERE anon_id = ?)
-    ORDER BY RANDOM()
-    LIMIT 1
-  `
-  )
-    .bind(anonId, anonId)
-    .first();
+  // Subquery for dogs already rated by this user
+  const ratedDogIds = db
+    .select({ dogId: ratingsTable.dogId })
+    .from(ratingsTable)
+    .where(eq(ratingsTable.anonId, anonId));
 
-  if (!result) {
+  // Subquery for dogs already skipped by this user
+  const skippedDogIds = db
+    .select({ dogId: skipsTable.dogId })
+    .from(skipsTable)
+    .where(eq(skipsTable.anonId, anonId));
+
+  // Main query - get random unrated/unskipped approved dog
+  const result = await db
+    .select({
+      id: dogsTable.id,
+      name: dogsTable.name,
+      image_key: dogsTable.imageKey,
+      breed_id: dogsTable.breedId,
+      breed_name: breedsTable.name,
+      breed_slug: breedsTable.slug,
+      avg_rating: sql<
+        number | null
+      >`(SELECT AVG(value) FROM ratings WHERE dog_id = ${dogsTable.id})`,
+      rating_count: sql<number>`(SELECT COUNT(*) FROM ratings WHERE dog_id = ${dogsTable.id})`,
+    })
+    .from(dogsTable)
+    .innerJoin(breedsTable, eq(dogsTable.breedId, breedsTable.id))
+    .where(
+      and(
+        eq(dogsTable.status, "approved"),
+        notInArray(dogsTable.id, ratedDogIds),
+        notInArray(dogsTable.id, skippedDogIds)
+      )
+    )
+    .orderBy(sql`RANDOM()`)
+    .limit(1);
+
+  if (result.length === 0) {
     return c.json(success(null));
   }
 
+  const dog = result[0];
   return c.json(
     success({
-      ...result,
-      image_url: getImageUrl(
-        result.image_key as string,
-        result.breed_slug as string
-      ),
+      ...dog,
+      image_url: getImageUrl(dog.image_key, dog.breed_slug),
     })
   );
 });
 
-// GET /api/dogs/:id - Get dog by ID
+/**
+ * GET /api/dogs/:id - Get dog by ID
+ */
 dogs.get("/:id", async (c) => {
+  const db = c.get("db");
   const id = parseInt(c.req.param("id"));
 
-  const result = await c.env.DB.prepare(
-    `
-    SELECT d.id, d.name, d.image_key, d.breed_id, b.name as breed_name, b.slug as breed_slug,
-           (SELECT AVG(value) FROM ratings WHERE dog_id = d.id) as avg_rating,
-           (SELECT COUNT(*) FROM ratings WHERE dog_id = d.id) as rating_count
-    FROM dogs d
-    JOIN breeds b ON d.breed_id = b.id
-    WHERE d.id = ? AND d.status = 'approved'
-  `
-  )
-    .bind(id)
-    .first();
+  const result = await db
+    .select({
+      id: dogsTable.id,
+      name: dogsTable.name,
+      image_key: dogsTable.imageKey,
+      breed_id: dogsTable.breedId,
+      breed_name: breedsTable.name,
+      breed_slug: breedsTable.slug,
+      avg_rating: sql<
+        number | null
+      >`(SELECT AVG(value) FROM ratings WHERE dog_id = ${dogsTable.id})`,
+      rating_count: sql<number>`(SELECT COUNT(*) FROM ratings WHERE dog_id = ${dogsTable.id})`,
+    })
+    .from(dogsTable)
+    .innerJoin(breedsTable, eq(dogsTable.breedId, breedsTable.id))
+    .where(and(eq(dogsTable.id, id), eq(dogsTable.status, "approved")))
+    .limit(1);
 
-  if (!result) {
+  if (result.length === 0) {
     return c.json(
       {
         success: false,
@@ -70,122 +112,105 @@ dogs.get("/:id", async (c) => {
     );
   }
 
+  const dog = result[0];
   return c.json(
     success({
-      ...result,
-      image_url: getImageUrl(
-        result.image_key as string,
-        result.breed_slug as string
-      ),
+      ...dog,
+      image_url: getImageUrl(dog.image_key, dog.breed_slug),
     })
   );
 });
 
-// POST /api/dogs/:id/rate - Rate a dog
-dogs.post(
-  "/:id/rate",
-  zValidator(
-    "json",
-    z.object({ value: z.number().min(0.5).max(5).multipleOf(0.5) })
-  ),
-  async (c) => {
-    const id = parseInt(c.req.param("id"));
-    const { value } = c.req.valid("json");
-    const anonId = c.get("anonId");
-    const clientIP = c.get("clientIP");
-    const userAgent = c.get("userAgent");
+/**
+ * POST /api/dogs/:id/rate - Rate a dog
+ */
+dogs.post("/:id/rate", zValidator("json", rateRequestSchema), async (c) => {
+  const db = c.get("db");
+  const id = parseInt(c.req.param("id"));
+  const { value } = c.req.valid("json");
+  const anonId = c.get("anonId");
+  const clientIP = c.get("clientIP");
+  const userAgent = c.get("userAgent");
 
-    try {
-      await c.env.DB.prepare(
-        `
-      INSERT INTO ratings (dog_id, value, anon_id, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)
-    `
-      )
-        .bind(id, value, anonId, clientIP, userAgent)
-        .run();
+  try {
+    await db.insert(ratingsTable).values({
+      dogId: id,
+      value,
+      anonId,
+      ipAddress: clientIP,
+      userAgent,
+    });
 
-      return c.json(success({ rated: true }));
-    } catch {
-      // Likely duplicate rating
-      return c.json(
-        {
-          success: false,
-          error: { code: "ALREADY_RATED", message: "Already rated this dog" },
-        },
-        400
-      );
-    }
+    return c.json(success({ rated: true }));
+  } catch {
+    // Likely duplicate rating (unique constraint violation)
+    return c.json(
+      {
+        success: false,
+        error: { code: "ALREADY_RATED", message: "Already rated this dog" },
+      },
+      400
+    );
   }
-);
+});
 
-// POST /api/dogs/:id/skip - Skip a dog
+/**
+ * POST /api/dogs/:id/skip - Skip a dog
+ */
 dogs.post("/:id/skip", async (c) => {
+  const db = c.get("db");
   const id = parseInt(c.req.param("id"));
   const anonId = c.get("anonId");
 
   try {
-    await c.env.DB.prepare(
-      `
-      INSERT INTO skips (dog_id, anon_id) VALUES (?, ?)
-    `
-    )
-      .bind(id, anonId)
-      .run();
+    await db.insert(skipsTable).values({
+      dogId: id,
+      anonId,
+    });
 
     return c.json(success({ skipped: true }));
   } catch {
-    return c.json(success({ skipped: true })); // Already skipped, that's fine
+    // Already skipped (unique constraint violation), that's fine
+    return c.json(success({ skipped: true }));
   }
 });
 
-// POST /api/dogs - Create a new dog (upload)
-dogs.post(
-  "/",
-  zValidator(
-    "json",
-    z.object({
-      name: z.string().max(50).optional(),
-      imageKey: z.string(),
-      breedId: z.number().int().positive(),
+/**
+ * POST /api/dogs - Create a new dog (upload)
+ */
+dogs.post("/", zValidator("json", createDogRequestSchema), async (c) => {
+  const db = c.get("db");
+  const { name, imageKey, breedId } = c.req.valid("json");
+  const anonId = c.get("anonId");
+
+  const result = await db
+    .insert(dogsTable)
+    .values({
+      name: name ?? null,
+      imageKey,
+      breedId,
+      uploaderAnonId: anonId,
+      status: "approved",
     })
-  ),
-  async (c) => {
-    const { name, imageKey, breedId } = c.req.valid("json");
-    const anonId = c.get("anonId");
+    .returning({ id: dogsTable.id });
 
-    const result = await c.env.DB.prepare(
-      `
-    INSERT INTO dogs (name, image_key, breed_id, uploader_anon_id, status)
-    VALUES (?, ?, ?, ?, 'approved')
-    RETURNING id
-  `
-    )
-      .bind(name ?? null, imageKey, breedId, anonId)
-      .first();
+  return c.json(success({ id: result[0]?.id }), 201);
+});
 
-    return c.json(success({ id: result?.id }), 201);
-  }
-);
+/**
+ * POST /api/dogs/upload-url - Get presigned upload URL
+ */
+dogs.post("/upload-url", zValidator("json", uploadUrlRequestSchema), (c) => {
+  const { contentType } = c.req.valid("json");
+  const key = generateImageKey(contentType);
 
-// POST /api/upload-url - Get presigned upload URL
-dogs.post(
-  "/upload-url",
-  zValidator(
-    "json",
-    z.object({
-      contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
-    })
-  ),
-  (c) => {
-    const { contentType } = c.req.valid("json");
-    const key = generateImageKey(contentType);
+  // For MVP, we'll upload directly through our endpoint
+  return c.json(success({ key, uploadUrl: `/api/upload/${key}` }));
+});
 
-    // For MVP, we'll upload directly through our endpoint
-    return c.json(success({ key, uploadUrl: `/api/upload/${key}` }));
-  }
-);
-
-// PUT /api/upload/:key - Direct upload endpoint
+/**
+ * PUT /api/dogs/upload/* - Direct upload endpoint
+ */
 dogs.put("/upload/*", async (c) => {
   const key = c.req.path.replace("/api/dogs/upload/", "");
   const body = await c.req.arrayBuffer();

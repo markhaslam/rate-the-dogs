@@ -80,10 +80,12 @@ export default tseslint.config(
     files: [
       "**/vitest.config.ts",
       "**/playwright.config.ts",
+      "**/drizzle.config.ts",
       "**/*.test.ts",
       "**/*.test.tsx",
       "**/*.spec.ts",
       "**/*.spec.tsx",
+      "**/test/**/*.ts",
       "e2e/**/*.ts",
     ],
     ...tseslint.configs.disableTypeChecked,

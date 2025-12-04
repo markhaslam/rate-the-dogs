@@ -4,6 +4,7 @@ import type { Env, Variables } from "./lib/env.js";
 import { errorHandler } from "./lib/errors.js";
 import { anonMiddleware } from "./middleware/anon.js";
 import { loggerMiddleware } from "./middleware/logger.js";
+import { dbMiddleware } from "./middleware/db.js";
 import dogsRoute from "./routes/dogs.js";
 import breedsRoute from "./routes/breeds.js";
 import leaderboardRoute from "./routes/leaderboard.js";
@@ -14,6 +15,7 @@ const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 // Global middleware
 app.use("*", cors());
 app.use("*", loggerMiddleware);
+app.use("*", dbMiddleware);
 app.use("/api/*", anonMiddleware);
 
 // Global error handler

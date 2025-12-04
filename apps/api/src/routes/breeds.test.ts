@@ -1,100 +1,75 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, beforeAll } from "vitest";
+import { env } from "cloudflare:test";
 import app from "../index.js";
+import { applyMigrations, clearTestData } from "../test/setup.js";
 
-// Mock environment for testing
-const mockEnv = {
-  DB: {
-    prepare: (sql: string) => ({
-      bind: (..._params: unknown[]) => ({
-        all: async () => {
-          if (sql.includes("SELECT id, name, slug FROM breeds")) {
-            if (sql.includes("LIKE")) {
-              return {
-                results: [
-                  {
-                    id: 1,
-                    name: "Labrador Retriever",
-                    slug: "labrador-retriever",
-                  },
-                ],
-              };
-            }
-            return {
-              results: [
-                {
-                  id: 1,
-                  name: "Labrador Retriever",
-                  slug: "labrador-retriever",
-                },
-                { id: 2, name: "German Shepherd", slug: "german-shepherd" },
-                { id: 3, name: "Golden Retriever", slug: "golden-retriever" },
-              ],
-            };
-          }
-          return { results: [] };
-        },
-        first: async () => {
-          if (sql.includes("WHERE slug = ?")) {
-            return {
-              id: 1,
-              name: "Labrador Retriever",
-              slug: "labrador-retriever",
-            };
-          }
-          return null;
-        },
-      }),
-    }),
-  },
-  IMAGES: {},
-  ADMIN_SECRET: "test-secret",
-  ENVIRONMENT: "test",
-};
+/**
+ * Breeds API Tests
+ *
+ * These tests use the real D1 database provided by vitest-pool-workers/miniflare.
+ */
+
+// Apply migrations before all tests
+beforeAll(async () => {
+  await applyMigrations();
+});
+
+// Helper to seed test data using prepare().run()
+async function seedTestData() {
+  await env.DB.prepare(
+    `INSERT OR IGNORE INTO breeds (id, name, slug) VALUES (1, 'Labrador Retriever', 'labrador-retriever')`
+  ).run();
+  await env.DB.prepare(
+    `INSERT OR IGNORE INTO breeds (id, name, slug) VALUES (2, 'German Shepherd', 'german-shepherd')`
+  ).run();
+  await env.DB.prepare(
+    `INSERT OR IGNORE INTO breeds (id, name, slug) VALUES (3, 'Golden Retriever', 'golden-retriever')`
+  ).run();
+  await env.DB.prepare(
+    `INSERT OR IGNORE INTO breeds (id, name, slug) VALUES (4, 'Shih Tzu', 'shih-tzu')`
+  ).run();
+}
 
 describe("Breeds API", () => {
+  beforeEach(async () => {
+    await clearTestData();
+    await seedTestData();
+  });
+
   describe("GET /api/breeds", () => {
     it("returns list of all breeds", async () => {
-      const res = await app.request("/api/breeds", {}, mockEnv);
+      const res = await app.request("/api/breeds", {}, env);
       expect(res.status).toBe(200);
 
       const json = await res.json();
       expect(json.success).toBe(true);
       expect(Array.isArray(json.data)).toBe(true);
-      expect(json.data.length).toBeGreaterThan(0);
+      expect(json.data.length).toBe(4);
     });
 
     it("returns breeds sorted alphabetically by name", async () => {
-      const res = await app.request("/api/breeds", {}, mockEnv);
+      const res = await app.request("/api/breeds", {}, env);
       const json = await res.json();
 
-      expect(json.data[0].name).toBe("Labrador Retriever");
+      // Should be sorted: German Shepherd, Golden Retriever, Labrador Retriever, Shih Tzu
+      expect(json.data[0].name).toBe("German Shepherd");
+      expect(json.data[1].name).toBe("Golden Retriever");
+      expect(json.data[2].name).toBe("Labrador Retriever");
+      expect(json.data[3].name).toBe("Shih Tzu");
     });
 
     it("filters breeds by search query", async () => {
-      const res = await app.request("/api/breeds?search=labrador", {}, mockEnv);
+      const res = await app.request("/api/breeds?search=labrador", {}, env);
       expect(res.status).toBe(200);
 
       const json = await res.json();
       expect(json.success).toBe(true);
+      expect(json.data.length).toBe(1);
+      expect(json.data[0].name).toBe("Labrador Retriever");
     });
 
     it("returns empty array for no matching search", async () => {
-      const emptyEnv = {
-        ...mockEnv,
-        DB: {
-          prepare: () => ({
-            bind: () => ({
-              all: async () => ({ results: [] }),
-            }),
-          }),
-        },
-      };
-
-      const res = await app.request(
-        "/api/breeds?search=nonexistent",
-        {},
-        emptyEnv
-      );
+      const res = await app.request("/api/breeds?search=nonexistent", {}, env);
       const json = await res.json();
 
       expect(json.success).toBe(true);
@@ -102,38 +77,35 @@ describe("Breeds API", () => {
     });
 
     it("handles case-insensitive search", async () => {
-      const res = await app.request("/api/breeds?search=LABRADOR", {}, mockEnv);
+      const res = await app.request("/api/breeds?search=LABRADOR", {}, env);
       expect(res.status).toBe(200);
+
+      const json = await res.json();
+      expect(json.data.length).toBe(1);
+    });
+
+    it("returns multiple matches for partial search", async () => {
+      const res = await app.request("/api/breeds?search=retriever", {}, env);
+      expect(res.status).toBe(200);
+
+      const json = await res.json();
+      expect(json.data.length).toBe(2); // Golden Retriever and Labrador Retriever
     });
   });
 
   describe("GET /api/breeds/:slug", () => {
     it("returns breed by slug", async () => {
-      const res = await app.request(
-        "/api/breeds/labrador-retriever",
-        {},
-        mockEnv
-      );
+      const res = await app.request("/api/breeds/labrador-retriever", {}, env);
       expect(res.status).toBe(200);
 
       const json = await res.json();
       expect(json.success).toBe(true);
       expect(json.data.slug).toBe("labrador-retriever");
+      expect(json.data.name).toBe("Labrador Retriever");
     });
 
     it("returns 404 for non-existent breed", async () => {
-      const notFoundEnv = {
-        ...mockEnv,
-        DB: {
-          prepare: () => ({
-            bind: () => ({
-              first: async () => null,
-            }),
-          }),
-        },
-      };
-
-      const res = await app.request("/api/breeds/fake-breed", {}, notFoundEnv);
+      const res = await app.request("/api/breeds/fake-breed", {}, env);
       expect(res.status).toBe(404);
 
       const json = await res.json();
@@ -142,9 +114,20 @@ describe("Breeds API", () => {
     });
 
     it("handles special characters in slug", async () => {
-      const res = await app.request("/api/breeds/shih-tzu", {}, mockEnv);
-      // Should not crash, returns 200 or 404 depending on data
-      expect([200, 404]).toContain(res.status);
+      const res = await app.request("/api/breeds/shih-tzu", {}, env);
+      expect(res.status).toBe(200);
+
+      const json = await res.json();
+      expect(json.data.name).toBe("Shih Tzu");
+    });
+
+    it("includes all breed fields in response", async () => {
+      const res = await app.request("/api/breeds/german-shepherd", {}, env);
+      const json = await res.json();
+
+      expect(json.data).toHaveProperty("id");
+      expect(json.data).toHaveProperty("name");
+      expect(json.data).toHaveProperty("slug");
     });
   });
 });
