@@ -39,7 +39,7 @@ function Nav() {
             <img
               src="/logo.png"
               alt="RateTheDogs"
-              className="w-10 h-10 rounded-lg shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 transition-all group-hover:scale-105"
+              className="w-10 h-10 rounded-lg bg-white p-1 shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 transition-all group-hover:scale-105"
             />
             <span className="text-xl font-bold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent hidden sm:inline">
               RateTheDogs
