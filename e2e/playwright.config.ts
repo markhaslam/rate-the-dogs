@@ -59,12 +59,13 @@ export default defineConfig({
   // Start local servers before running tests
   webServer: process.env.CI
     ? [
-        // CI: Use unified wrangler server (requires pre-built web app + D1 migrations)
+        // CI: Use unified wrangler server (requires pre-built web app + D1 migrations + seed data)
         {
           command:
-            "bun run --cwd ../apps/web build && bun run --cwd ../apps/api db:migrate:local && bun run --cwd ../apps/api dev",
+            "bun run --cwd ../apps/web build && bun run --cwd ../apps/api db:migrate:local && bun run ../apps/api/scripts/seedDogCeoImages.ts --local --limit=10 && bun run --cwd ../apps/api dev",
           port: 8787,
           reuseExistingServer: false,
+          timeout: 120000, // Allow more time for build + migrate + seed
         },
       ]
     : [
