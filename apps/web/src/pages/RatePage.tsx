@@ -267,7 +267,7 @@ export function RatePage() {
       {/* Quick tip */}
       <div className="mt-6 text-center max-w-sm">
         <p className="text-xs text-muted-foreground">
-          Tip: Click the bones to rate, or use keyboard arrows for quick rating!
+          Tip: Tap the bones to rate!
         </p>
       </div>
     </div>
