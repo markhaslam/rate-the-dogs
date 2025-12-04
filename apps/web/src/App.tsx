@@ -4,6 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { RatePage } from "@/pages/RatePage";
 import { UploadPage } from "@/pages/UploadPage";
 import { LeaderboardPage } from "@/pages/LeaderboardPage";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 // Bone icon for branding - modern wide style
@@ -18,6 +20,7 @@ function BoneIcon({ className }: { className?: string }) {
 function Nav() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { resolvedTheme } = useTheme();
 
   const navLinks = [
     { to: "/", label: "Rate", icon: "rate" },
@@ -31,17 +34,20 @@ function Nav() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-lg border-b border-slate-700/50">
+    <nav className="sticky top-0 z-50 bg-card/95 backdrop-blur-lg border-b border-border">
       <div className="max-w-4xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <img
-              src="/logo.png"
+              src="/logo.svg"
               alt="RateTheDogs"
-              className="w-10 h-10 rounded-lg bg-white p-1 shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 transition-all group-hover:scale-105"
+              className={cn(
+                "w-9 h-9 transition-transform duration-200 group-hover:scale-110",
+                resolvedTheme === "dark" && "invert"
+              )}
             />
-            <span className="text-xl font-bold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent hidden sm:inline">
+            <span className="text-xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent hidden sm:inline">
               RateTheDogs
             </span>
           </Link>
@@ -55,40 +61,44 @@ function Nav() {
                 className={cn(
                   "px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200",
                   isActive(link.to)
-                    ? "bg-orange-500/20 text-orange-400 shadow-lg shadow-orange-500/10"
-                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                    ? "bg-primary/20 text-primary shadow-lg shadow-primary/10"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
                 {link.label}
               </Link>
             ))}
+            <ThemeToggle className="ml-2" />
           </div>
 
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="sm:hidden p-2 rounded-lg hover:bg-slate-800 transition-colors"
-            aria-label="Toggle menu"
-          >
-            <svg
-              className="w-6 h-6 text-slate-300"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
+          {/* Mobile: theme toggle and menu button */}
+          <div className="flex items-center gap-1 sm:hidden">
+            <ThemeToggle />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-lg hover:bg-muted transition-colors"
+              aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? (
-                <path d="M18 6L6 18M6 6l12 12" />
-              ) : (
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
+              <svg
+                className="w-6 h-6 text-muted-foreground"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                {mobileMenuOpen ? (
+                  <path d="M18 6L6 18M6 6l12 12" />
+                ) : (
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Mobile navigation */}
         {mobileMenuOpen && (
-          <div className="sm:hidden pt-3 pb-2 space-y-1 border-t mt-3 border-slate-700">
+          <div className="sm:hidden pt-3 pb-2 space-y-1 border-t mt-3 border-border">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
@@ -97,8 +107,8 @@ function Nav() {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-200",
                   isActive(link.to)
-                    ? "bg-orange-500/20 text-orange-400"
-                    : "text-slate-300 hover:bg-slate-800"
+                    ? "bg-primary/20 text-primary"
+                    : "text-muted-foreground hover:bg-muted"
                 )}
               >
                 {link.icon === "rate" && <BoneIcon className="w-5 h-5" />}
@@ -136,9 +146,9 @@ function Nav() {
   );
 }
 
-function App() {
+function AppContent() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       <Nav />
       <main className="pb-8">
         <Routes>
@@ -153,6 +163,14 @@ function App() {
   );
 }
 
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
+
 function NotFound() {
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4">
@@ -162,13 +180,13 @@ function NotFound() {
             🐕‍🦺
           </span>
         </div>
-        <h1 className="text-4xl font-bold text-white">404</h1>
-        <p className="mt-2 text-slate-400">
+        <h1 className="text-4xl font-bold text-foreground">404</h1>
+        <p className="mt-2 text-muted-foreground">
           Oops! This page ran away like a loose dog.
         </p>
         <Link
           to="/"
-          className="mt-4 inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-lg font-medium hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-orange-500/25"
+          className="mt-4 inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded-lg font-medium hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-primary/25"
         >
           <svg
             className="w-4 h-4"

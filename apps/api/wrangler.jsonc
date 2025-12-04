@@ -1,0 +1,47 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "rate-the-dogs",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "assets": {
+    "directory": "../web/dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/"],
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "rate-the-dogs",
+      "database_id": "local",
+      "migrations_dir": "src/db/migrations",
+    },
+  ],
+
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "rate-the-dogs-images",
+    },
+  ],
+
+  "vars": {
+    "ENVIRONMENT": "production",
+  },
+
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.1,
+  },
+
+  "env": {
+    "dev": {
+      "name": "rate-the-dogs-dev",
+      "vars": {
+        "ENVIRONMENT": "development",
+      },
+    },
+  },
+}

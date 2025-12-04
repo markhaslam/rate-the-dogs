@@ -27,8 +27,13 @@
       "outputs": []
     },
     "deploy": {
-      "dependsOn": ["build", "test"],
-      "outputs": []
+      "dependsOn": [
+        "@rate-the-dogs/web#build",
+        "@rate-the-dogs/api#build",
+        "test"
+      ],
+      "outputs": [],
+      "cache": false
     },
     "clean": {
       "cache": false

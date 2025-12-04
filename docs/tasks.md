@@ -303,6 +303,11 @@
   - [x] Homepage loads
   - [x] Navigation works
   - [x] API health check
+- [x] Create `e2e/tests/deployment.spec.ts`
+  - [x] Static assets load (CSS, JS, images)
+  - [x] SPA routing works (direct navigation)
+  - [x] API routes work (same origin)
+  - [x] Cookie handling (anonymous ID)
 - [ ] Create `e2e/tests/rating.spec.ts`
   - [ ] Rate a dog successfully
   - [ ] Skip a dog
@@ -343,17 +348,76 @@
 
 ### 6.3 CI/CD
 
-- [ ] Create `.github/workflows/ci.yml`
-- [ ] Run typecheck, lint, format:check, test on PRs
-- [ ] Run build to verify compilation
-- [ ] Create `.github/workflows/deploy.yml`
-- [ ] Deploy to Cloudflare on main merge
+- [x] Create `.github/workflows/ci.yml`
+- [x] Run typecheck, lint, format:check, test on PRs
+- [x] Run build to verify compilation
+- [x] Create `.github/workflows/deploy.yml`
+- [x] Deploy to Cloudflare on main merge
 
 ### 6.4 Documentation
 
 - [x] Update CLAUDE.md with any pattern changes
 - [x] Verify plan.md is accurate
 - [ ] Create brief README.md for the project
+
+---
+
+## Phase 6.5: Cloudflare Workers Unified Deployment Migration (COMPLETED)
+
+> **Status**: Completed December 2025
+> **Reference**: `docs/deployment-migration-plan.md`
+
+### 6.5.1 Configuration Migration
+
+- [x] Delete `apps/api/wrangler.toml`
+- [x] Create `apps/api/wrangler.jsonc` with unified deployment config
+- [x] Add `assets` configuration pointing to `../web/dist`
+- [x] Add `run_worker_first: ["/api/*", "/"]` for API routing
+- [x] Add observability config with 10% sampling rate
+- [x] Add dev environment configuration
+
+### 6.5.2 Build Scripts
+
+- [x] Add `build:deploy` script to root package.json
+- [x] Add `deploy` script for unified deployment
+- [x] Add `deploy:preview` script for dev environment
+- [x] Update turbo.json for deployment tasks
+
+### 6.5.3 GitHub Workflows
+
+- [x] Create `.github/workflows/ci.yml` for PR checks
+- [x] Create `.github/workflows/deploy.yml` for production deployment
+- [x] Configure Cloudflare API token secret requirement
+
+### 6.5.4 E2E Test Updates
+
+- [x] Update `e2e/playwright.config.ts` for unified server testing
+- [x] Create `e2e/tests/deployment.spec.ts` for deployment verification
+- [x] Add static asset loading tests
+- [x] Add SPA routing tests
+- [x] Add API route tests (same origin)
+- [x] Add cookie handling tests
+- [x] Skip webkit tests on WSL (missing system dependencies)
+
+### 6.5.5 Package Updates (React 19 Migration)
+
+- [x] Update React to 19.2.1
+- [x] Update Vite to 7.2.6
+- [x] Update Vitest to 4.0.15 (web) / 3.2.x (api)
+- [x] Update @testing-library/react to 16.3.0
+- [x] Update Zod to 4.1.13
+- [x] Update Hono to 4.10.7
+- [x] Update TailwindCSS to 4.1.17
+- [x] Update TypeScript to 5.9.3
+- [x] Fix Zod 4 breaking changes (errorMap → message)
+- [x] Fix jest-dom matchers for Vitest 4
+- [x] Fix React 19 act() warnings in tests
+
+### 6.5.6 Test Results
+
+- [x] Unit tests: 243 passing (shared: 75, api: 68, web: 100)
+- [x] E2E tests: 42 passing (Chromium, Firefox, Mobile Chrome)
+- [x] All quality checks passing (typecheck, lint, format)
 
 ---
 
@@ -369,8 +433,7 @@
 
 ### 7.2 Production Deploy
 
-- [ ] Deploy API worker with `wrangler deploy`
-- [ ] Deploy frontend (Cloudflare Pages or similar)
+- [ ] Deploy unified Worker with `bun run deploy` (API + static assets)
 - [ ] Configure custom domain (if applicable)
 - [ ] Verify production functionality
 - [ ] Set observability sampling rate for production (10%)
@@ -533,6 +596,50 @@ This phase adds Dog CEO API integration, analytics fields, and user system prep.
 - [x] Add micro-interactions
 - [x] Ensure mobile responsiveness
 - [x] Ensure desktop responsiveness
+
+---
+
+## Phase 10: Light/Dark Mode Theme (Completed)
+
+### 10.1 Theme System Architecture
+
+- [x] Create ThemeContext with provider and useTheme hook
+- [x] Support "light", "dark", and "system" theme options
+- [x] Default to user's system preference via `prefers-color-scheme`
+- [x] Persist theme choice to localStorage
+- [x] Listen for system preference changes in real-time
+
+### 10.2 Theme Toggle Component
+
+- [x] Create ThemeToggle component with sun/moon icons
+- [x] Add smooth icon transitions (rotation/scale animations)
+- [x] Dynamic aria-label based on current theme
+- [x] Add to navbar (both desktop and mobile)
+
+### 10.3 CSS Theme Variables
+
+- [x] Define light theme variables in `:root`
+- [x] Define dark theme variables in `.dark` class
+- [x] Use OKLCH color space for perceptually uniform colors
+- [x] Add smooth theme transition animations
+- [x] Include semantic variables (background, foreground, card, muted, etc.)
+
+### 10.4 Component Updates
+
+- [x] Update BoneRating.tsx to use CSS variables instead of hardcoded colors
+- [x] Update DogCard.tsx to use theme-aware classes
+- [x] Update RatePage.tsx to use theme classes
+- [x] Update LeaderboardPage.tsx to use theme classes
+- [x] Update UploadPage.tsx to use theme classes
+- [x] Update navbar logo to conditionally invert based on theme
+
+### 10.5 Testing
+
+- [x] Write unit tests for ThemeContext (13 tests)
+- [x] Write unit tests for ThemeToggle (14 tests)
+- [x] Test localStorage persistence
+- [x] Test system preference detection
+- [x] Test theme toggle behavior
 
 ---
 

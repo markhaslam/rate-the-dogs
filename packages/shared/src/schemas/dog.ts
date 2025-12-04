@@ -75,9 +75,7 @@ export const dogWithDetailsSchema = dogSchema.extend({
  */
 export const uploadUrlRequestSchema = z.object({
   contentType: z.enum(UPLOAD.ALLOWED_TYPES, {
-    errorMap: () => ({
-      message: `Content type must be one of: ${UPLOAD.ALLOWED_TYPES.join(", ")}`,
-    }),
+    message: `Content type must be one of: ${UPLOAD.ALLOWED_TYPES.join(", ")}`,
   }),
 });
 

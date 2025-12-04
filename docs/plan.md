@@ -1,8 +1,8 @@
 # RateTheDogs - Implementation Plan
 
-> **Version**: 1.0
+> **Version**: 1.1
 > **Last Updated**: December 2025
-> **Status**: Ready for Implementation
+> **Status**: MVP In Progress - Deployment Migration Complete
 
 ---
 
@@ -12,21 +12,23 @@ RateTheDogs is a dog rating web application where users upload dog photos and ra
 
 ## Tech Stack
 
-| Layer           | Technology              | Rationale                                       |
-| --------------- | ----------------------- | ----------------------------------------------- |
-| Runtime         | Cloudflare Workers      | Edge deployment, global CDN, generous free tier |
-| Backend         | Hono ^4.6               | Lightweight, TypeScript-first, built-in RPC     |
-| Database        | Cloudflare D1           | Serverless SQLite, automatic replication        |
-| Storage         | Cloudflare R2           | S3-compatible, zero egress fees                 |
-| Validation      | Zod ^3.23               | TypeScript inference, runtime validation        |
-| Frontend        | React ^18.3             | Component ecosystem, React Query                |
-| Build           | Vite ^6.0               | Fast HMR, native ESM, TailwindCSS v4 plugin     |
-| CSS             | TailwindCSS ^4.0        | Utility-first, new Vite plugin                  |
-| Components      | shadcn/ui               | Accessible, customizable, owned code            |
-| Package Manager | Bun ^1.1                | Fast installs, native TypeScript                |
-| Monorepo        | Turborepo ^2.3          | Task orchestration, caching                     |
-| Testing         | Vitest + Playwright     | Vite-native, comprehensive coverage             |
-| Observability   | Cloudflare Workers Logs | Structured logging, dashboard queries           |
+| Layer           | Technology                        | Rationale                                          |
+| --------------- | --------------------------------- | -------------------------------------------------- |
+| Runtime         | Cloudflare Workers + Static Assets | Unified deployment (API + frontend), global CDN    |
+| Backend         | Hono ^4.10                        | Lightweight, TypeScript-first, built-in RPC        |
+| Database        | Cloudflare D1                     | Serverless SQLite, automatic replication           |
+| Storage         | Cloudflare R2                     | S3-compatible, zero egress fees                    |
+| Validation      | Zod ^4.1                          | TypeScript inference, runtime validation           |
+| Frontend        | React ^19                         | Latest stable, improved performance                |
+| Build           | Vite ^7.2                         | Fast HMR, native ESM, TailwindCSS v4 plugin        |
+| CSS             | TailwindCSS ^4.1                  | Utility-first, new Vite plugin                     |
+| Components      | shadcn/ui                         | Accessible, customizable, owned code               |
+| Package Manager | Bun ^1.1                          | Fast installs, native TypeScript                   |
+| Monorepo        | Turborepo ^2.6                    | Task orchestration, caching                        |
+| Testing         | Vitest ^4 + Playwright ^1.57     | Vite-native, comprehensive coverage                |
+| Observability   | Cloudflare Workers Logs           | Structured logging, dashboard queries              |
+
+> **Note**: Cloudflare Pages is now in maintenance mode. This project uses the recommended Cloudflare Workers with Static Assets approach for unified deployment.
 
 ---
 
@@ -90,7 +92,7 @@ rate-the-dogs/
 ├── apps/
 │   ├── api/                     # Cloudflare Worker (Hono)
 │   │   ├── package.json
-│   │   ├── wrangler.toml
+│   │   ├── wrangler.jsonc       # Cloudflare Workers config (unified deployment)
 │   │   ├── tsconfig.json
 │   │   └── src/
 │   │       ├── index.ts         # Main entry, exports AppType
@@ -380,6 +382,13 @@ CREATE INDEX idx_breeds_last_synced ON breeds(last_synced_at);
 - Rating widget
 - Share button
 
+### ThemeToggle
+
+- Sun/moon icons with smooth transitions
+- Toggles between light and dark mode
+- Persists preference to localStorage
+- Respects system preference (`prefers-color-scheme`)
+
 ---
 
 ## Empty States
@@ -427,6 +436,7 @@ CREATE INDEX idx_breeds_last_synced ON breeds(last_synced_at);
 - Dog upload with name & breed
 - Leaderboards
 - Admin moderation
+- Light/dark mode theme with system preference detection
 - 80%+ test coverage
 
 ### Phase 1.5: Dog CEO Content Integration (NEW)
@@ -444,12 +454,14 @@ See `docs/dog-ceo-integration.md` for complete technical specification.
 - Google OAuth
 - User profiles
 - Merge anon ratings
+- User theme preferences
 
 ### Phase 3: Polish & SEO
 
 - WCAG 2.2 audit
 - Meta tags, Open Graph
 - PWA support
+- Ensure theme contrast meets WCAG standards
 
 ### Phase 4: Legal
 

@@ -1,6 +1,6 @@
 # RateTheDogs — Full Product Requirements Document (PRD)
 
-### Version 1.0 — Complete & Engineering-Ready
+### Version 1.1 — Updated December 2025
 
 _(Markdown version optimized for code-generation agents such as Claude Code)_
 
@@ -140,22 +140,34 @@ The app must be built on **Cloudflare Workers**, **D1**, **R2**, and modern Type
 - Admin can ban `anon_id` or `user_id`.
 - Store hashed IP address to detect abuse.
 
+## 4.7 Light/Dark Mode Theme
+
+- Default to user's system preference via `prefers-color-scheme` media query.
+- Support three theme options: "light", "dark", and "system".
+- Persist user's theme choice to localStorage.
+- Sun/moon toggle button in navbar with smooth animations.
+- Semantic CSS variables for all colors (background, foreground, card, muted, etc.).
+- OKLCH color space for perceptually uniform colors.
+- Smooth transitions when switching themes.
+
 ---
 
 # 5. Technical Requirements & Architecture
 
 ## 5.1 Platform Stack
 
-- **Cloudflare Workers** → Backend API + optional SSR
+- **Cloudflare Workers** → Unified deployment (API + static assets)
 - **Cloudflare D1** → Relational SQL database
 - **Cloudflare R2** → Object storage for dog images
 - Optional: **Cloudflare KV** for caching frequently accessed data
 
+> **Note**: As of December 2025, Cloudflare Pages is in maintenance mode. All deployments now use the unified Cloudflare Workers with Static Assets approach. See `docs/deployment-migration-plan.md` for details.
+
 ## 5.2 Backend
 
-- Language: **TypeScript**
-- Framework: **Hono**
-- Validation: **Zod**
+- Language: **TypeScript 5.9+**
+- Framework: **Hono 4.10+**
+- Validation: **Zod 4.x**
 - Shared TypeScript schema package
 - Anonymous identity: cookie-based UUID
 - Logged-in users: JWT in secure cookies (future)
@@ -163,10 +175,11 @@ The app must be built on **Cloudflare Workers**, **D1**, **R2**, and modern Type
 
 ## 5.3 Frontend
 
-- Framework: **React**
-- Build system: **Vite**
-- Styling: **TailwindCSS**
+- Framework: **React 19**
+- Build system: **Vite 7.x**
+- Styling: **TailwindCSS 4.x**
 - Component library: **shadcn-style components**
+- Testing: **Vitest 4.x** + **@testing-library/react 16.x**
 - Mobile-first UI
 
 ### Frontend Pages

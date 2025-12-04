@@ -31,11 +31,11 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "zod": "^3.23.8"
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
   }
 }

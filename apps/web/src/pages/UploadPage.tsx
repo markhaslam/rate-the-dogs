@@ -121,9 +121,9 @@ export function UploadPage() {
 
   return (
     <div className="max-w-md mx-auto py-8 px-4">
-      <Card className="bg-slate-800/50 border-slate-700/50">
+      <Card className="bg-card/50 border-border/50">
         <CardHeader>
-          <CardTitle className="text-center text-white">
+          <CardTitle className="text-center text-foreground">
             Upload Your Dog
           </CardTitle>
         </CardHeader>
@@ -132,7 +132,7 @@ export function UploadPage() {
             {/* Image Upload */}
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center cursor-pointer hover:border-orange-500 transition-colors bg-slate-900/50"
+              className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors bg-muted/50"
             >
               {preview ? (
                 <img
@@ -141,7 +141,7 @@ export function UploadPage() {
                   className="max-h-64 mx-auto rounded-lg"
                 />
               ) : (
-                <div className="text-slate-400">
+                <div className="text-muted-foreground">
                   <p className="text-lg">Click to upload</p>
                   <p className="text-sm">JPEG, PNG, WebP (max 10MB)</p>
                 </div>
@@ -157,7 +157,7 @@ export function UploadPage() {
 
             {/* Dog Name */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Dog&apos;s Name (optional)
               </label>
               <input
@@ -166,29 +166,29 @@ export function UploadPage() {
                 onChange={(e) => setDogName(e.target.value)}
                 maxLength={50}
                 placeholder="e.g., Max, Bella, Charlie..."
-                className="w-full px-3 py-2 border border-slate-600 rounded-lg bg-slate-900/50 text-white placeholder-slate-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
 
             {/* Breed Selection */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Breed *
               </label>
               <select
                 value={selectedBreed ?? ""}
                 onChange={(e) => setSelectedBreed(parseInt(e.target.value))}
                 required
-                className="w-full px-3 py-2 border border-slate-600 rounded-lg bg-slate-900/50 text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
               >
-                <option value="" className="text-slate-500">
+                <option value="" className="text-muted-foreground">
                   Select a breed...
                 </option>
                 {breeds.map((breed) => (
                   <option
                     key={breed.id}
                     value={breed.id}
-                    className="bg-slate-800 text-white"
+                    className="bg-card text-foreground"
                   >
                     {breed.name}
                   </option>
@@ -196,7 +196,7 @@ export function UploadPage() {
               </select>
             </div>
 
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && <p className="text-destructive text-sm">{error}</p>}
 
             <Button
               type="submit"

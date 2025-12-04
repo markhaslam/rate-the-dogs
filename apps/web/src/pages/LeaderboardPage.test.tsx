@@ -2,9 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { LeaderboardPage } from "./LeaderboardPage";
 
-// Mock fetch globally
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
+// Create a fresh mock fetch for each test
+let mockFetch: ReturnType<typeof vi.fn>;
 
 const mockDogsResponse = {
   success: true,
@@ -72,7 +71,8 @@ const mockBreedsResponse = {
 
 describe("LeaderboardPage", () => {
   beforeEach(() => {
-    mockFetch.mockClear();
+    mockFetch = vi.fn();
+    vi.stubGlobal("fetch", mockFetch);
   });
 
   describe("rendering", () => {
@@ -87,6 +87,11 @@ describe("LeaderboardPage", () => {
       expect(
         screen.getByText("The most beloved dogs on the internet")
       ).toBeInTheDocument();
+
+      // Wait for async state updates to complete
+      await waitFor(() => {
+        expect(screen.getByText("Charlie")).toBeInTheDocument();
+      });
     });
 
     it("shows loading skeletons initially", () => {
@@ -108,6 +113,11 @@ describe("LeaderboardPage", () => {
 
       expect(screen.getByText("Top Dogs")).toBeInTheDocument();
       expect(screen.getByText("Top Breeds")).toBeInTheDocument();
+
+      // Wait for async state updates to complete
+      await waitFor(() => {
+        expect(screen.getByText("Charlie")).toBeInTheDocument();
+      });
     });
   });
 

@@ -67,21 +67,21 @@ export function LeaderboardPage() {
         <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
           Leaderboard
         </h1>
-        <p className="text-slate-400 mt-2">
+        <p className="text-muted-foreground mt-2">
           The most beloved dogs on the internet
         </p>
       </div>
 
       {/* Tab switcher */}
       <div className="flex justify-center mb-6">
-        <div className="inline-flex bg-slate-800 rounded-xl p-1">
+        <div className="inline-flex bg-muted rounded-xl p-1">
           <button
             onClick={() => setTab("dogs")}
             className={cn(
               "px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-200",
               tab === "dogs"
-                ? "bg-slate-700 text-orange-400 shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-card text-primary shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
             <span className="flex items-center gap-2">
@@ -96,8 +96,8 @@ export function LeaderboardPage() {
             className={cn(
               "px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-200",
               tab === "breeds"
-                ? "bg-slate-700 text-orange-400 shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-card text-primary shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
             <span className="flex items-center gap-2">
@@ -120,10 +120,7 @@ export function LeaderboardPage() {
       {loading && (
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              className="h-20 bg-slate-800 rounded-xl animate-pulse"
-            />
+            <div key={i} className="h-20 bg-muted rounded-xl animate-pulse" />
           ))}
         </div>
       )}
@@ -138,7 +135,7 @@ export function LeaderboardPage() {
               <Card
                 key={dog.id}
                 className={cn(
-                  "flex items-center p-4 transition-all duration-200 hover:shadow-md bg-slate-800/50 border-slate-700/50",
+                  "flex items-center p-4 transition-all duration-200 hover:shadow-md bg-card/50 border-border/50",
                   i < 3 &&
                     `bg-gradient-to-r ${rankBadges[i + 1]?.color ?? ""}/10`
                 )}
@@ -148,7 +145,7 @@ export function LeaderboardPage() {
                   {i < 3 ? (
                     <span className="text-2xl">{rankBadges[i + 1]?.icon}</span>
                   ) : (
-                    <span className="text-lg font-bold text-slate-400">
+                    <span className="text-lg font-bold text-muted-foreground">
                       #{i + 1}
                     </span>
                   )}
@@ -167,10 +164,10 @@ export function LeaderboardPage() {
 
                 {/* Dog info */}
                 <div className="flex-1 ml-4 min-w-0">
-                  <h3 className="font-semibold text-white truncate">
+                  <h3 className="font-semibold text-foreground truncate">
                     {dog.name ?? "Unnamed Pup"}
                   </h3>
-                  <p className="text-sm text-slate-400 truncate">
+                  <p className="text-sm text-muted-foreground truncate">
                     {dog.breed_name}
                   </p>
                 </div>
@@ -178,18 +175,18 @@ export function LeaderboardPage() {
                 {/* Rating */}
                 <div className="text-right flex-shrink-0 ml-4">
                   <div className="flex items-center gap-1.5 justify-end">
-                    <span className="text-xl font-bold text-orange-500">
+                    <span className="text-xl font-bold text-primary">
                       {dog.avg_rating.toFixed(1)}
                     </span>
                     <svg
-                      className="w-5 h-5 text-orange-400"
+                      className="w-5 h-5 text-primary"
                       viewBox="0 0 24 19"
                       fill="currentColor"
                     >
                       <path d="M22.46 9.17c.94-.47 1.54-1.44 1.54-2.49v-.29C24 4.85 22.73 3.6 21.19 3.6c-1.2 0-2.27.77-2.65 1.91c-.29.86-.43 1.69-1.43 1.69H6.89c-1.03 0-1.18-.96-1.43-1.69C5.08 4.37 4 3.6 2.79 3.6 1.25 3.6 0 4.85 0 6.39v.29c0 1.06.6 2.02 1.54 2.49c.35.18.35.68 0 .86C.6 10.5 0 11.46 0 12.52v.29c0 1.54 1.25 2.79 2.79 2.79 1.2 0 2.27-.77 2.65-1.91c.29-.86.43-1.69 1.43-1.69h10.26c1.03 0 1.18.96 1.43 1.69c.38 1.14 1.45 1.91 2.65 1.91 1.54 0 2.79-1.25 2.79-2.79v-.29c0-1.06-.6-2.02-1.54-2.49-.35-.18-.35-.68 0-.86z" />
                     </svg>
                   </div>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-muted-foreground">
                     {dog.rating_count}{" "}
                     {dog.rating_count === 1 ? "rating" : "ratings"}
                   </p>
@@ -210,7 +207,7 @@ export function LeaderboardPage() {
               <Card
                 key={breed.id}
                 className={cn(
-                  "flex items-center p-4 transition-all duration-200 hover:shadow-md bg-slate-800/50 border-slate-700/50",
+                  "flex items-center p-4 transition-all duration-200 hover:shadow-md bg-card/50 border-border/50",
                   i < 3 &&
                     `bg-gradient-to-r ${rankBadges[i + 1]?.color ?? ""}/10`
                 )}
@@ -220,16 +217,16 @@ export function LeaderboardPage() {
                   {i < 3 ? (
                     <span className="text-2xl">{rankBadges[i + 1]?.icon}</span>
                   ) : (
-                    <span className="text-lg font-bold text-slate-400">
+                    <span className="text-lg font-bold text-muted-foreground">
                       #{i + 1}
                     </span>
                   )}
                 </div>
 
                 {/* Breed icon */}
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center flex-shrink-0">
                   <svg
-                    className="w-7 h-7 text-orange-500"
+                    className="w-7 h-7 text-primary"
                     viewBox="0 0 24 19"
                     fill="currentColor"
                   >
@@ -239,10 +236,10 @@ export function LeaderboardPage() {
 
                 {/* Breed info */}
                 <div className="flex-1 ml-4 min-w-0">
-                  <h3 className="font-semibold text-white truncate">
+                  <h3 className="font-semibold text-foreground truncate">
                     {breed.name}
                   </h3>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-muted-foreground">
                     {breed.dog_count} {breed.dog_count === 1 ? "dog" : "dogs"}
                   </p>
                 </div>
@@ -250,18 +247,18 @@ export function LeaderboardPage() {
                 {/* Rating */}
                 <div className="text-right flex-shrink-0 ml-4">
                   <div className="flex items-center gap-1.5 justify-end">
-                    <span className="text-xl font-bold text-orange-500">
+                    <span className="text-xl font-bold text-primary">
                       {breed.avg_rating.toFixed(1)}
                     </span>
                     <svg
-                      className="w-5 h-5 text-orange-400"
+                      className="w-5 h-5 text-primary"
                       viewBox="0 0 24 19"
                       fill="currentColor"
                     >
                       <path d="M22.46 9.17c.94-.47 1.54-1.44 1.54-2.49v-.29C24 4.85 22.73 3.6 21.19 3.6c-1.2 0-2.27.77-2.65 1.91c-.29.86-.43 1.69-1.43 1.69H6.89c-1.03 0-1.18-.96-1.43-1.69C5.08 4.37 4 3.6 2.79 3.6 1.25 3.6 0 4.85 0 6.39v.29c0 1.06.6 2.02 1.54 2.49c.35.18.35.68 0 .86C.6 10.5 0 11.46 0 12.52v.29c0 1.54 1.25 2.79 2.79 2.79 1.2 0 2.27-.77 2.65-1.91c.29-.86.43-1.69 1.43-1.69h10.26c1.03 0 1.18.96 1.43 1.69c.38 1.14 1.45 1.91 2.65 1.91 1.54 0 2.79-1.25 2.79-2.79v-.29c0-1.06-.6-2.02-1.54-2.49-.35-.18-.35-.68 0-.86z" />
                     </svg>
                   </div>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-muted-foreground">
                     {breed.rating_count}{" "}
                     {breed.rating_count === 1 ? "rating" : "ratings"}
                   </p>
@@ -283,7 +280,7 @@ function EmptyState({ message }: { message: string }) {
           🐾
         </span>
       </div>
-      <p className="text-slate-400">{message}</p>
+      <p className="text-muted-foreground">{message}</p>
     </div>
   );
 }

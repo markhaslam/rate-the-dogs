@@ -15,26 +15,6 @@ const sizeConfig = {
   lg: { bone: "w-12 h-12", gap: "gap-1.5", text: "text-base" },
 };
 
-// Modern gradient colors for bones
-const colors = {
-  filled: {
-    primary: "#f97316", // orange-500
-    secondary: "#ea580c", // orange-600
-    stroke: "#c2410c", // orange-700
-    glow: "rgba(249, 115, 22, 0.4)",
-  },
-  empty: {
-    primary: "#e5e7eb", // gray-200
-    secondary: "#d1d5db", // gray-300
-    stroke: "#9ca3af", // gray-400
-  },
-  hover: {
-    primary: "#fed7aa", // orange-200
-    secondary: "#fdba74", // orange-300
-    stroke: "#fb923c", // orange-400
-  },
-};
-
 // Labels for accessibility and UX (supports half values)
 const ratingLabels: Record<number, string> = {
   0.5: "Poor",
@@ -168,7 +148,7 @@ export function BoneRating({
               aria-label={`Rate ${boneIndex} out of 5`}
               aria-pressed={value >= boneIndex}
               className={cn(
-                "relative transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 rounded-sm",
+                "relative transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm",
                 !readonly && "cursor-pointer active:scale-90",
                 readonly && "cursor-default",
                 isInteracting && !readonly && "transform"
@@ -177,8 +157,10 @@ export function BoneRating({
                 transform: isHovered && !readonly ? "scale(1.15)" : "scale(1)",
                 filter:
                   (isFilled || isHalf) && !readonly
-                    ? `drop-shadow(0 0 8px ${colors.filled.glow})`
+                    ? "drop-shadow(0 0 8px var(--glow-color))"
                     : "none",
+                // @ts-expect-error CSS custom property
+                "--glow-color": "rgba(249, 115, 22, 0.4)",
               }}
               onMouseMove={(e) => handleMouseMove(e, boneIndex)}
               onClick={(e) => handleClick(e, boneIndex)}
@@ -191,7 +173,7 @@ export function BoneRating({
                 aria-hidden="true"
               >
                 <defs>
-                  {/* Gradient for filled bone */}
+                  {/* Gradient for filled bone - orange */}
                   <linearGradient
                     id={`bone-filled-${boneIndex}`}
                     x1="0%"
@@ -199,10 +181,10 @@ export function BoneRating({
                     x2="0%"
                     y2="100%"
                   >
-                    <stop offset="0%" stopColor={colors.filled.primary} />
-                    <stop offset="100%" stopColor={colors.filled.secondary} />
+                    <stop offset="0%" stopColor="#f97316" />
+                    <stop offset="100%" stopColor="#ea580c" />
                   </linearGradient>
-                  {/* Gradient for empty bone */}
+                  {/* Gradient for empty bone - theme aware */}
                   <linearGradient
                     id={`bone-empty-${boneIndex}`}
                     x1="0%"
@@ -210,8 +192,16 @@ export function BoneRating({
                     x2="0%"
                     y2="100%"
                   >
-                    <stop offset="0%" stopColor={colors.empty.primary} />
-                    <stop offset="100%" stopColor={colors.empty.secondary} />
+                    <stop
+                      offset="0%"
+                      className="[stop-color:var(--color-muted)]"
+                      stopColor="var(--color-muted, #e5e7eb)"
+                    />
+                    <stop
+                      offset="100%"
+                      className="[stop-color:var(--color-border)]"
+                      stopColor="var(--color-border, #d1d5db)"
+                    />
                   </linearGradient>
                   {/* Gradient for hover bone */}
                   <linearGradient
@@ -221,8 +211,8 @@ export function BoneRating({
                     x2="0%"
                     y2="100%"
                   >
-                    <stop offset="0%" stopColor={colors.hover.primary} />
-                    <stop offset="100%" stopColor={colors.hover.secondary} />
+                    <stop offset="0%" stopColor="#fed7aa" />
+                    <stop offset="100%" stopColor="#fdba74" />
                   </linearGradient>
                   {/* Half-fill gradient (left half filled) */}
                   <linearGradient
@@ -232,8 +222,11 @@ export function BoneRating({
                     x2="100%"
                     y2="0%"
                   >
-                    <stop offset="50%" stopColor={colors.filled.primary} />
-                    <stop offset="50%" stopColor={colors.empty.primary} />
+                    <stop offset="50%" stopColor="#f97316" />
+                    <stop
+                      offset="50%"
+                      stopColor="var(--color-muted, #e5e7eb)"
+                    />
                   </linearGradient>
                   {/* Half-fill gradient for hover */}
                   <linearGradient
@@ -243,8 +236,11 @@ export function BoneRating({
                     x2="100%"
                     y2="0%"
                   >
-                    <stop offset="50%" stopColor={colors.hover.secondary} />
-                    <stop offset="50%" stopColor={colors.empty.primary} />
+                    <stop offset="50%" stopColor="#fdba74" />
+                    <stop
+                      offset="50%"
+                      stopColor="var(--color-muted, #e5e7eb)"
+                    />
                   </linearGradient>
                 </defs>
                 {/* FontAwesome bone - wide modern style */}
@@ -263,10 +259,10 @@ export function BoneRating({
                   }
                   stroke={
                     isFilled || isHalf
-                      ? colors.filled.stroke
+                      ? "#c2410c"
                       : isHovered && !readonly
-                        ? colors.hover.stroke
-                        : colors.empty.stroke
+                        ? "#fb923c"
+                        : "var(--color-muted-foreground, #9ca3af)"
                   }
                   strokeWidth="1"
                   strokeLinecap="round"
@@ -297,7 +293,7 @@ export function BoneRating({
           className={cn(
             "font-bold tabular-nums transition-all duration-200",
             config.text,
-            displayValue > 0 ? "text-orange-600" : "text-gray-400"
+            displayValue > 0 ? "text-primary" : "text-muted-foreground"
           )}
           style={{
             transform: isInteracting ? "scale(1.1)" : "scale(1)",
@@ -308,7 +304,7 @@ export function BoneRating({
         {showLabel && displayValue > 0 && (
           <span
             className={cn(
-              "font-medium text-gray-500 transition-opacity duration-200",
+              "font-medium text-muted-foreground transition-opacity duration-200",
               config.text,
               isInteracting ? "opacity-100" : "opacity-70"
             )}

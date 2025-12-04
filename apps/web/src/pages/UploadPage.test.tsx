@@ -3,10 +3,6 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { UploadPage } from "./UploadPage";
 import { BrowserRouter } from "react-router-dom";
 
-// Mock fetch globally
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
-
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
@@ -30,9 +26,29 @@ const renderWithRouter = (component: React.ReactNode) => {
   return render(<BrowserRouter>{component}</BrowserRouter>);
 };
 
+// Create a fresh mock fetch for each test
+let mockFetch: ReturnType<typeof vi.fn>;
+
+// Mock FileReader class
+class MockFileReader {
+  result: string | null = null;
+  onload: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+
+  readAsDataURL(_file: Blob) {
+    // Simulate async behavior
+    setTimeout(() => {
+      this.result = "data:image/jpeg;base64,test";
+      if (this.onload) this.onload();
+    }, 0);
+  }
+}
+
 describe("UploadPage", () => {
   beforeEach(() => {
-    mockFetch.mockClear();
+    mockFetch = vi.fn();
+    vi.stubGlobal("fetch", mockFetch);
+    vi.stubGlobal("FileReader", MockFileReader);
     mockNavigate.mockClear();
   });
 
@@ -49,6 +65,11 @@ describe("UploadPage", () => {
       expect(
         screen.getByText("JPEG, PNG, WebP (max 10MB)")
       ).toBeInTheDocument();
+
+      // Wait for breeds to load to avoid act() warning
+      await waitFor(() => {
+        expect(screen.getByText("Labrador Retriever")).toBeInTheDocument();
+      });
     });
 
     it("displays dog name input field", async () => {
@@ -62,6 +83,11 @@ describe("UploadPage", () => {
       expect(
         screen.getByPlaceholderText("e.g., Max, Bella, Charlie...")
       ).toBeInTheDocument();
+
+      // Wait for breeds to load to avoid act() warning
+      await waitFor(() => {
+        expect(screen.getByText("Labrador Retriever")).toBeInTheDocument();
+      });
     });
 
     it("displays breed selection dropdown", async () => {
@@ -107,22 +133,7 @@ describe("UploadPage", () => {
         'input[type="file"]'
       ) as HTMLInputElement;
 
-      // Mock FileReader
-      const mockFileReader = {
-        readAsDataURL: vi.fn(),
-        onload: null as (() => void) | null,
-        result: "data:image/jpeg;base64,test",
-      };
-      vi.spyOn(global, "FileReader").mockImplementation(
-        () => mockFileReader as unknown as FileReader
-      );
-
       fireEvent.change(input, { target: { files: [file] } });
-
-      // Trigger onload callback
-      if (mockFileReader.onload) {
-        mockFileReader.onload();
-      }
 
       await waitFor(() => {
         const preview = screen.queryByAltText("Preview");
@@ -209,19 +220,12 @@ describe("UploadPage", () => {
         'input[type="file"]'
       ) as HTMLInputElement;
 
-      const mockFileReader = {
-        readAsDataURL: vi.fn(),
-        onload: null as (() => void) | null,
-        result: "data:image/jpeg;base64,test",
-      };
-      vi.spyOn(global, "FileReader").mockImplementation(
-        () => mockFileReader as unknown as FileReader
-      );
-
       fireEvent.change(input, { target: { files: [file] } });
-      if (mockFileReader.onload) {
-        mockFileReader.onload();
-      }
+
+      // Wait for FileReader to complete
+      await waitFor(() => {
+        expect(screen.queryByAltText("Preview")).toBeInTheDocument();
+      });
 
       // Select a breed
       const select = screen.getByRole("combobox");
@@ -261,19 +265,12 @@ describe("UploadPage", () => {
         'input[type="file"]'
       ) as HTMLInputElement;
 
-      const mockFileReader = {
-        readAsDataURL: vi.fn(),
-        onload: null as (() => void) | null,
-        result: "data:image/jpeg;base64,test",
-      };
-      vi.spyOn(global, "FileReader").mockImplementation(
-        () => mockFileReader as unknown as FileReader
-      );
-
       fireEvent.change(input, { target: { files: [file] } });
-      if (mockFileReader.onload) {
-        mockFileReader.onload();
-      }
+
+      // Wait for FileReader to complete
+      await waitFor(() => {
+        expect(screen.queryByAltText("Preview")).toBeInTheDocument();
+      });
 
       // Select a breed
       const select = screen.getByRole("combobox");
@@ -297,6 +294,11 @@ describe("UploadPage", () => {
 
       renderWithRouter(<UploadPage />);
 
+      // Wait for breeds to load first
+      await waitFor(() => {
+        expect(screen.getByText("Labrador Retriever")).toBeInTheDocument();
+      });
+
       const nameInput = screen.getByPlaceholderText(
         "e.g., Max, Bella, Charlie..."
       );
@@ -311,6 +313,11 @@ describe("UploadPage", () => {
       });
 
       renderWithRouter(<UploadPage />);
+
+      // Wait for breeds to load first
+      await waitFor(() => {
+        expect(screen.getByText("Labrador Retriever")).toBeInTheDocument();
+      });
 
       const nameInput = screen.getByPlaceholderText(
         "e.g., Max, Bella, Charlie..."
@@ -358,19 +365,12 @@ describe("UploadPage", () => {
         'input[type="file"]'
       ) as HTMLInputElement;
 
-      const mockFileReader = {
-        readAsDataURL: vi.fn(),
-        onload: null as (() => void) | null,
-        result: "data:image/jpeg;base64,test",
-      };
-      vi.spyOn(global, "FileReader").mockImplementation(
-        () => mockFileReader as unknown as FileReader
-      );
-
       fireEvent.change(input, { target: { files: [file] } });
-      if (mockFileReader.onload) {
-        mockFileReader.onload();
-      }
+
+      // Wait for FileReader to complete
+      await waitFor(() => {
+        expect(screen.queryByAltText("Preview")).toBeInTheDocument();
+      });
 
       // Select a breed
       const select = screen.getByRole("combobox");

@@ -81,13 +81,13 @@ export function RatePage() {
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="w-8 h-8 rounded-full bg-orange-500/60 animate-bounce"
+                className="w-8 h-8 rounded-full bg-primary/60 animate-bounce"
                 style={{ animationDelay: `${i * 0.15}s` }}
               />
             ))}
           </div>
         </div>
-        <p className="text-lg text-slate-400 animate-pulse">
+        <p className="text-lg text-muted-foreground animate-pulse">
           Finding the goodest dogs...
         </p>
       </div>
@@ -103,16 +103,16 @@ export function RatePage() {
             🎉🐕🎉
           </span>
         </div>
-        <h2 className="text-2xl font-bold mb-2 text-white">
+        <h2 className="text-2xl font-bold mb-2 text-foreground">
           You&apos;ve rated all the dogs!
         </h2>
-        <p className="text-slate-400 mb-6 max-w-sm">
+        <p className="text-muted-foreground mb-6 max-w-sm">
           Wow, you&apos;re a true dog lover! Check back later for more adorable
           pups, or add your own furry friend.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <Link to="/upload">
-            <Button className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-lg shadow-orange-500/25">
+            <Button className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-lg shadow-primary/25 text-white">
               <svg
                 className="w-4 h-4 mr-2"
                 viewBox="0 0 24 24"
@@ -130,7 +130,7 @@ export function RatePage() {
           <Link to="/leaderboard">
             <Button
               variant="outline"
-              className="border-slate-600 hover:bg-slate-800 text-slate-200"
+              className="border-border hover:bg-muted text-foreground"
             >
               <svg
                 className="w-4 h-4 mr-2"
@@ -153,11 +153,11 @@ export function RatePage() {
     <div className="flex flex-col items-center py-6 px-4 min-h-[calc(100vh-4rem)]">
       {/* Header with stats */}
       <div className="w-full max-w-md mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
           Rate This Pup!
         </h1>
         {ratedCount > 0 && (
-          <div className="flex items-center gap-1.5 bg-orange-500/20 text-orange-400 px-3 py-1 rounded-full text-sm font-medium">
+          <div className="flex items-center gap-1.5 bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-medium">
             <svg className="w-4 h-4" viewBox="0 0 24 19" fill="currentColor">
               <path d="M22.46 9.17c.94-.47 1.54-1.44 1.54-2.49v-.29C24 4.85 22.73 3.6 21.19 3.6c-1.2 0-2.27.77-2.65 1.91c-.29.86-.43 1.69-1.43 1.69H6.89c-1.03 0-1.18-.96-1.43-1.69C5.08 4.37 4 3.6 2.79 3.6 1.25 3.6 0 4.85 0 6.39v.29c0 1.06.6 2.02 1.54 2.49c.35.18.35.68 0 .86C.6 10.5 0 11.46 0 12.52v.29c0 1.54 1.25 2.79 2.79 2.79 1.2 0 2.27-.77 2.65-1.91c.29-.86.43-1.69 1.43-1.69h10.26c1.03 0 1.18.96 1.43 1.69c.38 1.14 1.45 1.91 2.65 1.91 1.54 0 2.79-1.25 2.79-2.79v-.29c0-1.06-.6-2.02-1.54-2.49-.35-.18-.35-.68 0-.86z" />
             </svg>
@@ -180,7 +180,7 @@ export function RatePage() {
 
       {/* Quick tip */}
       <div className="mt-6 text-center max-w-sm">
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-muted-foreground">
           Tip: Click the bones to rate, or use keyboard arrows for quick rating!
         </p>
       </div>

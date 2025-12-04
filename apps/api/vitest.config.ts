@@ -6,7 +6,7 @@ export default defineWorkersConfig({
     passWithNoTests: true,
     poolOptions: {
       workers: {
-        wrangler: { configPath: "./wrangler.toml" },
+        wrangler: { configPath: "./wrangler.jsonc" },
         miniflare: {
           // Mock bindings for tests
           d1Databases: ["DB"],

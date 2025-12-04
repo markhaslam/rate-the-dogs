@@ -6,16 +6,19 @@ RateTheDogs is a dog rating web application built on Cloudflare's edge infrastru
 
 ## Tech Stack
 
-| Layer           | Technology                                |
-| --------------- | ----------------------------------------- |
-| Backend         | Cloudflare Workers + Hono + D1 + R2       |
-| Frontend        | React + Vite + TailwindCSS v4 + shadcn/ui |
-| Validation      | Zod (shared schemas)                      |
-| Type Safety     | Hono RPC for end-to-end types             |
-| Testing         | Vitest + Playwright                       |
-| Package Manager | Bun                                       |
-| Monorepo        | Bun workspaces + Turborepo                |
-| Observability   | Cloudflare Workers Logs                   |
+| Layer           | Technology                                      |
+| --------------- | ----------------------------------------------- |
+| Runtime         | Cloudflare Workers + Static Assets (unified)    |
+| Backend         | Hono 4.10+ + D1 + R2                            |
+| Frontend        | React 19 + Vite 7.x + TailwindCSS 4.x + shadcn  |
+| Validation      | Zod 4.x (shared schemas)                        |
+| Type Safety     | Hono RPC for end-to-end types                   |
+| Testing         | Vitest 4.x + Playwright 1.57+                   |
+| Package Manager | Bun                                             |
+| Monorepo        | Bun workspaces + Turborepo                      |
+| Observability   | Cloudflare Workers Logs                         |
+
+> **Note**: Cloudflare Pages is in maintenance mode. This project uses the recommended Cloudflare Workers with Static Assets approach. See `docs/deployment-migration-plan.md`.
 
 ## Agentic Development Workflow
 
@@ -78,7 +81,7 @@ rate-the-dogs/
 │   │   │   ├── services/        # Business logic
 │   │   │   ├── db/              # migrations, queries, seed
 │   │   │   └── lib/             # r2, hash, errors, response
-│   │   └── wrangler.toml
+│   │   └── wrangler.jsonc       # Cloudflare Workers unified deployment config
 │   └── web/                     # React SPA
 │       └── src/
 │           ├── api/             # Hono RPC client
@@ -197,7 +200,9 @@ bun run db:seed          # Seed breeds
 
 # Build & Deploy
 bun run build            # Build all
-bun run deploy           # Deploy to Cloudflare
+bun run build:deploy     # Build web + API for deployment
+bun run deploy           # Deploy unified Worker to Cloudflare (API + static assets)
+bun run deploy:preview   # Deploy to dev environment
 ```
 
 ## Environment Variables
@@ -277,9 +282,44 @@ app.onError((err, c) => {
 - Use React Query for request deduplication
 - Database indexes on frequently queried columns
 
+## Deployment Architecture (COMPLETED)
+
+The app uses **Cloudflare Workers with Static Assets** for unified deployment:
+
+```
+Single Worker deployment:
+├── Worker code (Hono API) → handles /api/* routes
+├── Static assets (React) → served from apps/web/dist
+├── D1 binding (database)
+├── R2 binding (image storage)
+└── wrangler.jsonc configuration
+```
+
+### Key Configuration (`apps/api/wrangler.jsonc`)
+
+```jsonc
+{
+  "assets": {
+    "directory": "../web/dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/"]
+  }
+}
+```
+
+### Deployment Commands
+
+```bash
+bun run deploy         # Deploy to production
+bun run deploy:preview # Deploy to dev environment
+bun run build:deploy   # Build web + API for deployment
+```
+
+---
+
 ## Dog CEO API Integration (Phase 1.5)
 
-**IMPORTANT: This is the current major feature being implemented.**
+**Status**: Database migration complete, sync script pending
 
 Read `docs/dog-ceo-integration.md` for the complete technical architecture.
 
@@ -296,24 +336,13 @@ The app is being enhanced to use the Dog CEO API as a long-term content source:
 
 | File                                                     | Action | Purpose                                 |
 | -------------------------------------------------------- | ------ | --------------------------------------- |
-| `apps/api/src/db/migrations/002_dog_ceo_integration.sql` | Create | Schema migration                        |
+| `apps/api/src/db/migrations/003_dog_ceo_integration.sql` | Done   | Schema migration                        |
 | `apps/api/src/lib/dogCeoBreeds.ts`                       | Create | Breed name mapping (120+ breeds)        |
 | `apps/api/scripts/syncDogCeo.ts`                         | Create | Seeding script                          |
 | `apps/api/src/lib/r2.ts`                                 | Modify | Update `getImageUrl()` for dual sources |
 | `apps/api/src/routes/dogs.ts`                            | Modify | Add prefetch endpoint                   |
 | `apps/web/src/hooks/useDogPrefetch.ts`                   | Create | Frontend prefetch hook                  |
 | `apps/web/src/pages/RatePage.tsx`                        | Modify | Use prefetching                         |
-
-### Implementation Order
-
-1. Database migration (add new columns)
-2. Breed name mapping (create dogCeoBreeds.ts)
-3. Sync script (fetch and seed Dog CEO images)
-4. API updates (getImageUrl + prefetch endpoint)
-5. Frontend prefetching (useDogPrefetch hook)
-6. Update RatePage to use prefetching
-7. Tests for all new code
-8. Cleanup old hardcoded mappings
 
 ### Current Task Status
 

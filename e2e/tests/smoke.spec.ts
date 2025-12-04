@@ -12,7 +12,11 @@ test.describe("Smoke tests", () => {
   });
 
   test("API health check responds", async ({ request }) => {
-    const response = await request.get("http://localhost:8787/");
+    // Use environment-aware base URL for API
+    const apiBase = process.env.CI
+      ? "http://localhost:8787"
+      : "http://localhost:8787";
+    const response = await request.get(`${apiBase}/`);
     expect(response.ok()).toBeTruthy();
 
     const body = await response.json();

@@ -29,9 +29,9 @@ export function DogCard({
   const [imgError, setImgError] = useState(false);
 
   return (
-    <Card className="w-full max-w-md overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 shadow-xl shadow-black/30 border-slate-700/50">
+    <Card className="w-full max-w-md overflow-hidden bg-card shadow-xl shadow-black/10 dark:shadow-black/30 border-border">
       {/* Image container with modern styling */}
-      <div className="aspect-square relative bg-gradient-to-br from-slate-700 to-slate-800 overflow-hidden">
+      <div className="aspect-square relative bg-muted overflow-hidden">
         {/* Decorative background pattern */}
         <div className="absolute inset-0 opacity-5">
           <svg className="w-full h-full" viewBox="0 0 100 100">
@@ -65,13 +65,13 @@ export function DogCard({
 
         {/* Rating badge overlay */}
         {dog.avg_rating !== null && (
-          <div className="absolute bottom-3 right-3 bg-slate-900/90 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-lg border border-slate-700/50">
+          <div className="absolute bottom-3 right-3 bg-card/90 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-lg border border-border">
             <div className="flex items-center gap-1.5">
-              <span className="text-xl font-bold text-orange-500">
+              <span className="text-xl font-bold text-primary">
                 {dog.avg_rating.toFixed(1)}
               </span>
               <svg
-                className="w-5 h-5 text-orange-500"
+                className="w-5 h-5 text-primary"
                 viewBox="0 0 24 19"
                 fill="currentColor"
               >
@@ -83,11 +83,11 @@ export function DogCard({
 
         {/* Name tag overlay */}
         <div className="absolute bottom-3 left-3">
-          <div className="bg-slate-900/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-slate-700/50">
-            <h2 className="text-lg font-bold text-white">
+          <div className="bg-card/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-border">
+            <h2 className="text-lg font-bold text-foreground">
               {dog.name ?? "Unnamed Pup"}
             </h2>
-            <p className="text-sm text-slate-300 flex items-center gap-1">
+            <p className="text-sm text-muted-foreground flex items-center gap-1">
               <svg
                 className="w-3 h-3"
                 viewBox="0 0 24 24"
@@ -108,9 +108,9 @@ export function DogCard({
         {/* Stats row */}
         {dog.avg_rating !== null && (
           <div className="flex justify-center">
-            <div className="inline-flex items-center gap-2 bg-slate-700/50 rounded-full px-4 py-2">
+            <div className="inline-flex items-center gap-2 bg-muted rounded-full px-4 py-2">
               <svg
-                className="w-4 h-4 text-slate-400"
+                className="w-4 h-4 text-muted-foreground"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -121,7 +121,7 @@ export function DogCard({
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
-              <span className="text-sm font-medium text-slate-300">
+              <span className="text-sm font-medium text-muted-foreground">
                 {dog.rating_count}{" "}
                 {dog.rating_count === 1 ? "rating" : "ratings"}
               </span>
@@ -132,7 +132,7 @@ export function DogCard({
         {/* Interactive rating section */}
         {showRating && onRate && (
           <div className="pt-2 pb-1">
-            <p className="text-center text-sm font-medium text-slate-400 mb-3">
+            <p className="text-center text-sm font-medium text-muted-foreground mb-3">
               How would you rate this good{" "}
               {Math.random() > 0.5 ? "boy" : "girl"}?
             </p>
@@ -147,7 +147,7 @@ export function DogCard({
           <button
             onClick={onSkip}
             disabled={isRating}
-            className="w-full py-2.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <svg
               className="w-4 h-4"
