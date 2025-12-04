@@ -97,7 +97,8 @@ describe("useDogPrefetch", () => {
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/dogs/prefetch?count=10")
+        expect.stringContaining("/api/dogs/prefetch?count=10"),
+        expect.objectContaining({ credentials: "include" })
       );
     });
 
@@ -133,6 +134,24 @@ describe("useDogPrefetch", () => {
       });
     });
 
+    it("sends credentials with fetch requests for cookie handling", async () => {
+      const dogs = [createMockDog(1)];
+      mockFetch.mockResolvedValue(createMockResponse(mockDogsResponse(dogs)));
+
+      renderHook(() => useDogPrefetch());
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalled();
+      });
+
+      // Verify credentials: "include" is sent for cookie authentication
+      // This is critical for sending anon_id cookies with API requests
+      const fetchCall = mockFetch.mock.calls[0];
+      expect(fetchCall[1]).toEqual(
+        expect.objectContaining({ credentials: "include" })
+      );
+    });
+
     it("respects custom prefetchCount option", async () => {
       mockFetch.mockResolvedValue(
         createMockResponse(mockDogsResponse([createMockDog(1)]))
@@ -142,7 +161,8 @@ describe("useDogPrefetch", () => {
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
-          expect.stringContaining("count=5")
+          expect.stringContaining("count=5"),
+          expect.objectContaining({ credentials: "include" })
         );
       });
     });
@@ -282,7 +302,8 @@ describe("useDogPrefetch", () => {
       // Queue is 2, which is below threshold 3, so it should refill
       await waitFor(() => {
         expect(mockFetch).toHaveBeenLastCalledWith(
-          expect.stringContaining("exclude=1,2")
+          expect.stringContaining("exclude=1,2"),
+          expect.objectContaining({ credentials: "include" })
         );
       });
     });

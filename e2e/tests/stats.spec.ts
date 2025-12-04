@@ -104,8 +104,10 @@ test.describe("Stats Page", () => {
       timeout: 5000,
     });
 
-    // Should show the milestone progress
-    await expect(page.getByText("Milestone Progress")).toBeVisible({
+    // Should show the milestone progress (use heading role to be specific)
+    await expect(
+      page.getByRole("heading", { name: "Milestone Progress", level: 3 })
+    ).toBeVisible({
       timeout: 5000,
     });
 
@@ -115,8 +117,10 @@ test.describe("Stats Page", () => {
     // Should show personality section
     await expect(page.getByText("Puppy Trainee")).toBeVisible();
 
-    // Should show achievements section
-    await expect(page.getByText("Achievements")).toBeVisible();
+    // Should show achievements section (use specific heading to avoid matching sr-only or description text)
+    await expect(
+      page.getByRole("heading", { name: "Achievements", level: 3 })
+    ).toBeVisible();
 
     // Perfect Score achievement should be unlocked (we gave 5 stars)
     await expect(page.getByText("Perfect Score")).toBeVisible({

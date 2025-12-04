@@ -81,7 +81,9 @@ describe("Dogs API", () => {
 
       expect(cookie).toContain("anon_id=");
       expect(cookie).toContain("HttpOnly");
-      expect(cookie).toContain("SameSite=Strict");
+      // Use SameSite=Lax to allow cookies on fetch() requests while still
+      // preventing cross-site form submission attacks (CSRF)
+      expect(cookie).toContain("SameSite=Lax");
     });
 
     it("excludes already rated dogs", async () => {
