@@ -26,7 +26,8 @@
     "db:seed": "bun run --cwd apps/api db:seed",
     "deploy": "bun run build:deploy && wrangler deploy --cwd apps/api",
     "deploy:preview": "bun run build:deploy && wrangler deploy --cwd apps/api --env dev",
-    "clean": "turbo clean && rm -rf node_modules"
+    "clean": "turbo clean && rm -rf node_modules",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

@@ -12,6 +12,11 @@ import { defineConfig, devices } from "@playwright/test";
  *   bun run test:e2e          # Local dev mode (fast, parallel)
  *   bun run test:e2e:ci       # CI simulation (serial, retries, built assets)
  *   CI=true bun run test:e2e  # Full CI mode (includes webkit - requires system deps)
+ *
+ * Reliability features:
+ *   - Global setup verifies server health before tests run
+ *   - Locked browser channels for consistent behavior across environments
+ *   - WebKit-based browsers skipped for cookie-dependent tests (wrangler dev limitation)
  */
 
 // CI simulation mode: run like CI but without webkit (not available on WSL)
@@ -23,6 +28,9 @@ export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
   forbidOnly: isCI,
+
+  // Global setup verifies server is healthy before running any tests
+  globalSetup: require.resolve("./global-setup"),
 
   // Retries: 2 in CI/CI-sim to handle transient failures, 0 locally for fast feedback
   retries: useCISettings ? 2 : 0,
@@ -42,7 +50,11 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        // Use stable Chrome channel for consistent behavior across CI and local
+        channel: "chrome",
+      },
     },
     {
       name: "firefox",

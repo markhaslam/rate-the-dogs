@@ -363,11 +363,34 @@ E2E tests use Playwright and run in three modes to catch issues at different sta
 | CI Simulation | `bun run test:e2e:ci` | 1 (serial) | 2       | 3 (no webkit) | Built assets | **Before push** |
 | Full CI       | GitHub Actions        | 1 (serial) | 2       | 5 (+ webkit)  | Built assets | Pull requests   |
 
+**Reliability Features:**
+
+- **Global Setup**: Verifies server health before running any tests (`e2e/global-setup.ts`)
+- **Browser Channel Lock**: Chromium uses stable Chrome channel for consistent behavior
+- **Smoke Tests**: Quick validation of critical paths (`e2e/tests/smoke.spec.ts`)
+- **WebKit Detection**: `isWebKitBrowser()` helper for consistent skip logic
+
 **Best Practice Workflow:**
 
 1. During development: `bun run test:e2e` (fast, parallel)
 2. Before pushing: `bun run test:e2e:ci` (catches CI-specific issues)
 3. CI runs automatically on push/PR
+
+**Smoke Tests:**
+
+Run smoke tests first to quickly validate the app is functional:
+
+```bash
+bun run test:e2e -- --grep="Smoke"
+```
+
+Smoke tests verify:
+
+- API health check responds
+- Home page loads with rating interface
+- Can rate a dog
+- Leaderboard and stats pages load
+- Navigation works between pages
 
 **Why CI Simulation?**
 
@@ -383,20 +406,42 @@ Running `test:e2e:ci` before pushing catches these issues locally.
 
 WebKit (Safari) browsers have stricter cookie handling that causes issues with the wrangler dev server. Tests that rely on cookies persisting across navigations are skipped on WebKit. The feature works correctly in production - this is a test infrastructure limitation.
 
-| Browser       | Cookie Reliability | Notes                           |
-| ------------- | ------------------ | ------------------------------- |
-| Chromium      | Good               | Most reliable                   |
-| Firefox       | Good               | Reliable                        |
-| Mobile Chrome | Fair               | Some cookie persistence issues  |
-| WebKit/Safari | Poor               | Strict cookie policies, CI only |
+| Browser       | Cookie Reliability | Notes                              |
+| ------------- | ------------------ | ---------------------------------- |
+| Chromium      | Good               | Most reliable, uses Chrome channel |
+| Firefox       | Good               | Reliable                           |
+| Mobile Chrome | Fair               | Some cookie persistence issues     |
+| WebKit/Safari | Poor               | Strict cookie policies, CI only    |
 
 **Flaky Test Handling:**
 
 Tests that are known to be flaky due to wrangler dev cookie issues:
 
-- Use `test.skip(browserName === "webkit", "reason")` to skip on problematic browsers
+- Use `isWebKitBrowser(browserName)` to skip on all WebKit-based browsers (Safari + Mobile Safari)
 - Use cookie re-injection as fallback when cookies are lost during navigation
 - CI has 2 retries to handle transient failures
+
+### Git Hooks (Husky)
+
+The project uses Husky for Git hooks to catch issues before they reach CI:
+
+**Pre-commit Hook (`.husky/pre-commit`):**
+
+- Runs `lint-staged` to lint and format staged files
+- Fast, runs on every commit
+
+**Pre-push Hook (`.husky/pre-push`):**
+
+- Runs `typecheck` and `test` (unit tests)
+- Catches type errors and test failures before pushing
+- Optional E2E tests: `RUN_E2E=1 git push` includes E2E CI simulation
+
+**Skipping Hooks (use sparingly):**
+
+```bash
+git commit --no-verify  # Skip pre-commit
+git push --no-verify    # Skip pre-push
+```
 
 ## Common Commands
 

@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+
+# Pre-push hook: Run quality checks before pushing to remote
+# This catches issues that might fail CI before they're pushed
+
+echo "Running pre-push checks..."
+
+# Run TypeScript type checking
+echo "Checking types..."
+bun run typecheck || exit 1
+
+# Run unit tests
+echo "Running unit tests..."
+bun run test || exit 1
+
+# E2E tests are optional - set RUN_E2E=1 to include them
+# Example: RUN_E2E=1 git push
+if [ "$RUN_E2E" = "1" ]; then
+  echo "Running E2E tests (CI simulation mode)..."
+  bun run test:e2e:ci || exit 1
+fi
+
+echo "All pre-push checks passed!"
