@@ -1,0 +1,195 @@
+:root {
+  --body-margin: 2.5rem;
+  --image-width: calc(100vw - (2 * var(--body-margin)));
+  --aspect-ratio: 4 * 3;
+  --image-max-width: 70rem;
+  --image-min-width: 10rem;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 10px;
+}
+
+body {
+  font-size: 1.6rem;
+  margin: var(--body-margin);
+  /* background-image: linear-gradient(111deg, #888888d0, #989898d0),
+    url(../assets/dog-bg.svg); */
+  background-image:
+    linear-gradient(111deg, #88cefcf5, #8fadffda), url(../assets/dog-bg.svg);
+  /* background-image:
+    linear-gradient(111deg, #989898d0, #989898d0),
+    url(./sdaf.svg); */
+  /* background-size: 100px, auto; */
+  min-height: calc(100vh - 5rem);
+  display: grid;
+  grid-template-columns: 1fr;
+  background-size:
+    auto,
+    250px auto;
+  /*   justify-content: center; */
+  /*   align-items: center;
+  flex-direction: column; */
+  align-content: start;
+  justify-items: center;
+  grid-gap: 3rem;
+}
+
+.rating-container {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  display: grid;
+  justify-items: center;
+  /* align-items: center; */
+  align-content: center;
+  grid-gap: 2rem;
+  background-color: #494949;
+  padding: 2rem;
+  border-radius: 0.4rem;
+  box-shadow: 0 0 1rem #222222;
+  /* width: 100%; */
+  max-width: 60rem;
+  /* border: 1px solid red; */
+  /* justify-content: center; */
+  /* align-items: center; */
+}
+
+.container {
+  user-select: none;
+  -webkit-user-select: none;
+  width: var(--image-width);
+  height: calc(var(--image-width) / var(--aspect-ratio));
+  max-width: var(--image-max-width);
+  max-height: calc(var(--image-max-width) / var(--aspect-ratio));
+  min-width: var(--image-min-width);
+  min-height: calc(var(--image-min-width) / var(--aspect-ratio));
+  /*   padding: 2rem; */
+  /*   margin: 0 auto; */
+}
+
+.container > img {
+  width: 100%;
+  height: 100%;
+  /* object-fit: cover; */
+  object-fit: contain;
+  /*   object-position: center; */
+  border-radius: 1rem;
+  /*   border: .2rem solid rgba(0, 0, 0, 0.03); */
+  box-shadow: 0 0 1rem #222222;
+  background: #111;
+}
+
+.starContainer {
+  display: flex;
+  /* user-select: none;
+  -webkit-user-select: none; 
+  -webkit-tap-highlight-color: rgba(0,0,0,0); */
+}
+
+.bone {
+  /* font-size: calc(4.5rem + 2.5vw); */
+  font-size: calc(4rem + 2.7vw);
+  font-size: 13vw;
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.bone:hover {
+  cursor: pointer;
+}
+
+.selected {
+  color: transparent;
+  text-shadow: 0 0 0 #ffdd00;
+}
+
+.hovering {
+  color: transparent;
+  text-shadow: 0 0 0 #ffc000;
+}
+
+button.rate-button {
+  -webkit-tap-highlight-color: initial;
+  font-size: 2rem;
+  color: #494949;
+  text-transform: uppercase;
+  /* text-decoration: none; */
+  background: #ffffff;
+  padding: 10px 30px;
+  border: 4px solid #494949;
+  /* display: inline-block; */
+  transition: all 0.1s ease;
+}
+
+/* button.rate-button:hover { */
+/* color: #ffffff;
+background: #f6b93b;
+border-color: #f6b93b;
+transition: all 0.4s ease 0s; */
+/*   
+  transform: scale(1.05);
+} */
+
+button.rate-button:active {
+  transform: scale(0.95);
+}
+
+button.rate-button:focus {
+  /* transform: scale(0.95); */
+  outline: none;
+}
+
+button.rate-button:disabled {
+  /* transform: scale(0.95); */
+  /* background-color: #888888;
+  color: #cccccc; */
+  opacity: 0.3;
+}
+
+button.rate-button:active:disabled {
+  transform: scale(1);
+}
+
+/* @media (hover:hover) {
+  button.rate-button:hover {
+      
+      transform: scale(1.05);
+    }
+} */
+
+@media (min-width: 500px) {
+  .bone {
+    font-size: calc(4.8rem + 2.5vw);
+  }
+}
+
+@media (min-width: 1300px) {
+  :root {
+    /* --body-margin: 2.5rem; */
+    /* --image-width: calc(100vw - (2 * var(--body-margin))); */
+    /* --aspect-ratio: 4*3; */
+    /* --image-max-width: 60rem;
+    --image-min-width: 10rem; */
+  }
+
+  body {
+    grid-template-columns: minmax(auto, 700px) minmax(auto, 500px);
+    justify-content: center;
+  }
+
+  .rating-container {
+    align-self: center;
+  }
+
+  .bone {
+    font-size: 8rem;
+  }
+}

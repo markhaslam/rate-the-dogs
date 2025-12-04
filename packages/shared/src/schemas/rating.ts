@@ -8,7 +8,10 @@ export const ratingValueSchema = z
   .number()
   .min(RATING.MIN, `Rating must be at least ${RATING.MIN}`)
   .max(RATING.MAX, `Rating must be at most ${RATING.MAX}`)
-  .multipleOf(RATING.INCREMENT, `Rating must be in ${RATING.INCREMENT} increments`);
+  .multipleOf(
+    RATING.INCREMENT,
+    `Rating must be in ${RATING.INCREMENT} increments`
+  );
 
 /**
  * Schema for POST /api/dogs/:id/rate request body

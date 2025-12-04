@@ -1,0 +1,835 @@
+{
+  "totalBreeds": 207,
+  "totalImages": 18282,
+  "duplicatesRemoved": 7912,
+  "breedStats": [
+    {
+      "breed": "maltese",
+      "count": 225
+    },
+    {
+      "breed": "pug",
+      "count": 202
+    },
+    {
+      "breed": "entlebucher",
+      "count": 200
+    },
+    {
+      "breed": "shihtzu",
+      "count": 198
+    },
+    {
+      "breed": "pomeranian",
+      "count": 197
+    },
+    {
+      "breed": "terrier-tibetan",
+      "count": 197
+    },
+    {
+      "breed": "husky",
+      "count": 190
+    },
+    {
+      "breed": "mountain-bernese",
+      "count": 190
+    },
+    {
+      "breed": "airedale",
+      "count": 189
+    },
+    {
+      "breed": "labrador",
+      "count": 189
+    },
+    {
+      "breed": "papillon",
+      "count": 184
+    },
+    {
+      "breed": "chow",
+      "count": 183
+    },
+    {
+      "breed": "terrier-australian",
+      "count": 181
+    },
+    {
+      "breed": "retriever-golden",
+      "count": 177
+    },
+    {
+      "breed": "terrier-cairn",
+      "count": 177
+    },
+    {
+      "breed": "terrier-lakeland",
+      "count": 176
+    },
+    {
+      "breed": "terrier-toy",
+      "count": 176
+    },
+    {
+      "breed": "elkhound-norwegian",
+      "count": 175
+    },
+    {
+      "breed": "pinscher-miniature",
+      "count": 175
+    },
+    {
+      "breed": "spaniel-cocker",
+      "count": 174
+    },
+    {
+      "breed": "beagle",
+      "count": 173
+    },
+    {
+      "breed": "bulldog-boston",
+      "count": 173
+    },
+    {
+      "breed": "terrier-silky",
+      "count": 173
+    },
+    {
+      "breed": "basenji",
+      "count": 170
+    },
+    {
+      "breed": "african-wild",
+      "count": 169
+    },
+    {
+      "breed": "samoyed",
+      "count": 168
+    },
+    {
+      "breed": "lhasa",
+      "count": 166
+    },
+    {
+      "breed": "spaniel-japanese",
+      "count": 163
+    },
+    {
+      "breed": "whippet",
+      "count": 162
+    },
+    {
+      "breed": "mix",
+      "count": 160
+    },
+    {
+      "breed": "terrier-westhighland",
+      "count": 160
+    },
+    {
+      "breed": "pyrenees",
+      "count": 159
+    },
+    {
+      "breed": "pembroke",
+      "count": 158
+    },
+    {
+      "breed": "spaniel-blenheim",
+      "count": 157
+    },
+    {
+      "breed": "terrier-irish",
+      "count": 157
+    },
+    {
+      "breed": "collie-border",
+      "count": 155
+    },
+    {
+      "breed": "hound-ibizan",
+      "count": 154
+    },
+    {
+      "breed": "newfoundland",
+      "count": 154
+    },
+    {
+      "breed": "terrier-american",
+      "count": 153
+    },
+    {
+      "breed": "ridgeback-rhodesian",
+      "count": 151
+    },
+    {
+      "breed": "dhole",
+      "count": 150
+    },
+    {
+      "breed": "setter-english",
+      "count": 150
+    },
+    {
+      "breed": "springer-english",
+      "count": 150
+    },
+    {
+      "breed": "terrier-norwich",
+      "count": 150
+    },
+    {
+      "breed": "boxer",
+      "count": 149
+    },
+    {
+      "breed": "hound-basset",
+      "count": 149
+    },
+    {
+      "breed": "terrier-yorkshire",
+      "count": 149
+    },
+    {
+      "breed": "dingo",
+      "count": 148
+    },
+    {
+      "breed": "saluki",
+      "count": 148
+    },
+    {
+      "breed": "terrier-bedlington",
+      "count": 148
+    },
+    {
+      "breed": "terrier-dandie",
+      "count": 148
+    },
+    {
+      "breed": "bluetick",
+      "count": 147
+    },
+    {
+      "breed": "bulldog-french",
+      "count": 147
+    },
+    {
+      "breed": "kelpie",
+      "count": 147
+    },
+    {
+      "breed": "terrier-border",
+      "count": 147
+    },
+    {
+      "breed": "sheepdog-english",
+      "count": 145
+    },
+    {
+      "breed": "collie",
+      "count": 144
+    },
+    {
+      "breed": "mexicanhairless",
+      "count": 144
+    },
+    {
+      "breed": "schnauzer-giant",
+      "count": 143
+    },
+    {
+      "breed": "weimaraner",
+      "count": 143
+    },
+    {
+      "breed": "greyhound-italian",
+      "count": 142
+    },
+    {
+      "breed": "poodle-toy",
+      "count": 142
+    },
+    {
+      "breed": "retriever-chesapeake",
+      "count": 142
+    },
+    {
+      "breed": "retriever-flatcoated",
+      "count": 142
+    },
+    {
+      "breed": "terrier-norfolk",
+      "count": 142
+    },
+    {
+      "breed": "brabancon",
+      "count": 141
+    },
+    {
+      "breed": "spaniel-irish",
+      "count": 141
+    },
+    {
+      "breed": "deerhound-scottish",
+      "count": 140
+    },
+    {
+      "breed": "eskimo",
+      "count": 140
+    },
+    {
+      "breed": "poodle-standard",
+      "count": 140
+    },
+    {
+      "breed": "schnauzer",
+      "count": 140
+    },
+    {
+      "breed": "rottweiler",
+      "count": 139
+    },
+    {
+      "breed": "setter-gordon",
+      "count": 139
+    },
+    {
+      "breed": "stbernard",
+      "count": 139
+    },
+    {
+      "breed": "sheepdog-shetland",
+      "count": 138
+    },
+    {
+      "breed": "spaniel-welsh",
+      "count": 138
+    },
+    {
+      "breed": "doberman",
+      "count": 137
+    },
+    {
+      "breed": "mastiff-bull",
+      "count": 137
+    },
+    {
+      "breed": "poodle-miniature",
+      "count": 137
+    },
+    {
+      "breed": "schnauzer-miniature",
+      "count": 137
+    },
+    {
+      "breed": "briard",
+      "count": 136
+    },
+    {
+      "breed": "german-shepherd",
+      "count": 136
+    },
+    {
+      "breed": "malamute",
+      "count": 136
+    },
+    {
+      "breed": "malinois",
+      "count": 136
+    },
+    {
+      "breed": "spaniel-brittany",
+      "count": 136
+    },
+    {
+      "breed": "appenzeller",
+      "count": 135
+    },
+    {
+      "breed": "hound-blood",
+      "count": 135
+    },
+    {
+      "breed": "keeshond",
+      "count": 135
+    },
+    {
+      "breed": "wolfhound-irish",
+      "count": 135
+    },
+    {
+      "breed": "affenpinscher",
+      "count": 134
+    },
+    {
+      "breed": "pointer-german",
+      "count": 134
+    },
+    {
+      "breed": "terrier-fox",
+      "count": 134
+    },
+    {
+      "breed": "terrier-wheaten",
+      "count": 134
+    },
+    {
+      "breed": "vizsla",
+      "count": 134
+    },
+    {
+      "breed": "kuvasz",
+      "count": 133
+    },
+    {
+      "breed": "terrier-scottish",
+      "count": 133
+    },
+    {
+      "breed": "bullterrier-staffordshire",
+      "count": 132
+    },
+    {
+      "breed": "corgi-cardigan",
+      "count": 132
+    },
+    {
+      "breed": "terrier-sealyham",
+      "count": 132
+    },
+    {
+      "breed": "redbone",
+      "count": 131
+    },
+    {
+      "breed": "chihuahua",
+      "count": 130
+    },
+    {
+      "breed": "coonhound",
+      "count": 130
+    },
+    {
+      "breed": "schipperke",
+      "count": 130
+    },
+    {
+      "breed": "setter-irish",
+      "count": 130
+    },
+    {
+      "breed": "hound-walker",
+      "count": 129
+    },
+    {
+      "breed": "retriever-curly",
+      "count": 129
+    },
+    {
+      "breed": "dane-great",
+      "count": 127
+    },
+    {
+      "breed": "groenendael",
+      "count": 126
+    },
+    {
+      "breed": "mastiff-tibetan",
+      "count": 126
+    },
+    {
+      "breed": "hound-afghan",
+      "count": 125
+    },
+    {
+      "breed": "mountain-swiss",
+      "count": 125
+    },
+    {
+      "breed": "pekinese",
+      "count": 124
+    },
+    {
+      "breed": "bouvier",
+      "count": 119
+    },
+    {
+      "breed": "terrier-kerryblue",
+      "count": 118
+    },
+    {
+      "breed": "clumber",
+      "count": 116
+    },
+    {
+      "breed": "hound-english",
+      "count": 114
+    },
+    {
+      "breed": "leonberg",
+      "count": 113
+    },
+    {
+      "breed": "otterhound",
+      "count": 110
+    },
+    {
+      "breed": "borzoi",
+      "count": 107
+    },
+    {
+      "breed": "komondor",
+      "count": 101
+    },
+    {
+      "breed": "spaniel-sussex",
+      "count": 99
+    },
+    {
+      "breed": "pinscher",
+      "count": 38
+    },
+    {
+      "breed": "dachshund",
+      "count": 32
+    },
+    {
+      "breed": "ovcharka-caucasian",
+      "count": 30
+    },
+    {
+      "breed": "puggle",
+      "count": 28
+    },
+    {
+      "breed": "shiba",
+      "count": 23
+    },
+    {
+      "breed": "cattledog-australian",
+      "count": 18
+    },
+    {
+      "breed": "terrier-russell",
+      "count": 17
+    },
+    {
+      "breed": "cockapoo",
+      "count": 16
+    },
+    {
+      "breed": "frise-bichon",
+      "count": 14
+    },
+    {
+      "breed": "australian-kelpie",
+      "count": 8
+    },
+    {
+      "breed": "pitbull",
+      "count": 8
+    },
+    {
+      "breed": "akita",
+      "count": 7
+    },
+    {
+      "breed": "corgi",
+      "count": 7
+    },
+    {
+      "breed": "tervuren",
+      "count": 7
+    },
+    {
+      "breed": "spitz-japanese",
+      "count": 6
+    },
+    {
+      "breed": "waterdog-spanish",
+      "count": 6
+    },
+    {
+      "breed": "australian-shepherd",
+      "count": 5
+    },
+    {
+      "breed": "bulldog-english",
+      "count": 5
+    },
+    {
+      "breed": "cavapoo",
+      "count": 5
+    },
+    {
+      "breed": "havanese",
+      "count": 5
+    },
+    {
+      "breed": "terrier-patterdale",
+      "count": 5
+    },
+    {
+      "breed": "cotondetulear",
+      "count": 4
+    },
+    {
+      "breed": "mastiff-english",
+      "count": 4
+    },
+    {
+      "breed": "pointer-germanlonghair",
+      "count": 4
+    },
+    {
+      "breed": "terrier-andalusian",
+      "count": 4
+    },
+    {
+      "breed": "buhund-norwegian",
+      "count": 3
+    },
+    {
+      "breed": "labradoodle",
+      "count": 3
+    },
+    {
+      "breed": "rough-collie",
+      "count": 3
+    },
+    {
+      "breed": "terrier-boston",
+      "count": 3
+    },
+    {
+      "breed": "dalmatian",
+      "count": 2
+    },
+    {
+      "breed": "finnish-lapphund",
+      "count": 2
+    },
+    {
+      "breed": "hound-plott",
+      "count": 2
+    },
+    {
+      "breed": "poodle-medium",
+      "count": 2
+    },
+    {
+      "breed": "segugio-italian",
+      "count": 2
+    },
+    {
+      "breed": "bakharwal-indian",
+      "count": 1
+    },
+    {
+      "breed": "chippiparai-indian",
+      "count": 1
+    },
+    {
+      "breed": "gaddi-indian",
+      "count": 1
+    },
+    {
+      "breed": "greyhound",
+      "count": 1
+    },
+    {
+      "breed": "greyhound-indian",
+      "count": 1
+    },
+    {
+      "breed": "kombai",
+      "count": 1
+    },
+    {
+      "breed": "mastiff-indian",
+      "count": 1
+    },
+    {
+      "breed": "mudhol-indian",
+      "count": 1
+    },
+    {
+      "breed": "pariah-indian",
+      "count": 1
+    },
+    {
+      "breed": "rajapalayam-indian",
+      "count": 1
+    },
+    {
+      "breed": "sharpei",
+      "count": 1
+    },
+    {
+      "breed": "sheepdog-indian",
+      "count": 1
+    },
+    {
+      "breed": "spitz-indian",
+      "count": 1
+    },
+    {
+      "breed": "terrier-welsh",
+      "count": 1
+    },
+    {
+      "breed": "african",
+      "count": 0
+    },
+    {
+      "breed": "australian",
+      "count": 0
+    },
+    {
+      "breed": "bakharwal",
+      "count": 0
+    },
+    {
+      "breed": "buhund",
+      "count": 0
+    },
+    {
+      "breed": "bulldog",
+      "count": 0
+    },
+    {
+      "breed": "bullterrier",
+      "count": 0
+    },
+    {
+      "breed": "cattledog",
+      "count": 0
+    },
+    {
+      "breed": "chippiparai",
+      "count": 0
+    },
+    {
+      "breed": "dane",
+      "count": 0
+    },
+    {
+      "breed": "danish",
+      "count": 0
+    },
+    {
+      "breed": "danish-swedish",
+      "count": 0
+    },
+    {
+      "breed": "deerhound",
+      "count": 0
+    },
+    {
+      "breed": "elkhound",
+      "count": 0
+    },
+    {
+      "breed": "finnish",
+      "count": 0
+    },
+    {
+      "breed": "frise",
+      "count": 0
+    },
+    {
+      "breed": "gaddi",
+      "count": 0
+    },
+    {
+      "breed": "german",
+      "count": 0
+    },
+    {
+      "breed": "hound",
+      "count": 0
+    },
+    {
+      "breed": "mastiff",
+      "count": 0
+    },
+    {
+      "breed": "mountain",
+      "count": 0
+    },
+    {
+      "breed": "mudhol",
+      "count": 0
+    },
+    {
+      "breed": "ovcharka",
+      "count": 0
+    },
+    {
+      "breed": "pariah",
+      "count": 0
+    },
+    {
+      "breed": "pointer",
+      "count": 0
+    },
+    {
+      "breed": "poodle",
+      "count": 0
+    },
+    {
+      "breed": "rajapalayam",
+      "count": 0
+    },
+    {
+      "breed": "retriever",
+      "count": 0
+    },
+    {
+      "breed": "ridgeback",
+      "count": 0
+    },
+    {
+      "breed": "rough",
+      "count": 0
+    },
+    {
+      "breed": "segugio",
+      "count": 0
+    },
+    {
+      "breed": "setter",
+      "count": 0
+    },
+    {
+      "breed": "sheepdog",
+      "count": 0
+    },
+    {
+      "breed": "spaniel",
+      "count": 0
+    },
+    {
+      "breed": "spitz",
+      "count": 0
+    },
+    {
+      "breed": "springer",
+      "count": 0
+    },
+    {
+      "breed": "terrier",
+      "count": 0
+    },
+    {
+      "breed": "waterdog",
+      "count": 0
+    },
+    {
+      "breed": "wolfhound",
+      "count": 0
+    }
+  ]
+}

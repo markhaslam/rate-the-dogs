@@ -24,9 +24,8 @@ export const searchQuerySchema = z.object({
 /**
  * Combined pagination + search
  */
-export const paginatedSearchQuerySchema = paginationQuerySchema.merge(
-  searchQuerySchema
-);
+export const paginatedSearchQuerySchema =
+  paginationQuerySchema.merge(searchQuerySchema);
 
 /**
  * Standard success response wrapper

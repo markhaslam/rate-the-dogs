@@ -185,24 +185,33 @@ The app must be built on **Cloudflare Workers**, **D1**, **R2**, and modern Type
 
 ## 6.1 Table: breeds
 
-| Column | Type        | Notes                   |
-| ------ | ----------- | ----------------------- |
-| id     | integer PK  |                         |
-| name   | text unique | e.g. "Golden Retriever" |
-| slug   | text unique | e.g. "golden-retriever" |
+| Column         | Type        | Notes                                     |
+| -------------- | ----------- | ----------------------------------------- |
+| id             | integer PK  |                                           |
+| name           | text unique | e.g. "Golden Retriever"                   |
+| slug           | text unique | e.g. "golden-retriever"                   |
+| dog_ceo_path   | text        | Dog CEO API path, e.g. "retriever/golden" |
+| image_count    | integer     | Number of images synced from Dog CEO      |
+| last_synced_at | text        | Last Dog CEO sync timestamp               |
+| created_at     | text        | ISO timestamp                             |
 
 ## 6.2 Table: dogs
 
-| Column           | Type                | Notes                       |
-| ---------------- | ------------------- | --------------------------- |
-| id               | integer PK          |                             |
-| image_url        | text                | URL to R2 object            |
-| breed_id         | integer FK          |                             |
-| uploader_user_id | integer nullable FK |                             |
-| uploader_anon_id | text nullable       |                             |
-| status           | text enum           | pending, approved, rejected |
-| created_at       | text                | ISO timestamp               |
-| updated_at       | text                | ISO timestamp               |
+| Column           | Type                | Notes                            |
+| ---------------- | ------------------- | -------------------------------- |
+| id               | integer PK          |                                  |
+| name             | text nullable       | Optional dog name                |
+| image_key        | text nullable       | R2 object key (for user uploads) |
+| image_url        | text nullable       | Direct URL (for Dog CEO images)  |
+| image_source     | text                | 'dog_ceo' or 'user_upload'       |
+| breed_id         | integer FK          |                                  |
+| uploader_user_id | integer nullable FK |                                  |
+| uploader_anon_id | text nullable       |                                  |
+| status           | text enum           | pending, approved, rejected      |
+| moderated_by     | text nullable       | Admin who reviewed               |
+| moderated_at     | text nullable       | Review timestamp                 |
+| created_at       | text                | ISO timestamp                    |
+| updated_at       | text                | ISO timestamp                    |
 
 ## 6.3 Table: ratings
 
@@ -242,6 +251,34 @@ All requests include anon_id via cookie if no user logged in.
 ## 7.1 GET /api/dogs/next
 
 Returns next unrated dog for this anon_id/user_id.
+
+## 7.1.1 GET /api/dogs/prefetch
+
+Returns multiple unrated dogs for prefetching (instant transitions).
+
+**Query params:**
+
+- `count`: Number of dogs to return (default: 10, max: 20)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": 123,
+        "name": "Buddy",
+        "image_url": "https://images.dog.ceo/breeds/...",
+        "breed_name": "Golden Retriever",
+        "avg_rating": 4.5,
+        "rating_count": 12
+      }
+    ]
+  }
+}
+```
 
 ## 7.2 POST /api/dogs/:id/rate
 
@@ -391,6 +428,29 @@ Rating history for current anon_id/user.
 - Top Breeds leaderboard
 - Rating UI
 - Cloudflare deployment
+- **Dog CEO API Integration** (see below)
+
+## Phase 1.5: Dog CEO Content Integration
+
+This phase adds thousands of dog images from the Dog CEO API as long-term content, ensuring the app has engaging content even before user uploads reach critical mass.
+
+### Goals
+
+- Support 100+ breeds with thousands of images (vs. manual seeding)
+- Human-readable breed names
+- Frontend prefetching for instant image loading
+- Production-quality with verified image URLs
+
+### Features
+
+- **Comprehensive Breed Support**: All 120+ Dog CEO breeds mapped to human-readable names
+- **Image Prefetching**: Queue of 10+ dogs loaded ahead, instant transitions
+- **localStorage Persistence**: Prefetch queue survives page refreshes
+- **Dual Source Support**: Seamless handling of both Dog CEO and user-uploaded images
+
+### Technical Details
+
+See `docs/dog-ceo-integration.md` for complete technical architecture.
 
 ## Phase 2
 

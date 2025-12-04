@@ -7,7 +7,10 @@ export const breedSlugSchema = z
   .string()
   .min(1)
   .max(100)
-  .regex(/^[a-z0-9-]+$/, "Slug must be lowercase letters, numbers, and hyphens");
+  .regex(
+    /^[a-z0-9-]+$/,
+    "Slug must be lowercase letters, numbers, and hyphens"
+  );
 
 /**
  * Breed database record

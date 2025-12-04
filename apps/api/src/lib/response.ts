@@ -1,4 +1,8 @@
-import type { PaginatedData, SuccessResponse, PaginatedResponse } from "@rate-the-dogs/shared";
+import type {
+  PaginatedData,
+  SuccessResponse,
+  PaginatedResponse,
+} from "@rate-the-dogs/shared";
 
 /**
  * Create a success response

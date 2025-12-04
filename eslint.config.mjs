@@ -15,6 +15,8 @@ export default tseslint.config(
       "**/coverage/**",
       "**/.turbo/**",
       "**/playwright-report/**",
+      "reference/**",
+      "apps/api/scripts/**",
     ],
   },
 
