@@ -1,78 +1,48 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DogCard } from "@/components/DogCard";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-
-interface Dog {
-  id: number;
-  name: string | null;
-  image_url: string;
-  breed_name: string;
-  avg_rating: number | null;
-  rating_count: number;
-}
-
-interface DogApiResponse {
-  success: boolean;
-  data: Dog | null;
-}
+import { useDogPrefetch } from "@/hooks/useDogPrefetch";
 
 export function RatePage() {
-  const [dog, setDog] = useState<Dog | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { currentDog, queueLength, loading, noDogs, error, popDog } =
+    useDogPrefetch({
+      prefetchCount: 10,
+      refillThreshold: 3,
+    });
+
   const [isRating, setIsRating] = useState(false);
-  const [noDogs, setNoDogs] = useState(false);
   const [ratedCount, setRatedCount] = useState(0);
 
-  const fetchNextDog = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/dogs/next");
-      const json = (await res.json()) as DogApiResponse;
-      if (json.success && json.data) {
-        setDog(json.data);
-        setNoDogs(false);
-      } else {
-        setDog(null);
-        setNoDogs(true);
-      }
-    } catch (e) {
-      console.error("Failed to fetch dog:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void fetchNextDog();
-  }, []);
-
   const handleRate = (value: number) => {
-    if (!dog || isRating) return;
+    if (!currentDog || isRating) return;
     setIsRating(true);
-    fetch(`/api/dogs/${dog.id}/rate`, {
+    fetch(`/api/dogs/${currentDog.id}/rate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ value }),
     })
       .then(() => {
         setRatedCount((c) => c + 1);
-        return fetchNextDog();
+        popDog(); // Instantly show next dog from prefetch queue
       })
       .catch((e) => console.error("Failed to rate:", e))
       .finally(() => setIsRating(false));
   };
 
   const handleSkip = () => {
-    if (!dog || isRating) return;
+    if (!currentDog || isRating) return;
     setIsRating(true);
-    fetch(`/api/dogs/${dog.id}/skip`, { method: "POST" })
-      .then(() => fetchNextDog())
+    fetch(`/api/dogs/${currentDog.id}/skip`, { method: "POST" })
+      .then(() => {
+        popDog(); // Instantly show next dog from prefetch queue
+      })
       .catch((e) => console.error("Failed to skip:", e))
       .finally(() => setIsRating(false));
   };
 
-  if (loading) {
+  // Show loading only on initial load when queue is empty
+  if (loading && queueLength === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="relative">
@@ -94,7 +64,32 @@ export function RatePage() {
     );
   }
 
-  if (noDogs) {
+  // Show error state
+  if (error && !currentDog) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <div className="mb-6 text-6xl">
+          <span role="img" aria-label="sad dog">
+            🐕💔
+          </span>
+        </div>
+        <h2 className="text-2xl font-bold mb-2 text-foreground">
+          Oops! Something went wrong
+        </h2>
+        <p className="text-muted-foreground mb-6 max-w-sm">
+          We couldn&apos;t load any dogs. Please try refreshing the page.
+        </p>
+        <Button
+          onClick={() => window.location.reload()}
+          className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+        >
+          Refresh Page
+        </Button>
+      </div>
+    );
+  }
+
+  if (noDogs && !currentDog) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
         {/* Fun celebration illustration */}
@@ -156,21 +151,38 @@ export function RatePage() {
         <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
           Rate This Pup!
         </h1>
-        {ratedCount > 0 && (
-          <div className="flex items-center gap-1.5 bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-medium">
-            <svg className="w-4 h-4" viewBox="0 0 24 19" fill="currentColor">
-              <path d="M22.46 9.17c.94-.47 1.54-1.44 1.54-2.49v-.29C24 4.85 22.73 3.6 21.19 3.6c-1.2 0-2.27.77-2.65 1.91c-.29.86-.43 1.69-1.43 1.69H6.89c-1.03 0-1.18-.96-1.43-1.69C5.08 4.37 4 3.6 2.79 3.6 1.25 3.6 0 4.85 0 6.39v.29c0 1.06.6 2.02 1.54 2.49c.35.18.35.68 0 .86C.6 10.5 0 11.46 0 12.52v.29c0 1.54 1.25 2.79 2.79 2.79 1.2 0 2.27-.77 2.65-1.91c.29-.86.43-1.69 1.43-1.69h10.26c1.03 0 1.18.96 1.43 1.69c.38 1.14 1.45 1.91 2.65 1.91 1.54 0 2.79-1.25 2.79-2.79v-.29c0-1.06-.6-2.02-1.54-2.49-.35-.18-.35-.68 0-.86z" />
-            </svg>
-            {ratedCount} rated
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Queue indicator */}
+          {queueLength > 1 && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+              <svg
+                className="w-3 h-3"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M4 4v16h16M4 20l6-6 4 4 6-6" />
+              </svg>
+              {queueLength - 1} more
+            </div>
+          )}
+          {ratedCount > 0 && (
+            <div className="flex items-center gap-1.5 bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-medium">
+              <svg className="w-4 h-4" viewBox="0 0 24 19" fill="currentColor">
+                <path d="M22.46 9.17c.94-.47 1.54-1.44 1.54-2.49v-.29C24 4.85 22.73 3.6 21.19 3.6c-1.2 0-2.27.77-2.65 1.91c-.29.86-.43 1.69-1.43 1.69H6.89c-1.03 0-1.18-.96-1.43-1.69C5.08 4.37 4 3.6 2.79 3.6 1.25 3.6 0 4.85 0 6.39v.29c0 1.06.6 2.02 1.54 2.49c.35.18.35.68 0 .86C.6 10.5 0 11.46 0 12.52v.29c0 1.54 1.25 2.79 2.79 2.79 1.2 0 2.27-.77 2.65-1.91c.29-.86.43-1.69 1.43-1.69h10.26c1.03 0 1.18.96 1.43 1.69c.38 1.14 1.45 1.91 2.65 1.91 1.54 0 2.79-1.25 2.79-2.79v-.29c0-1.06-.6-2.02-1.54-2.49-.35-.18-.35-.68 0-.86z" />
+              </svg>
+              {ratedCount} rated
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Dog card */}
-      {dog && (
+      {currentDog && (
         <div className="w-full max-w-md">
           <DogCard
-            dog={dog}
+            dog={currentDog}
             onRate={handleRate}
             onSkip={handleSkip}
             isRating={isRating}
