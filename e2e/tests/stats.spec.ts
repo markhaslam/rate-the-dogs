@@ -123,7 +123,8 @@ test.describe("Stats Page", () => {
     ).toBeVisible();
 
     // Perfect Score achievement should be unlocked (we gave 5 stars)
-    await expect(page.getByText("Perfect Score")).toBeVisible({
+    // Use first() since achievement name appears in both tooltip and badge
+    await expect(page.getByText("Perfect Score").first()).toBeVisible({
       timeout: 3000,
     });
   });
