@@ -1,18 +1,71 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DogCard } from "@/components/DogCard";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useDogPrefetch } from "@/hooks/useDogPrefetch";
 
+interface RevealedRating {
+  avgRating: number;
+  ratingCount: number;
+  userRating: number;
+}
+
 export function RatePage() {
   const { currentDog, queueLength, loading, noDogs, error, popDog } =
     useDogPrefetch({
-      prefetchCount: 10,
+      prefetchCount: 5, // Reduced from 10 to balance UX vs bandwidth
       refillThreshold: 3,
     });
 
   const [isRating, setIsRating] = useState(false);
   const [ratedCount, setRatedCount] = useState(0);
+  const [revealedRating, setRevealedRating] = useState<RevealedRating | null>(
+    null
+  );
+
+  // Slide animation state
+  const [isEntering, setIsEntering] = useState(false);
+  const [previousImageUrl, setPreviousImageUrl] = useState<string | null>(null);
+  const prevDogIdRef = useRef<number | null>(null);
+
+  // Trigger slide-in animation when dog changes
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    if (
+      currentDog &&
+      prevDogIdRef.current !== null &&
+      currentDog.id !== prevDogIdRef.current
+    ) {
+      // Dog has changed, animate entrance with slide-over effect
+      setIsEntering(true);
+      // Clear entering state after animation completes
+      timer = setTimeout(() => {
+        setIsEntering(false);
+        setPreviousImageUrl(null);
+      }, 300); // Match animation duration
+    }
+
+    if (currentDog) {
+      prevDogIdRef.current = currentDog.id;
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [currentDog]);
+
+  // Fetch user's rating count on mount to persist across page refreshes
+  useEffect(() => {
+    fetch("/api/me/stats")
+      .then((res) => res.json())
+      .then((data: { success: boolean; data?: { ratings_count: number } }) => {
+        if (data.success && data.data) {
+          setRatedCount(data.data.ratings_count);
+        }
+      })
+      .catch((e) => console.error("Failed to fetch stats:", e));
+  }, []);
 
   const handleRate = (value: number) => {
     if (!currentDog || isRating) return;
@@ -22,12 +75,39 @@ export function RatePage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ value }),
     })
-      .then(() => {
-        setRatedCount((c) => c + 1);
-        popDog(); // Instantly show next dog from prefetch queue
-      })
+      .then((res) => res.json())
+      .then(
+        (data: {
+          success: boolean;
+          data?: { avg_rating: number; rating_count: number };
+          error?: { code: string; message: string };
+        }) => {
+          if (data.success && data.data) {
+            // Show the reveal animation with the updated rating
+            setRevealedRating({
+              avgRating: data.data.avg_rating,
+              ratingCount: data.data.rating_count,
+              userRating: value,
+            });
+            setRatedCount((c) => c + 1);
+          } else if (data.error?.code === "ALREADY_RATED") {
+            // User already rated this dog (stale state), move to next dog
+            console.warn("Already rated this dog, moving to next");
+            popDog();
+          }
+        }
+      )
       .catch((e) => console.error("Failed to rate:", e))
       .finally(() => setIsRating(false));
+  };
+
+  const handleRevealComplete = () => {
+    setRevealedRating(null);
+    // Capture current image for slide-over animation
+    if (currentDog) {
+      setPreviousImageUrl(currentDog.image_url);
+    }
+    popDog();
   };
 
   const handleSkip = () => {
@@ -35,7 +115,11 @@ export function RatePage() {
     setIsRating(true);
     fetch(`/api/dogs/${currentDog.id}/skip`, { method: "POST" })
       .then(() => {
-        popDog(); // Instantly show next dog from prefetch queue
+        // Capture current image for slide-over animation
+        if (currentDog) {
+          setPreviousImageUrl(currentDog.image_url);
+        }
+        popDog();
       })
       .catch((e) => console.error("Failed to skip:", e))
       .finally(() => setIsRating(false));
@@ -152,21 +236,6 @@ export function RatePage() {
           Rate This Pup!
         </h1>
         <div className="flex items-center gap-2">
-          {/* Queue indicator */}
-          {queueLength > 1 && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-              <svg
-                className="w-3 h-3"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M4 4v16h16M4 20l6-6 4 4 6-6" />
-              </svg>
-              {queueLength - 1} more
-            </div>
-          )}
           {ratedCount > 0 && (
             <div className="flex items-center gap-1.5 bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-medium">
               <svg className="w-4 h-4" viewBox="0 0 24 19" fill="currentColor">
@@ -178,14 +247,19 @@ export function RatePage() {
         </div>
       </div>
 
-      {/* Dog card */}
+      {/* Dog card with image slide animation */}
       {currentDog && (
         <div className="w-full max-w-md">
           <DogCard
+            key={currentDog.id}
             dog={currentDog}
             onRate={handleRate}
             onSkip={handleSkip}
             isRating={isRating}
+            revealedRating={revealedRating}
+            onRevealComplete={handleRevealComplete}
+            imageTransition={isEntering ? "enter" : "idle"}
+            previousImageUrl={isEntering ? previousImageUrl : null}
           />
         </div>
       )}

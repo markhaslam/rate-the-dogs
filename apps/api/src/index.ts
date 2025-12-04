@@ -8,6 +8,7 @@ import { dbMiddleware } from "./middleware/db.js";
 import dogsRoute from "./routes/dogs.js";
 import breedsRoute from "./routes/breeds.js";
 import leaderboardRoute from "./routes/leaderboard.js";
+import meRoute from "./routes/me.js";
 
 // Create the Hono app with typed bindings
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -43,6 +44,7 @@ app.get("/api/health", (c) => {
 app.route("/api/dogs", dogsRoute);
 app.route("/api/breeds", breedsRoute);
 app.route("/api/leaderboard", leaderboardRoute);
+app.route("/api/me", meRoute);
 
 // 404 handler for unmatched routes
 app.notFound((c) => {

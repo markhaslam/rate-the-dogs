@@ -24,20 +24,15 @@ describe("DogCard", () => {
       expect(screen.getByText("Labrador Retriever")).toBeInTheDocument();
     });
 
-    it("displays average rating when available", () => {
+    it("hides average rating before user rates (to avoid influencing)", () => {
+      // Rating is intentionally hidden before user rates
       render(<DogCard dog={mockDog} />);
-      expect(screen.getByText("4.5")).toBeInTheDocument();
+      expect(screen.queryByText("4.5")).not.toBeInTheDocument();
     });
 
-    it("displays rating count", () => {
+    it("hides rating count before user rates", () => {
+      // Rating count is hidden to avoid influencing user
       render(<DogCard dog={mockDog} />);
-      expect(screen.getByText(/10.*ratings/)).toBeInTheDocument();
-    });
-
-    it("does not display rating when avg_rating is null", () => {
-      const unratedDog = { ...mockDog, avg_rating: null };
-      render(<DogCard dog={unratedDog} />);
-      // Should not find the rating display
       expect(screen.queryByText(/10.*ratings/)).not.toBeInTheDocument();
     });
 
@@ -130,6 +125,28 @@ describe("DogCard", () => {
     });
   });
 
+  describe("rating reveal", () => {
+    it("shows rating reveal overlay when revealedRating is provided", () => {
+      const revealedRating = {
+        avgRating: 4.2,
+        ratingCount: 15,
+        userRating: 4.5,
+      };
+      render(<DogCard dog={mockDog} revealedRating={revealedRating} />);
+      expect(screen.getByTestId("rating-reveal")).toBeInTheDocument();
+    });
+
+    it("does not show rating reveal overlay when revealedRating is null", () => {
+      render(<DogCard dog={mockDog} revealedRating={null} />);
+      expect(screen.queryByTestId("rating-reveal")).not.toBeInTheDocument();
+    });
+
+    it("does not show rating reveal overlay when revealedRating is undefined", () => {
+      render(<DogCard dog={mockDog} />);
+      expect(screen.queryByTestId("rating-reveal")).not.toBeInTheDocument();
+    });
+  });
+
   describe("edge cases", () => {
     it("handles zero rating count", () => {
       const zeroRatingsDog = {
@@ -161,6 +178,80 @@ describe("DogCard", () => {
       };
       render(<DogCard dog={specialDog} />);
       expect(screen.getByText("St. Bernard & Poodle Mix")).toBeInTheDocument();
+    });
+  });
+
+  describe("image slide-over transition", () => {
+    it("renders single image by default (no animation)", () => {
+      render(<DogCard dog={mockDog} />);
+      const images = screen.getAllByRole("img");
+      expect(images).toHaveLength(1);
+      expect(images[0].className).toContain("object-cover");
+    });
+
+    it("renders single image when not sliding", () => {
+      render(<DogCard dog={mockDog} imageTransition="idle" />);
+      const images = screen.getAllByRole("img");
+      expect(images).toHaveLength(1);
+    });
+
+    it("renders two images when sliding with previousImageUrl", () => {
+      render(
+        <DogCard
+          dog={mockDog}
+          imageTransition="enter"
+          previousImageUrl="https://example.com/prev-dog.jpg"
+        />
+      );
+      const images = screen.getAllByRole("img");
+      expect(images).toHaveLength(2);
+
+      // First image is the previous one (underneath)
+      expect(images[0]).toHaveAttribute("src", "https://example.com/prev-dog.jpg");
+      expect(images[0]).toHaveAttribute("alt", "Previous dog");
+
+      // Second image is the current one with slide animation
+      expect(images[1]).toHaveAttribute("src", mockDog.image_url);
+    });
+
+    it("applies slide-in animation class when sliding", () => {
+      render(
+        <DogCard
+          dog={mockDog}
+          imageTransition="enter"
+          previousImageUrl="https://example.com/prev-dog.jpg"
+        />
+      );
+      const images = screen.getAllByRole("img");
+      const currentImage = images[1];
+      expect(currentImage.className).toContain("animate-slide-in-right");
+      expect(currentImage.className).toContain("absolute");
+    });
+
+    it("does not show previous image without previousImageUrl", () => {
+      render(<DogCard dog={mockDog} imageTransition="enter" />);
+      const images = screen.getAllByRole("img");
+      expect(images).toHaveLength(1);
+    });
+
+    it("does not show previous image when idle", () => {
+      render(
+        <DogCard
+          dog={mockDog}
+          imageTransition="idle"
+          previousImageUrl="https://example.com/prev-dog.jpg"
+        />
+      );
+      const images = screen.getAllByRole("img");
+      expect(images).toHaveLength(1);
+    });
+
+    it("preserves core image classes", () => {
+      render(<DogCard dog={mockDog} />);
+      const img = screen.getByRole("img");
+      expect(img.className).toContain("object-cover");
+      expect(img.className).toContain("w-full");
+      expect(img.className).toContain("h-full");
     });
   });
 });

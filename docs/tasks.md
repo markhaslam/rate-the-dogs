@@ -159,8 +159,8 @@
   - [x] GET /api/breeds
   - [x] GET /api/breeds/:slug
   - [ ] GET /api/breeds/:slug/top
-- [ ] Create `routes/me.ts`
-  - [ ] GET /api/me/ratings
+- [x] Create `routes/me.ts`
+  - [x] GET /api/me/stats (returns ratings_count and skips_count)
 - [ ] Create `routes/admin.ts`
   - [ ] GET /api/admin/pending
   - [ ] POST /api/admin/dogs/:id/approve
@@ -308,9 +308,9 @@
   - [x] SPA routing works (direct navigation)
   - [x] API routes work (same origin)
   - [x] Cookie handling (anonymous ID)
-- [ ] Create `e2e/tests/rating.spec.ts`
-  - [ ] Rate a dog successfully
-  - [ ] Skip a dog
+- [x] Create `e2e/tests/rating.spec.ts`
+  - [x] Rate a dog successfully
+  - [x] Skip a dog
   - [ ] Rate multiple dogs in sequence
 - [ ] Create `e2e/tests/upload.spec.ts`
   - [ ] Upload dog with name and breed
@@ -415,8 +415,8 @@
 
 ### 6.5.6 Test Results
 
-- [x] Unit tests: 243 passing (shared: 75, api: 68, web: 100)
-- [x] E2E tests: 42 passing (Chromium, Firefox, Mobile Chrome)
+- [x] Unit tests: 339+ passing (shared: 18, api: 168, web: 153)
+- [x] E2E tests: 51 passing (Chromium, Firefox, Mobile Chrome)
 - [x] All quality checks passing (typecheck, lint, format)
 
 ---
@@ -475,12 +475,12 @@ This phase adds Dog CEO API integration, analytics fields, and user system prep.
 
 ### 8.2 Breed Name Mapping
 
-- [ ] Create `apps/api/src/lib/dogCeoBreeds.ts`
-- [ ] Map all 120+ Dog CEO breed paths to human-readable names
-- [ ] Create `getReadableBreedName()` function
-- [ ] Create `getBreedSlug()` function
-- [ ] Write unit tests for all breed mappings
-- [ ] Handle edge cases (unknown breeds, special characters)
+- [x] Create `apps/api/src/lib/dogCeoBreeds.ts`
+- [x] Map all 120+ Dog CEO breed paths to human-readable names
+- [x] Create `getReadableBreedName()` function
+- [x] Create `getBreedSlug()` function
+- [x] Write unit tests for all breed mappings
+- [x] Handle edge cases (unknown breeds, special characters)
 
 ### 8.3 Dog CEO Data Pipeline (Two-Step Approach)
 
@@ -500,17 +500,17 @@ This phase adds Dog CEO API integration, analytics fields, and user system prep.
 - [x] Add `--validate-only` and `--dry-run` options
 - [ ] Add npm script: `"db:fetch-dog-ceo": "bun run scripts/fetchDogCeoImages.ts"`
 
-#### Step 2: Seed Script (To Be Created)
+#### Step 2: Seed Script
 
-- [ ] Create `apps/api/scripts/seedDogCeoImages.ts`
-- [ ] Read `breed-images.json` file
-- [ ] Use `dogCeoBreeds.ts` for human-readable breed names
-- [ ] Upsert breeds into D1 with `dog_ceo_path`
-- [ ] Insert dogs with `image_source = 'dog_ceo'` and `status = 'approved'`
-- [ ] Limit images per breed (configurable, default: 50)
-- [ ] Update breed `image_count` and `last_synced_at`
-- [ ] Skip duplicate images (UNIQUE constraint handling)
-- [ ] Add `--dry-run`, `--limit=N`, `--local`, `--remote` options
+- [x] Create `apps/api/scripts/seedDogCeoImages.ts`
+- [x] Read `breed-images.json` file
+- [x] Use `dogCeoBreeds.ts` for human-readable breed names
+- [x] Upsert breeds into D1 with `dog_ceo_path`
+- [x] Insert dogs with `image_source = 'dog_ceo'` and `status = 'approved'`
+- [x] Limit images per breed (configurable, default: 50)
+- [x] Update breed `image_count` and `last_synced_at`
+- [x] Skip duplicate images (UNIQUE constraint handling)
+- [x] Add `--dry-run`, `--limit=N`, `--local`, `--remote` options
 - [ ] Write integration tests for seed script
 - [ ] Add npm script: `"db:seed-dog-ceo": "bun run scripts/seedDogCeoImages.ts"`
 - [ ] Run seed locally and verify data integrity
@@ -518,56 +518,56 @@ This phase adds Dog CEO API integration, analytics fields, and user system prep.
 
 ### 8.4 API Updates
 
-- [ ] Update `apps/api/src/lib/r2.ts` - refactor `getImageUrl()`
-  - [ ] Handle `image_source === 'dog_ceo'` (return `image_url` directly)
-  - [ ] Handle `image_source === 'user_upload'` (return R2 presigned URL)
-  - [ ] Add fallback for missing images
-- [ ] Create `GET /api/dogs/prefetch` endpoint
-  - [ ] Accept `count` query param (default: 10, max: 20)
-  - [ ] Return multiple unrated dogs
-  - [ ] Exclude rated and skipped dogs
-  - [ ] Return `image_url` in response
-- [ ] Update `GET /api/dogs/next` to use new `getImageUrl()`
-- [ ] Update `GET /api/dogs/:id` to use new `getImageUrl()`
-- [ ] Update `GET /api/leaderboard/dogs` to use new `getImageUrl()`
-- [ ] Write integration tests for prefetch endpoint
-- [ ] Write unit tests for updated `getImageUrl()`
+- [x] Update `apps/api/src/lib/r2.ts` - refactor `getImageUrl()`
+  - [x] Handle `image_source === 'dog_ceo'` (return `image_url` directly)
+  - [x] Handle `image_source === 'user_upload'` (return R2 presigned URL)
+  - [x] Add fallback for missing images
+- [x] Create `GET /api/dogs/prefetch` endpoint
+  - [x] Accept `count` query param (default: 10, max: 20)
+  - [x] Return multiple unrated dogs
+  - [x] Exclude rated and skipped dogs
+  - [x] Return `image_url` in response
+- [x] Update `GET /api/dogs/next` to use new `getImageUrl()`
+- [x] Update `GET /api/dogs/:id` to use new `getImageUrl()`
+- [x] Update `GET /api/leaderboard/dogs` to use new `getImageUrl()`
+- [x] Write integration tests for prefetch endpoint
+- [x] Write unit tests for updated `getImageUrl()`
 
 ### 8.5 Frontend Prefetching
 
-- [ ] Create `apps/web/src/hooks/useDogPrefetch.ts`
-  - [ ] Maintain queue of prefetched dogs in React state
-  - [ ] Initialize queue from localStorage on mount
-  - [ ] Persist queue to localStorage on change
-  - [ ] Implement `fetchMore()` - call /api/dogs/prefetch
-  - [ ] Implement `popDog()` - remove current dog from queue
-  - [ ] Implement `clearQueue()` - clear queue and localStorage
-  - [ ] Auto-refill when queue < threshold (default: 3)
-  - [ ] Dedupe dogs by ID
-- [ ] Implement image preloading
-  - [ ] Add `<link rel="preload">` for each image in queue
-  - [ ] Use `new Image()` for browser cache priming
-- [ ] Update `apps/web/src/pages/RatePage.tsx`
-  - [ ] Replace current fetch logic with `useDogPrefetch`
-  - [ ] Show instant transitions (no loading between dogs)
+- [x] Create `apps/web/src/hooks/useDogPrefetch.ts`
+  - [x] Maintain queue of prefetched dogs in React state
+  - [x] Initialize queue from localStorage on mount
+  - [x] Persist queue to localStorage on change
+  - [x] Implement `fetchMore()` - call /api/dogs/prefetch
+  - [x] Implement `popDog()` - remove current dog from queue
+  - [x] Implement `clearQueue()` - clear queue and localStorage
+  - [x] Auto-refill when queue < threshold (default: 3)
+  - [x] Dedupe dogs by ID
+- [x] Implement image preloading
+  - [x] Add `<link rel="preload">` for each image in queue
+  - [x] Use `new Image()` for browser cache priming
+- [x] Update `apps/web/src/pages/RatePage.tsx`
+  - [x] Replace current fetch logic with `useDogPrefetch`
+  - [x] Show instant transitions (no loading between dogs)
   - [ ] Add queue length indicator (optional)
-  - [ ] Handle empty queue gracefully
-- [ ] Write unit tests for `useDogPrefetch` hook
-- [ ] Write integration tests for RatePage with prefetching
+  - [x] Handle empty queue gracefully
+- [x] Write unit tests for `useDogPrefetch` hook
+- [x] Write integration tests for RatePage with prefetching
 
 ### 8.6 Testing & Verification
 
-- [ ] Unit tests: breed name mapping (all 170+ breeds)
-- [ ] Unit tests: `getImageUrl()` for both sources
-- [ ] Unit tests: `useDogPrefetch` hook
-- [ ] Integration tests: prefetch endpoint with mocked D1
+- [x] Unit tests: breed name mapping (all 170+ breeds)
+- [x] Unit tests: `getImageUrl()` for both sources
+- [x] Unit tests: `useDogPrefetch` hook
+- [x] Integration tests: prefetch endpoint with mocked D1
 - [ ] Integration tests: seed script (`seedDogCeoImages.ts`)
-- [ ] Integration tests: fetch script (`fetchDogCeoImages.ts`) with mocked API
-- [ ] E2E tests: rating flow with prefetch queue
+- [x] Integration tests: fetch script (`fetchDogCeoImages.ts`) with mocked API
+- [x] E2E tests: rating flow with prefetch queue
 - [ ] E2E tests: queue refill behavior
 - [ ] E2E tests: localStorage persistence
 - [ ] Performance tests: image preload timing
-- [ ] Verify 80%+ test coverage on new code
+- [x] Verify 80%+ test coverage on new code
 
 ### 8.7 Production Rollout
 
@@ -792,11 +792,11 @@ Before considering MVP complete:
 - [x] Phase 10 (Light/Dark Mode Theme) completed
 - [x] Phase 11 (Drizzle ORM Migration) completed
 - [x] Test coverage >80%
-- [x] All tests passing (132 unit/integration tests)
+- [x] All tests passing (339+ unit/integration tests, 51 E2E tests)
 - [x] No TypeScript errors
 - [x] No ESLint errors
 - [x] Code formatted with Prettier
 - [ ] Production deployed and functional
 - [x] Documentation up to date
 - [ ] Dog CEO seed complete (8,000+ dogs, 170+ breeds)
-- [ ] Prefetching working in production
+- [x] Prefetching working locally (needs production deployment)

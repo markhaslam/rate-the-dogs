@@ -237,6 +237,7 @@ dogs.get("/:id", async (c) => {
 
 /**
  * POST /api/dogs/:id/rate - Rate a dog
+ * Returns the updated average rating for reveal animation
  */
 dogs.post("/:id/rate", zValidator("json", rateRequestSchema), async (c) => {
   const db = c.get("db");
@@ -255,7 +256,22 @@ dogs.post("/:id/rate", zValidator("json", rateRequestSchema), async (c) => {
       userAgent,
     });
 
-    return c.json(success({ rated: true }));
+    // Get the updated average rating for the reveal animation
+    const [ratingResult] = await db
+      .select({
+        avg_rating: sql<number>`AVG(value)`,
+        rating_count: sql<number>`COUNT(*)`,
+      })
+      .from(ratingsTable)
+      .where(eq(ratingsTable.dogId, id));
+
+    return c.json(
+      success({
+        rated: true,
+        avg_rating: ratingResult?.avg_rating ?? value,
+        rating_count: ratingResult?.rating_count ?? 1,
+      })
+    );
   } catch {
     // Likely duplicate rating (unique constraint violation)
     return c.json(

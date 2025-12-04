@@ -177,3 +177,37 @@ html.dark {
 html:not(.dark) {
   color-scheme: light;
 }
+
+/* Rating reveal confetti animation */
+@keyframes confetti {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0) rotate(0deg);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-20px) scale(1) rotate(45deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100px) scale(0.5) rotate(180deg);
+  }
+}
+
+.animate-confetti {
+  animation: confetti 1.2s ease-out forwards;
+}
+
+/* Image slide-in animation for dog transitions */
+@keyframes slide-in-right {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out forwards;
+}
