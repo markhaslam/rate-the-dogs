@@ -7,11 +7,20 @@ interface TopBreedsListProps {
   totalBreedsRated: number;
 }
 
-// Medal badges for top 3
-const medals: Record<number, { icon: string; color: string }> = {
-  0: { icon: "🥇", color: "from-yellow-400 to-amber-500" },
-  1: { icon: "🥈", color: "from-gray-300 to-gray-400" },
-  2: { icon: "🥉", color: "from-orange-400 to-orange-500" },
+// Medal badges for top 3 with full Tailwind classes (must be static for JIT)
+const medals: Record<number, { icon: string; bgClass: string }> = {
+  0: {
+    icon: "🥇",
+    bgClass: "bg-gradient-to-r from-yellow-400/10 to-amber-500/10",
+  },
+  1: {
+    icon: "🥈",
+    bgClass: "bg-gradient-to-r from-gray-300/10 to-gray-400/10",
+  },
+  2: {
+    icon: "🥉",
+    bgClass: "bg-gradient-to-r from-orange-400/10 to-orange-500/10",
+  },
 };
 
 /**
@@ -46,7 +55,7 @@ export function TopBreedsList({
               key={breed.id}
               className={cn(
                 "flex items-center gap-3 p-3 rounded-lg transition-colors",
-                index < 3 && `bg-gradient-to-r ${medals[index]?.color ?? ""}/10`
+                index < 3 && medals[index]?.bgClass
               )}
             >
               {/* Medal or rank */}

@@ -155,6 +155,79 @@ describe("RaterPersonality", () => {
       expect(screen.getByText("Belly Rub Expert")).toBeInTheDocument();
     });
   });
+
+  describe("gradient backgrounds (Tailwind JIT fix)", () => {
+    it("applies static gradient class for Puppy Trainee", () => {
+      const { container } = render(
+        <RaterPersonality ratingsCount={5} avgRating={4.0} />
+      );
+
+      const gradient = container.querySelector(
+        ".bg-gradient-to-br.from-gray-400.to-gray-500"
+      );
+      expect(gradient).toBeInTheDocument();
+    });
+
+    it("applies static gradient class for Treat Dispenser", () => {
+      const { container } = render(
+        <RaterPersonality ratingsCount={50} avgRating={4.5} />
+      );
+
+      const gradient = container.querySelector(
+        ".bg-gradient-to-br.from-pink-400.to-rose-500"
+      );
+      expect(gradient).toBeInTheDocument();
+    });
+
+    it("applies static gradient class for Belly Rub Expert", () => {
+      const { container } = render(
+        <RaterPersonality ratingsCount={50} avgRating={3.8} />
+      );
+
+      const gradient = container.querySelector(
+        ".bg-gradient-to-br.from-blue-400.to-cyan-500"
+      );
+      expect(gradient).toBeInTheDocument();
+    });
+
+    it("applies static gradient class for Bark Inspector", () => {
+      const { container } = render(
+        <RaterPersonality ratingsCount={50} avgRating={3.0} />
+      );
+
+      const gradient = container.querySelector(
+        ".bg-gradient-to-br.from-purple-400.to-violet-500"
+      );
+      expect(gradient).toBeInTheDocument();
+    });
+
+    it("applies static gradient class for Picky Pup Parent", () => {
+      const { container } = render(
+        <RaterPersonality ratingsCount={50} avgRating={2.0} />
+      );
+
+      const gradient = container.querySelector(
+        ".bg-gradient-to-br.from-amber-400.to-yellow-500"
+      );
+      expect(gradient).toBeInTheDocument();
+    });
+
+    it("uses static mapping instead of dynamic personality.color", () => {
+      const { container } = render(
+        <RaterPersonality ratingsCount={50} avgRating={4.5} />
+      );
+
+      // The gradient div should exist with proper static classes
+      const gradientDiv = container.querySelector(
+        ".absolute.inset-0.opacity-10.bg-gradient-to-br"
+      );
+      expect(gradientDiv).toBeInTheDocument();
+
+      // Should NOT have broken dynamic class (would be empty or missing)
+      expect(gradientDiv?.className).toContain("from-");
+      expect(gradientDiv?.className).toContain("to-");
+    });
+  });
 });
 
 describe("RaterPersonalitySkeleton", () => {

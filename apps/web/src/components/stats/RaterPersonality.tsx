@@ -7,6 +7,15 @@ import {
   type PersonalityDefinition,
 } from "@rate-the-dogs/shared";
 
+// Static gradient classes for Tailwind JIT (dynamic classes don't work)
+const PERSONALITY_GRADIENTS: Record<string, string> = {
+  puppy_trainee: "from-gray-400 to-gray-500",
+  treat_dispenser: "from-pink-400 to-rose-500",
+  belly_rub_expert: "from-blue-400 to-cyan-500",
+  bark_inspector: "from-purple-400 to-violet-500",
+  picky_pup_parent: "from-amber-400 to-yellow-500",
+};
+
 interface RaterPersonalityProps {
   ratingsCount: number;
   avgRating: number | null;
@@ -80,7 +89,7 @@ export function RaterPersonality({
       <div
         className={cn(
           "absolute inset-0 opacity-10 bg-gradient-to-br",
-          personality.color
+          PERSONALITY_GRADIENTS[personality.id] || "from-gray-400 to-gray-500"
         )}
       />
 

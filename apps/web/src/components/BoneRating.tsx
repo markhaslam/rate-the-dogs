@@ -124,7 +124,7 @@ export function BoneRating({
     <div className="flex flex-col items-center gap-2">
       <div
         ref={containerRef}
-        className={cn("flex items-center", config.gap)}
+        className={cn("flex items-center px-2", config.gap)}
         role="group"
         aria-label="Rating"
         onMouseLeave={handleMouseLeave}
@@ -169,7 +169,7 @@ export function BoneRating({
             >
               <svg
                 className={cn(config.bone, "transition-all duration-200")}
-                viewBox="0 0 24 19"
+                viewBox="-1 -1 26 21"
                 aria-hidden="true"
               >
                 <defs>
