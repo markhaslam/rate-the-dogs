@@ -1,5 +1,5 @@
 {
-  "totalBreeds": 169,
+  "totalBreeds": 168,
   "totalImages": 18282,
   "duplicatesRemoved": 7912,
   "emptyBreedsRemoved": 38,
@@ -65,6 +65,10 @@
       "count": 177
     },
     {
+      "breed": "bulldog-boston",
+      "count": 176
+    },
+    {
       "breed": "terrier-lakeland",
       "count": 176
     },
@@ -86,10 +90,6 @@
     },
     {
       "breed": "beagle",
-      "count": 173
-    },
-    {
-      "breed": "bulldog-boston",
       "count": 173
     },
     {
@@ -598,10 +598,6 @@
     },
     {
       "breed": "rough-collie",
-      "count": 3
-    },
-    {
-      "breed": "terrier-boston",
       "count": 3
     },
     {

@@ -407,6 +407,163 @@ bun run db:generate
 6. **Backup before production migrations** (D1 supports point-in-time recovery)
 7. **Never use `db:push` in production** - it doesn't track history
 
+## Testing with Drizzle
+
+The test suite uses **vitest-pool-workers** with miniflare to provide a real D1 database in tests. We've created type-safe Drizzle helpers for seeding test data.
+
+### Test File Structure
+
+```
+apps/api/src/test/
+├── db.ts            # Drizzle test client (getTestDb, schema export)
+├── setup.ts         # Migration application + clearTestData()
+└── seedHelpers.ts   # Type-safe seeding functions + fixtures
+```
+
+### Why Tests Use Some Raw SQL
+
+While production code uses Drizzle exclusively, test setup has two necessary exceptions:
+
+1. **Schema Creation (`setup.ts`)**: Miniflare's D1 doesn't support Drizzle's migration/push features. We use raw SQL `CREATE TABLE` statements that mirror the Drizzle schema definitions.
+
+2. **CLI Seed Scripts**: Scripts like `seedDogCeoImages.ts` run outside the Workers runtime, so D1 bindings aren't available. They use wrangler's `d1 execute --file` command.
+
+**Important:** Keep `test/setup.ts` in sync with `src/db/schema/*.ts` when schema changes!
+
+### Using Test Helpers
+
+#### Basic Setup Pattern
+
+```typescript
+import { describe, it, expect, beforeEach, beforeAll } from "vitest";
+import { env } from "cloudflare:test";
+import app from "../index.js";
+import {
+  applyMigrations,
+  clearTestData,
+  getTestDb,
+  schema,
+} from "../test/setup.js";
+import {
+  seedBreed,
+  seedDog,
+  seedRating,
+  TEST_BREEDS,
+} from "../test/seedHelpers.js";
+
+beforeAll(async () => {
+  await applyMigrations(); // Run once per test file
+});
+
+describe("My Feature", () => {
+  beforeEach(async () => {
+    await clearTestData(); // Clean slate for each test
+  });
+
+  it("does something", async () => {
+    // Seed data using helpers
+    const breed = await seedBreed(TEST_BREEDS.labrador);
+    const dog = await seedDog({
+      name: "Max",
+      imageKey: "dogs/max.jpg",
+      breedId: breed.id,
+      status: "approved",
+    });
+
+    // Make API request
+    const res = await app.request(`/api/dogs/${dog.id}`, {}, env);
+    expect(res.status).toBe(200);
+  });
+});
+```
+
+#### Available Seed Functions
+
+```typescript
+// Single entity seeding (returns the created entity with ID)
+const breed = await seedBreed({ name: "Labrador", slug: "labrador" });
+const dog = await seedDog({ name: "Max", breedId: breed.id, ... });
+const rating = await seedRating({ dogId: dog.id, value: 5.0, anonId: "user-1" });
+const skip = await seedSkip({ dogId: dog.id, anonId: "user-1" });
+
+// Batch seeding (returns array of created entities)
+const breeds = await seedBreeds([...]);
+const dogs = await seedDogs([...]);
+const ratings = await seedRatings([...]);
+const skips = await seedSkips([...]);
+
+// Pre-built fixtures
+const breeds = await seedStandardBreeds(); // 4 common breeds
+const { breeds, dogs, ratings } = await seedCompleteTestScenario(); // Full scenario
+```
+
+#### Pre-built Fixtures
+
+```typescript
+import {
+  TEST_BREEDS,
+  createTestDog,
+  createTestRating,
+} from "../test/seedHelpers.js";
+
+// TEST_BREEDS - Standard breed data
+TEST_BREEDS.labrador; // { name: "Labrador Retriever", slug: "labrador-retriever" }
+TEST_BREEDS.golden; // { name: "Golden Retriever", slug: "golden-retriever" }
+TEST_BREEDS.germanShepherd;
+TEST_BREEDS.shihTzu;
+
+// Factory functions for flexible test data
+const dogData = createTestDog(breedId, { name: "Custom Name" });
+const ratingData = createTestRating(dogId, 4.5, "anon-123");
+```
+
+#### Direct Database Access
+
+For complex test scenarios, access the database directly:
+
+```typescript
+import { getTestDb, schema } from "../test/setup.js";
+import { eq } from "drizzle-orm";
+
+it("verifies database state", async () => {
+  const db = getTestDb();
+
+  // Query data
+  const dogs = await db.select().from(schema.dogs);
+  const [dog] = await db
+    .select()
+    .from(schema.dogs)
+    .where(eq(schema.dogs.id, 1));
+
+  // Delete specific data
+  await db.delete(schema.ratings).where(eq(schema.ratings.dogId, 1));
+
+  // Update data
+  await db
+    .update(schema.dogs)
+    .set({ status: "rejected" })
+    .where(eq(schema.dogs.id, 1));
+});
+```
+
+### Test Data Guidelines
+
+1. **Always use helpers** - Never use raw `env.DB.prepare()` in tests
+2. **Clear before each test** - Use `clearTestData()` in `beforeEach`
+3. **Use fixtures** - Prefer `TEST_BREEDS` and `seedCompleteTestScenario()` for consistency
+4. **Type safety** - All helpers are fully typed via Drizzle schema inference
+5. **Return values** - Seed functions return created entities with IDs for assertions
+
+### Complete Test Scenario
+
+The `seedCompleteTestScenario()` function creates a realistic dataset:
+
+- **3 breeds**: Labrador, Golden Retriever, German Shepherd
+- **4 dogs**: Max (approved), Bella (approved), Charlie (approved), Luna (pending)
+- **5 ratings**: Various ratings creating predictable averages
+
+This is ideal for testing leaderboards, filtering, and aggregation logic.
+
 ## Related Documentation
 
 - [Drizzle ORM Docs](https://orm.drizzle.team/docs/overview)

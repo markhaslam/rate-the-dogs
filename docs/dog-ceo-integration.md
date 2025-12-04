@@ -40,6 +40,22 @@ This document outlines the architecture for integrating the Dog CEO API as a lon
 - `apps/api/src/routes/dogs.ts` - Needs prefetch endpoint
 - `apps/web/src/pages/RatePage.tsx` - Needs prefetch integration
 
+### Known API Quirks
+
+The Dog CEO API has some data quality issues that our scripts handle:
+
+| Issue                       | Example                                                                                 | How We Handle It                                                              |
+| --------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **Duplicate images**        | Parent breeds contain sub-breed images (e.g., "corgi" contains "corgi-cardigan" images) | `filterDuplicateImages()` in `dogCeoUtils.ts` removes misplaced images        |
+| **Duplicate breed names**   | Both `bulldog/boston` and `terrier/boston` map to "Boston Terrier"                      | `mergeDuplicateBreedNames()` combines images under the breed with more images |
+| **Mixed/mislabeled images** | "pug" folder contains "puggle" images                                                   | Filtered by checking URL path matches breed name                              |
+
+**Boston Terrier Example:**
+
+The Dog CEO API lists Boston Terrier under both `bulldog/boston` and `terrier/boston`. This is technically correct (historically Boston Bulldog was the ancestor, Boston Terrier is the modern standardized breed), but causes unique constraint violations if both are seeded.
+
+Solution: The fetch script (`fetchDogCeoImages.ts`) automatically merges breeds with the same display name, keeping the key with more images and combining all image URLs.
+
 ### Two-Step Data Pipeline
 
 The Dog CEO integration uses a **separated two-step approach** for reliability and development speed:

@@ -21,6 +21,9 @@
  *   - breed-images.json must exist (run fetchDogCeoImages.ts first)
  *   - Database migrations must be applied
  *   - wrangler must be installed and configured
+ *
+ * Performance:
+ *   Uses D1 batch execution to seed ~6000 dogs in ~10-20 seconds instead of minutes.
  */
 
 import { $ } from "bun";
@@ -33,6 +36,10 @@ import {
 // Configuration
 const DEFAULT_LIMIT = 50;
 const JSON_PATH = new URL("../src/db/breed-images.json", import.meta.url);
+
+// Batch size for SQL file execution (number of statements per file)
+// D1 can handle large batches, but we split for progress reporting
+const STATEMENTS_PER_BATCH = 500;
 
 interface BreedImages {
   [breed: string]: string[];
@@ -48,7 +55,6 @@ interface SeedOptions {
 interface SeedStats {
   totalBreeds: number;
   totalDogs: number;
-  skippedDuplicates: number;
   errors: string[];
 }
 
@@ -100,19 +106,15 @@ Options:
 }
 
 /**
- * Execute a SQL statement via wrangler d1 execute
+ * Execute SQL from a file via wrangler d1 execute
  */
-async function executeSql(
-  sql: string,
+async function executeSqlFile(
+  filePath: string,
   remote: boolean
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const remoteFlag = remote ? "--remote" : "--local";
-
-    // Use wrangler d1 execute to run the SQL
-    const result =
-      await $`cd apps/api && bunx wrangler d1 execute rate-the-dogs ${remoteFlag} --command=${sql}`.quiet();
-
+    await $`cd apps/api && bunx wrangler d1 execute rate-the-dogs ${remoteFlag} --file=${filePath}`.quiet();
     return { success: true };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -121,55 +123,47 @@ async function executeSql(
 }
 
 /**
- * Execute batch SQL statements
+ * Execute SQL statements in batches
  */
-async function executeBatchSql(
+async function executeBatched(
   statements: string[],
-  remote: boolean
+  remote: boolean,
+  description: string
 ): Promise<{ success: boolean; errors: string[] }> {
   const errors: string[] = [];
+  const totalBatches = Math.ceil(statements.length / STATEMENTS_PER_BATCH);
 
-  // Join statements with newlines and execute as a batch
-  const batchSql = statements.join("\n");
+  for (let i = 0; i < statements.length; i += STATEMENTS_PER_BATCH) {
+    const batch = statements.slice(i, i + STATEMENTS_PER_BATCH);
+    const batchNum = Math.floor(i / STATEMENTS_PER_BATCH) + 1;
+    const batchSql = batch.join("\n");
 
-  try {
-    const remoteFlag = remote ? "--remote" : "--local";
-
-    // Write SQL to a temp file for batch execution
-    const tempFile = `/tmp/seed-dog-ceo-${Date.now()}.sql`;
+    const tempFile = `/tmp/seed-dog-ceo-${Date.now()}-${batchNum}.sql`;
     await Bun.write(tempFile, batchSql);
 
-    await $`cd apps/api && bunx wrangler d1 execute rate-the-dogs ${remoteFlag} --file=${tempFile}`.quiet();
+    process.stdout.write(
+      `\r  ${description}: batch ${batchNum}/${totalBatches}...`
+    );
+
+    const result = await executeSqlFile(tempFile, remote);
 
     // Clean up temp file
     await $`rm ${tempFile}`.quiet();
 
-    return { success: true, errors: [] };
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    errors.push(errorMsg);
-    return { success: false, errors };
+    if (!result.success) {
+      errors.push(result.error ?? "Unknown error");
+    }
   }
+
+  console.log(`\r  ${description}: done (${statements.length} statements)`);
+  return { success: errors.length === 0, errors };
 }
 
 /**
- * Clean existing Dog CEO data
+ * Escape a string for SQL single quotes
  */
-async function cleanExistingData(remote: boolean): Promise<void> {
-  console.log("Cleaning existing Dog CEO data...");
-
-  const sql = `
-    DELETE FROM dogs WHERE image_source = 'dog_ceo';
-    UPDATE breeds SET image_count = 0, last_synced_at = NULL WHERE dog_ceo_path IS NOT NULL;
-  `;
-
-  const result = await executeSql(sql, remote);
-  if (!result.success) {
-    console.error("Failed to clean existing data:", result.error);
-    throw new Error("Clean failed");
-  }
-
-  console.log("Existing Dog CEO data cleaned.");
+function escapeSql(str: string): string {
+  return str.replace(/'/g, "''");
 }
 
 /**
@@ -179,7 +173,6 @@ async function seedDatabase(options: SeedOptions): Promise<SeedStats> {
   const stats: SeedStats = {
     totalBreeds: 0,
     totalDogs: 0,
-    skippedDuplicates: 0,
     errors: [],
   };
 
@@ -200,15 +193,45 @@ async function seedDatabase(options: SeedOptions): Promise<SeedStats> {
 
   if (options.dryRun) {
     console.log("\n[DRY RUN] No database changes will be made\n");
+
+    // Calculate what would be inserted
+    for (const breed of breeds) {
+      const allImages = breedImages[breed];
+      const images =
+        options.limit > 0 ? allImages.slice(0, options.limit) : allImages;
+      stats.totalBreeds++;
+      stats.totalDogs += images.length;
+    }
+
+    return stats;
   }
 
   // 2. Clean existing data if requested
-  if (options.clean && !options.dryRun) {
-    await cleanExistingData(options.remote);
+  if (options.clean) {
+    console.log("Cleaning existing Dog CEO data...");
+    const cleanStatements = [
+      "DELETE FROM dogs WHERE image_source = 'dog_ceo';",
+      "UPDATE breeds SET image_count = 0, last_synced_at = NULL WHERE dog_ceo_path IS NOT NULL;",
+    ];
+
+    const tempFile = `/tmp/seed-dog-ceo-clean-${Date.now()}.sql`;
+    await Bun.write(tempFile, cleanStatements.join("\n"));
+    const cleanResult = await executeSqlFile(tempFile, options.remote);
+    await $`rm ${tempFile}`.quiet();
+
+    if (!cleanResult.success) {
+      throw new Error(`Clean failed: ${cleanResult.error}`);
+    }
+    console.log("Existing Dog CEO data cleaned.");
   }
 
-  // 3. Process each breed
+  // 3. Build all SQL statements
   const now = new Date().toISOString();
+  const breedStatements: string[] = [];
+  const dogStatements: string[] = [];
+  const updateStatements: string[] = [];
+
+  console.log("\nPreparing SQL statements...");
 
   for (const breed of breeds) {
     const name = getReadableBreedName(breed);
@@ -220,94 +243,61 @@ async function seedDatabase(options: SeedOptions): Promise<SeedStats> {
     const images =
       options.limit > 0 ? allImages.slice(0, options.limit) : allImages;
 
-    console.log(`Processing ${name} (${slug}): ${images.length} images`);
+    const escapedName = escapeSql(name);
 
-    if (options.dryRun) {
-      stats.totalBreeds++;
-      stats.totalDogs += images.length;
-      continue;
+    // Breed upsert statement
+    breedStatements.push(
+      `INSERT INTO breeds (name, slug, dog_ceo_path, created_at) VALUES ('${escapedName}', '${slug}', '${dogCeoPath}', '${now}') ON CONFLICT(slug) DO UPDATE SET dog_ceo_path = '${dogCeoPath}', name = '${escapedName}';`
+    );
+
+    // Dog insert statements
+    for (const imageUrl of images) {
+      const escapedUrl = escapeSql(imageUrl);
+      dogStatements.push(
+        `INSERT OR IGNORE INTO dogs (image_url, image_source, breed_id, status, created_at, updated_at) SELECT '${escapedUrl}', 'dog_ceo', id, 'approved', '${now}', '${now}' FROM breeds WHERE slug = '${slug}';`
+      );
     }
 
-    // Escape single quotes in strings for SQL
-    const escapedName = name.replace(/'/g, "''");
-
-    // 3a. Upsert breed
-    const breedSql = `
-      INSERT INTO breeds (name, slug, dog_ceo_path, created_at)
-      VALUES ('${escapedName}', '${slug}', '${dogCeoPath}', '${now}')
-      ON CONFLICT(slug) DO UPDATE SET
-        dog_ceo_path = '${dogCeoPath}',
-        name = '${escapedName}';
-    `;
-
-    const breedResult = await executeSql(breedSql, options.remote);
-    if (!breedResult.success) {
-      console.error(`  Failed to upsert breed ${slug}:`, breedResult.error);
-      stats.errors.push(`Breed ${slug}: ${breedResult.error}`);
-      continue;
-    }
-
-    // 3b. Get breed ID
-    const getIdSql = `SELECT id FROM breeds WHERE slug = '${slug}';`;
-    // Note: We can't easily get the ID back from wrangler d1 execute
-    // So we'll use a subquery in the INSERT statement
-
-    // 3c. Insert dogs in batches
-    const batchSize = 100;
-    let insertedCount = 0;
-
-    for (let i = 0; i < images.length; i += batchSize) {
-      const batch = images.slice(i, i + batchSize);
-      const statements: string[] = [];
-
-      for (const imageUrl of batch) {
-        const escapedUrl = imageUrl.replace(/'/g, "''");
-        statements.push(`
-          INSERT OR IGNORE INTO dogs (
-            image_url,
-            image_source,
-            breed_id,
-            status,
-            created_at,
-            updated_at
-          )
-          SELECT
-            '${escapedUrl}',
-            'dog_ceo',
-            id,
-            'approved',
-            '${now}',
-            '${now}'
-          FROM breeds WHERE slug = '${slug}';
-        `);
-      }
-
-      const batchResult = await executeBatchSql(statements, options.remote);
-      if (batchResult.success) {
-        insertedCount += batch.length;
-      } else {
-        console.error(
-          `  Failed to insert batch for ${slug}:`,
-          batchResult.errors
-        );
-        stats.errors.push(...batchResult.errors);
-      }
-    }
-
-    // 3d. Update breed stats
-    const updateStatsSql = `
-      UPDATE breeds
-      SET
-        image_count = (SELECT COUNT(*) FROM dogs WHERE breed_id = (SELECT id FROM breeds WHERE slug = '${slug}') AND image_source = 'dog_ceo'),
-        last_synced_at = '${now}'
-      WHERE slug = '${slug}';
-    `;
-
-    await executeSql(updateStatsSql, options.remote);
+    // Stats update statement
+    updateStatements.push(
+      `UPDATE breeds SET image_count = (SELECT COUNT(*) FROM dogs WHERE breed_id = (SELECT id FROM breeds WHERE slug = '${slug}') AND image_source = 'dog_ceo'), last_synced_at = '${now}' WHERE slug = '${slug}';`
+    );
 
     stats.totalBreeds++;
-    stats.totalDogs += insertedCount;
-    console.log(`  Inserted ${insertedCount} dogs`);
+    stats.totalDogs += images.length;
+  }
+
+  console.log(
+    `  Prepared: ${breedStatements.length} breeds, ${dogStatements.length} dogs\n`
+  );
+
+  // 4. Execute breed upserts
+  console.log("Inserting breeds...");
+  const breedResult = await executeBatched(
+    breedStatements,
+    options.remote,
+    "Breeds"
+  );
+  if (!breedResult.success) {
+    stats.errors.push(...breedResult.errors);
+  }
+
+  // 5. Execute dog inserts (this is the big one)
+  console.log("Inserting dogs...");
+  const dogResult = await executeBatched(dogStatements, options.remote, "Dogs");
+  if (!dogResult.success) {
+    stats.errors.push(...dogResult.errors);
+  }
+
+  // 6. Update breed stats
+  console.log("Updating breed statistics...");
+  const updateResult = await executeBatched(
+    updateStatements,
+    options.remote,
+    "Stats"
+  );
+  if (!updateResult.success) {
+    stats.errors.push(...updateResult.errors);
   }
 
   return stats;
@@ -333,8 +323,12 @@ async function main(): Promise<void> {
   console.log(`  Clean existing: ${options.clean}`);
   console.log("");
 
+  const startTime = Date.now();
+
   try {
     const stats = await seedDatabase(options);
+
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
     console.log("\n================================");
     console.log(
@@ -342,6 +336,7 @@ async function main(): Promise<void> {
     );
     console.log(`  Breeds: ${stats.totalBreeds}`);
     console.log(`  Dogs: ${stats.totalDogs}`);
+    console.log(`  Time: ${elapsed}s`);
 
     if (stats.errors.length > 0) {
       console.log(`\nErrors (${stats.errors.length}):`);

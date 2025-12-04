@@ -15,7 +15,7 @@ describe("dogCeoBreeds", () => {
   describe("DOG_CEO_BREED_MAP", () => {
     it("contains at least 169 breeds", () => {
       const count = Object.keys(DOG_CEO_BREED_MAP).length;
-      expect(count).toBeGreaterThanOrEqual(168);
+      expect(count).toBeGreaterThanOrEqual(169);
     });
 
     it("contains key popular breeds", () => {
@@ -32,13 +32,15 @@ describe("dogCeoBreeds", () => {
       const terriers = Object.keys(DOG_CEO_BREED_MAP).filter((k) =>
         k.includes("terrier")
       );
-      expect(terriers.length).toBeGreaterThanOrEqual(20);
+      expect(terriers.length).toBeGreaterThanOrEqual(21);
 
       // Check specific terriers
       expect(DOG_CEO_BREED_MAP["terrier-yorkshire"]).toBe("Yorkshire Terrier");
       expect(DOG_CEO_BREED_MAP["terrier-scottish"]).toBe("Scottish Terrier");
       expect(DOG_CEO_BREED_MAP["terrier-russell"]).toBe("Jack Russell Terrier");
-      // Note: terrier-boston was removed as duplicate of bulldog-boston
+      // Both terrier-boston and bulldog-boston map to Boston Terrier
+      // The fetch script merges these automatically
+      expect(DOG_CEO_BREED_MAP["terrier-boston"]).toBe("Boston Terrier");
       expect(DOG_CEO_BREED_MAP["bulldog-boston"]).toBe("Boston Terrier");
     });
 

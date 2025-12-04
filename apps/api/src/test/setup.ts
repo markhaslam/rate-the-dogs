@@ -1,10 +1,17 @@
 /**
- * Test Setup - Applies database migrations before tests
+ * Test Setup - Applies database migrations and provides test utilities
  *
- * This file runs once before all tests to set up the D1 database schema.
+ * This file uses raw SQL to apply migrations because:
+ * 1. Miniflare's D1 needs direct SQL execution for schema setup
+ * 2. We want tests to match production schema exactly
+ * 3. Drizzle's push/migrate features don't work in the test environment
+ *
+ * The schema here MUST match the Drizzle schema definitions in src/db/schema/
+ * If you modify the schema, update both places.
  */
 
 import { env } from "cloudflare:test";
+import { getTestDb, schema } from "./db.js";
 
 /**
  * Execute a single SQL statement using prepare().run()
@@ -17,24 +24,38 @@ async function execSql(sql: string) {
 /**
  * Apply all database migrations to the test D1 database.
  * This creates all required tables and indexes.
+ *
+ * IMPORTANT: This must stay in sync with the Drizzle schema in src/db/schema/
+ * When you add columns or tables to the Drizzle schema, update this file too.
  */
 export async function applyMigrations() {
-  // Migration 001: Initial schema
-  // Create tables one at a time
+  // =========================================================================
+  // BREEDS TABLE
+  // Sync with: src/db/schema/breeds.ts
+  // =========================================================================
   await execSql(`
     CREATE TABLE IF NOT EXISTS breeds (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
       slug TEXT NOT NULL UNIQUE,
+      dog_ceo_path TEXT,
+      image_count INTEGER DEFAULT 0,
+      last_synced_at TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `);
 
+  // =========================================================================
+  // DOGS TABLE
+  // Sync with: src/db/schema/dogs.ts
+  // =========================================================================
   await execSql(`
     CREATE TABLE IF NOT EXISTS dogs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT,
-      image_key TEXT NOT NULL,
+      image_key TEXT,
+      image_url TEXT,
+      image_source TEXT DEFAULT 'user_upload',
       breed_id INTEGER NOT NULL REFERENCES breeds(id),
       uploader_user_id INTEGER,
       uploader_anon_id TEXT,
@@ -46,6 +67,10 @@ export async function applyMigrations() {
     )
   `);
 
+  // =========================================================================
+  // RATINGS TABLE
+  // Sync with: src/db/schema/ratings.ts
+  // =========================================================================
   await execSql(`
     CREATE TABLE IF NOT EXISTS ratings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,12 +79,17 @@ export async function applyMigrations() {
       user_id INTEGER,
       anon_id TEXT,
       ip_address TEXT,
+      user_agent TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(dog_id, anon_id),
       UNIQUE(dog_id, user_id)
     )
   `);
 
+  // =========================================================================
+  // SKIPS TABLE
+  // Sync with: src/db/schema/skips.ts
+  // =========================================================================
   await execSql(`
     CREATE TABLE IF NOT EXISTS skips (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,6 +102,10 @@ export async function applyMigrations() {
     )
   `);
 
+  // =========================================================================
+  // USERS TABLE
+  // Sync with: src/db/schema/users.ts
+  // =========================================================================
   await execSql(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -79,63 +113,38 @@ export async function applyMigrations() {
       name TEXT,
       avatar_url TEXT,
       google_id TEXT UNIQUE,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      email_verified INTEGER DEFAULT 0,
+      provider TEXT DEFAULT 'google',
+      linked_anon_id TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
     )
   `);
 
+  // =========================================================================
+  // ANONYMOUS_USERS TABLE
+  // Sync with: src/db/schema/anonymousUsers.ts
+  // =========================================================================
   await execSql(`
     CREATE TABLE IF NOT EXISTS anonymous_users (
       anon_id TEXT PRIMARY KEY,
       first_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
       last_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
-      is_banned INTEGER NOT NULL DEFAULT 0
+      is_banned INTEGER NOT NULL DEFAULT 0,
+      user_agent TEXT
     )
   `);
 
-  // Add additional columns from later migrations
-  // Use try-catch since SQLite doesn't have IF NOT EXISTS for ADD COLUMN
-  const addColumnSafe = async (sql: string) => {
-    try {
-      await execSql(sql);
-    } catch {
-      // Column already exists, ignore
-    }
-  };
-
-  // Dog CEO fields for breeds
-  await addColumnSafe(`ALTER TABLE breeds ADD COLUMN dog_ceo_path TEXT`);
-  await addColumnSafe(
-    `ALTER TABLE breeds ADD COLUMN image_count INTEGER DEFAULT 0`
-  );
-  await addColumnSafe(`ALTER TABLE breeds ADD COLUMN last_synced_at TEXT`);
-
-  // Dog CEO fields for dogs
-  await addColumnSafe(`ALTER TABLE dogs ADD COLUMN image_url TEXT`);
-  await addColumnSafe(
-    `ALTER TABLE dogs ADD COLUMN image_source TEXT DEFAULT 'user_upload'`
-  );
-
-  // Analytics fields
-  await addColumnSafe(`ALTER TABLE ratings ADD COLUMN user_agent TEXT`);
-  await addColumnSafe(`ALTER TABLE anonymous_users ADD COLUMN user_agent TEXT`);
-
-  // User system enhancements
-  await addColumnSafe(
-    `ALTER TABLE users ADD COLUMN updated_at TEXT DEFAULT (datetime('now'))`
-  );
-  await addColumnSafe(
-    `ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0`
-  );
-  await addColumnSafe(
-    `ALTER TABLE users ADD COLUMN provider TEXT DEFAULT 'google'`
-  );
-  await addColumnSafe(`ALTER TABLE users ADD COLUMN linked_anon_id TEXT`);
-
-  // Create indexes
+  // =========================================================================
+  // INDEXES
+  // =========================================================================
   await execSql(`CREATE INDEX IF NOT EXISTS idx_dogs_status ON dogs(status)`);
   await execSql(`CREATE INDEX IF NOT EXISTS idx_dogs_breed ON dogs(breed_id)`);
   await execSql(
     `CREATE INDEX IF NOT EXISTS idx_dogs_created ON dogs(created_at DESC)`
+  );
+  await execSql(
+    `CREATE INDEX IF NOT EXISTS idx_dogs_image_source ON dogs(image_source)`
   );
   await execSql(
     `CREATE INDEX IF NOT EXISTS idx_ratings_dog ON ratings(dog_id)`
@@ -152,23 +161,27 @@ export async function applyMigrations() {
     `CREATE INDEX IF NOT EXISTS idx_users_google ON users(google_id)`
   );
   await execSql(
-    `CREATE INDEX IF NOT EXISTS idx_dogs_image_source ON dogs(image_source)`
+    `CREATE INDEX IF NOT EXISTS idx_users_linked_anon ON users(linked_anon_id)`
   );
   await execSql(
     `CREATE INDEX IF NOT EXISTS idx_breeds_last_synced ON breeds(last_synced_at)`
   );
-  await execSql(
-    `CREATE INDEX IF NOT EXISTS idx_users_linked_anon ON users(linked_anon_id)`
-  );
 }
 
 /**
- * Clear all data from tables (for test cleanup)
+ * Clear all data from tables using Drizzle (for test cleanup)
+ * Deletes in order to respect foreign key constraints.
  */
 export async function clearTestData() {
-  await execSql(`DELETE FROM ratings`);
-  await execSql(`DELETE FROM skips`);
-  await execSql(`DELETE FROM dogs`);
-  await execSql(`DELETE FROM breeds`);
-  await execSql(`DELETE FROM anonymous_users`);
+  const db = getTestDb();
+
+  // Delete in order: ratings/skips depend on dogs, dogs depends on breeds
+  await db.delete(schema.ratings);
+  await db.delete(schema.skips);
+  await db.delete(schema.dogs);
+  await db.delete(schema.breeds);
+  await db.delete(schema.anonymousUsers);
 }
+
+// Re-export for tests that need direct DB access
+export { getTestDb, schema };

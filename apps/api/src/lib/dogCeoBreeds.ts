@@ -242,8 +242,9 @@ export const DOG_CEO_BREED_MAP: Readonly<Record<string, string>> = {
   "terrier-australian": "Australian Terrier",
   "terrier-bedlington": "Bedlington Terrier",
   "terrier-border": "Border Terrier",
-  // Note: "terrier-boston" removed - it's a duplicate of "bulldog-boston" (Boston Terrier)
-  // Dog CEO API lists Boston Terrier under both terrier/ and bulldog/ categories
+  // Note: "terrier-boston" maps to same name as "bulldog-boston" (Boston Terrier)
+  // The fetch script merges these automatically, keeping the one with more images
+  "terrier-boston": "Boston Terrier",
   "terrier-cairn": "Cairn Terrier",
   "terrier-dandie": "Dandie Dinmont Terrier",
   "terrier-fox": "Fox Terrier",

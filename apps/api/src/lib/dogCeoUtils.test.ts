@@ -5,6 +5,7 @@ import {
   validateImageUrl,
   extractBreedFromUrl,
   filterDuplicateImages,
+  mergeDuplicateBreedNames,
   calculateStats,
   findInvalidUrls,
   breedToApiPath,
@@ -335,6 +336,131 @@ describe("dogCeoUtils", () => {
       expect(result.filtered.beagle).toHaveLength(1);
       expect(result.filtered.broken).toBeUndefined();
       expect(result.emptyBreeds).toContain("broken");
+    });
+  });
+
+  describe("mergeDuplicateBreedNames", () => {
+    // Simple name resolver for testing - just capitalizes the key
+    const simpleResolver = (key: string) => key.toUpperCase();
+
+    // Resolver that maps multiple keys to same name (simulating Boston Terrier case)
+    const bostonResolver = (key: string): string => {
+      if (key === "bulldog-boston" || key === "terrier-boston") {
+        return "Boston Terrier";
+      }
+      return key;
+    };
+
+    it("returns unchanged data when no duplicate names", () => {
+      const input = {
+        beagle: ["img1.jpg", "img2.jpg"],
+        pug: ["img3.jpg"],
+      };
+
+      const result = mergeDuplicateBreedNames(input, simpleResolver);
+
+      expect(result.merged).toEqual(input);
+      expect(result.mergedBreeds).toHaveLength(0);
+    });
+
+    it("merges breeds with same display name", () => {
+      const input = {
+        "bulldog-boston": ["img1.jpg", "img2.jpg", "img3.jpg"],
+        "terrier-boston": ["img4.jpg", "img5.jpg"],
+      };
+
+      const result = mergeDuplicateBreedNames(input, bostonResolver);
+
+      // Should merge under the breed with more images (bulldog-boston)
+      expect(Object.keys(result.merged)).toHaveLength(1);
+      expect(result.merged["bulldog-boston"]).toBeDefined();
+      expect(result.merged["terrier-boston"]).toBeUndefined();
+      expect(result.merged["bulldog-boston"]).toHaveLength(5);
+      expect(result.mergedBreeds).toHaveLength(1);
+      expect(result.mergedBreeds[0].canonical).toBe("bulldog-boston");
+      expect(result.mergedBreeds[0].merged).toContain("terrier-boston");
+    });
+
+    it("uses breed with most images as canonical", () => {
+      const input = {
+        "terrier-boston": ["img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg"],
+        "bulldog-boston": ["img5.jpg", "img6.jpg"],
+      };
+
+      const result = mergeDuplicateBreedNames(input, bostonResolver);
+
+      // terrier-boston has more images, so it should be canonical
+      expect(result.merged["terrier-boston"]).toBeDefined();
+      expect(result.merged["bulldog-boston"]).toBeUndefined();
+      expect(result.mergedBreeds[0].canonical).toBe("terrier-boston");
+    });
+
+    it("deduplicates images when merging", () => {
+      const input = {
+        "bulldog-boston": ["img1.jpg", "img2.jpg", "shared.jpg"],
+        "terrier-boston": ["img3.jpg", "shared.jpg"], // shared.jpg is duplicate
+      };
+
+      const result = mergeDuplicateBreedNames(input, bostonResolver);
+
+      // Should have 4 unique images, not 5
+      expect(result.merged["bulldog-boston"]).toHaveLength(4);
+      expect(result.mergedBreeds[0].imageCount).toBe(4);
+    });
+
+    it("handles multiple different merge groups", () => {
+      // Two pairs of breeds that each merge into one
+      const resolver = (key: string): string => {
+        if (key === "a1" || key === "a2") return "GroupA";
+        if (key === "b1" || key === "b2") return "GroupB";
+        return key;
+      };
+
+      const input = {
+        a1: ["img1.jpg", "img2.jpg"],
+        a2: ["img3.jpg"],
+        b1: ["img4.jpg"],
+        b2: ["img5.jpg", "img6.jpg"],
+        other: ["img7.jpg"],
+      };
+
+      const result = mergeDuplicateBreedNames(input, resolver);
+
+      // Should have 3 breeds: a1 (merged), b2 (merged), other
+      expect(Object.keys(result.merged)).toHaveLength(3);
+      expect(result.merged.a1).toBeDefined(); // a1 has more images
+      expect(result.merged.b2).toBeDefined(); // b2 has more images
+      expect(result.merged.other).toBeDefined();
+      expect(result.mergedBreeds).toHaveLength(2);
+    });
+
+    it("handles empty breed images gracefully", () => {
+      const input = {
+        "bulldog-boston": [],
+        "terrier-boston": ["img1.jpg"],
+      };
+
+      const result = mergeDuplicateBreedNames(input, bostonResolver);
+
+      // terrier-boston should be canonical (has more images)
+      expect(result.merged["terrier-boston"]).toHaveLength(1);
+      expect(result.mergedBreeds[0].canonical).toBe("terrier-boston");
+    });
+
+    it("preserves breeds that are not duplicates", () => {
+      const input = {
+        beagle: ["img1.jpg"],
+        "bulldog-boston": ["img2.jpg", "img3.jpg"],
+        "terrier-boston": ["img4.jpg"],
+        pug: ["img5.jpg"],
+      };
+
+      const result = mergeDuplicateBreedNames(input, bostonResolver);
+
+      expect(result.merged.beagle).toEqual(["img1.jpg"]);
+      expect(result.merged.pug).toEqual(["img5.jpg"]);
+      expect(result.merged["bulldog-boston"]).toBeDefined();
+      expect(Object.keys(result.merged)).toHaveLength(3);
     });
   });
 

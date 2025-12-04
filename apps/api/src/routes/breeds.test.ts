@@ -2,11 +2,13 @@ import { describe, it, expect, beforeEach, beforeAll } from "vitest";
 import { env } from "cloudflare:test";
 import app from "../index.js";
 import { applyMigrations, clearTestData } from "../test/setup.js";
+import { seedBreeds, TEST_BREEDS } from "../test/seedHelpers.js";
 
 /**
  * Breeds API Tests
  *
  * These tests use the real D1 database provided by vitest-pool-workers/miniflare.
+ * Test data is seeded using Drizzle ORM helpers for type safety.
  */
 
 // Apply migrations before all tests
@@ -14,20 +16,14 @@ beforeAll(async () => {
   await applyMigrations();
 });
 
-// Helper to seed test data using prepare().run()
+// Helper to seed test data using Drizzle
 async function seedTestData() {
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO breeds (id, name, slug) VALUES (1, 'Labrador Retriever', 'labrador-retriever')`
-  ).run();
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO breeds (id, name, slug) VALUES (2, 'German Shepherd', 'german-shepherd')`
-  ).run();
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO breeds (id, name, slug) VALUES (3, 'Golden Retriever', 'golden-retriever')`
-  ).run();
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO breeds (id, name, slug) VALUES (4, 'Shih Tzu', 'shih-tzu')`
-  ).run();
+  await seedBreeds([
+    TEST_BREEDS.labrador,
+    TEST_BREEDS.germanShepherd,
+    TEST_BREEDS.golden,
+    TEST_BREEDS.shihTzu,
+  ]);
 }
 
 describe("Breeds API", () => {

@@ -1,12 +1,19 @@
 import { describe, it, expect, beforeEach, beforeAll } from "vitest";
 import { env } from "cloudflare:test";
 import app from "../index.js";
-import { applyMigrations, clearTestData } from "../test/setup.js";
+import {
+  applyMigrations,
+  clearTestData,
+  getTestDb,
+  schema,
+} from "../test/setup.js";
+import { seedCompleteTestScenario } from "../test/seedHelpers.js";
 
 /**
  * Leaderboard API Tests
  *
  * These tests use the real D1 database provided by vitest-pool-workers/miniflare.
+ * Test data is seeded using Drizzle ORM helpers for type safety.
  */
 
 // Apply migrations before all tests
@@ -14,59 +21,10 @@ beforeAll(async () => {
   await applyMigrations();
 });
 
-// Helper to seed test data using prepare().run()
-async function seedTestData() {
-  // Insert test breeds
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO breeds (id, name, slug) VALUES (1, 'Labrador Retriever', 'labrador-retriever')`
-  ).run();
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO breeds (id, name, slug) VALUES (2, 'Golden Retriever', 'golden-retriever')`
-  ).run();
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO breeds (id, name, slug) VALUES (3, 'German Shepherd', 'german-shepherd')`
-  ).run();
-
-  // Insert test dogs
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO dogs (id, name, image_key, breed_id, status) VALUES (1, 'Max', 'dogs/sample-1.jpg', 1, 'approved')`
-  ).run();
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO dogs (id, name, image_key, breed_id, status) VALUES (2, 'Bella', 'dogs/sample-2.jpg', 2, 'approved')`
-  ).run();
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO dogs (id, name, image_key, breed_id, status) VALUES (3, 'Charlie', 'dogs/sample-3.jpg', 1, 'approved')`
-  ).run();
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO dogs (id, name, image_key, breed_id, status) VALUES (4, 'Luna', 'dogs/sample-4.jpg', 3, 'pending')`
-  ).run();
-
-  // Insert test ratings
-  // Max (dog 1): average 4.5 (5.0 + 4.0) / 2
-  // Bella (dog 2): average 4.0 (4.0 + 4.0) / 2
-  // Charlie (dog 3): average 3.5 (3.5)
-  // Luna (dog 4): no ratings (pending status anyway)
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO ratings (id, dog_id, value, anon_id) VALUES (1, 1, 5.0, 'anon-user-1')`
-  ).run();
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO ratings (id, dog_id, value, anon_id) VALUES (2, 1, 4.0, 'anon-user-2')`
-  ).run();
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO ratings (id, dog_id, value, anon_id) VALUES (3, 2, 4.0, 'anon-user-1')`
-  ).run();
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO ratings (id, dog_id, value, anon_id) VALUES (4, 2, 4.0, 'anon-user-2')`
-  ).run();
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO ratings (id, dog_id, value, anon_id) VALUES (5, 3, 3.5, 'anon-user-1')`
-  ).run();
-}
-
 describe("Leaderboard API", () => {
   beforeEach(async () => {
     await clearTestData();
-    await seedTestData();
+    await seedCompleteTestScenario();
   });
 
   describe("GET /api/leaderboard/dogs", () => {
@@ -178,7 +136,8 @@ describe("Leaderboard API", () => {
     });
 
     it("returns empty array when no dogs have ratings", async () => {
-      await env.DB.prepare(`DELETE FROM ratings`).run();
+      const db = getTestDb();
+      await db.delete(schema.ratings);
 
       const res = await app.request("/api/leaderboard/dogs", {}, env);
       const json = await res.json();
@@ -286,7 +245,8 @@ describe("Leaderboard API", () => {
     });
 
     it("returns empty array when no breeds have ratings", async () => {
-      await env.DB.prepare(`DELETE FROM ratings`).run();
+      const db = getTestDb();
+      await db.delete(schema.ratings);
 
       const res = await app.request("/api/leaderboard/breeds", {}, env);
       const json = await res.json();

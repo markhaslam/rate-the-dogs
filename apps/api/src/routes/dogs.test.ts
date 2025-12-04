@@ -1,13 +1,26 @@
 import { describe, it, expect, beforeEach, beforeAll } from "vitest";
 import { env } from "cloudflare:test";
 import app from "../index.js";
-import { applyMigrations, clearTestData } from "../test/setup.js";
+import {
+  applyMigrations,
+  clearTestData,
+  getTestDb,
+  schema,
+} from "../test/setup.js";
+import {
+  seedBreed,
+  seedDog,
+  seedDogs,
+  seedRating,
+  seedSkip,
+} from "../test/seedHelpers.js";
 
 /**
  * Dogs API Tests
  *
  * These tests use the real D1 database provided by vitest-pool-workers/miniflare.
  * Each test starts with a fresh database state.
+ * Test data is seeded using Drizzle ORM helpers for type safety.
  */
 
 // Apply migrations before all tests
@@ -15,17 +28,23 @@ beforeAll(async () => {
   await applyMigrations();
 });
 
-// Helper to seed test data using prepare().run()
+// Helper to seed test data using Drizzle
 async function seedTestData() {
   // Insert test breed
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO breeds (id, name, slug) VALUES (1, 'Labrador Retriever', 'labrador-retriever')`
-  ).run();
+  const breed = await seedBreed({
+    name: "Labrador Retriever",
+    slug: "labrador-retriever",
+  });
 
   // Insert test dog
-  await env.DB.prepare(
-    `INSERT OR IGNORE INTO dogs (id, name, image_key, breed_id, status) VALUES (1, 'Max', 'dogs/sample-1.jpg', 1, 'approved')`
-  ).run();
+  await seedDog({
+    name: "Max",
+    imageKey: "dogs/sample-1.jpg",
+    breedId: breed.id,
+    status: "approved",
+  });
+
+  return { breed };
 }
 
 describe("Dogs API", () => {
@@ -46,7 +65,8 @@ describe("Dogs API", () => {
     });
 
     it("returns null when no dogs available", async () => {
-      await env.DB.prepare(`DELETE FROM dogs`).run();
+      const db = getTestDb();
+      await db.delete(schema.dogs);
 
       const res = await app.request("/api/dogs/next", {}, env);
       const json = await res.json();
@@ -65,13 +85,18 @@ describe("Dogs API", () => {
     });
 
     it("excludes already rated dogs", async () => {
-      // First, rate the only dog
+      const db = getTestDb();
       const anonId = "test-anon-exclude-rated";
-      await env.DB.prepare(
-        `INSERT INTO ratings (dog_id, value, anon_id) VALUES (1, 4.5, ?)`
-      )
-        .bind(anonId)
-        .run();
+
+      // Get the dog ID
+      const [dog] = await db.select().from(schema.dogs).limit(1);
+
+      // Rate the only dog
+      await seedRating({
+        dogId: dog.id,
+        value: 4.5,
+        anonId,
+      });
 
       // Request next dog with same anon_id
       const res = await app.request(
@@ -90,11 +115,17 @@ describe("Dogs API", () => {
     });
 
     it("excludes skipped dogs", async () => {
-      // First, skip the only dog
+      const db = getTestDb();
       const anonId = "test-anon-exclude-skipped";
-      await env.DB.prepare(`INSERT INTO skips (dog_id, anon_id) VALUES (1, ?)`)
-        .bind(anonId)
-        .run();
+
+      // Get the dog ID
+      const [dog] = await db.select().from(schema.dogs).limit(1);
+
+      // Skip the only dog
+      await seedSkip({
+        dogId: dog.id,
+        anonId,
+      });
 
       // Request next dog with same anon_id
       const res = await app.request(
@@ -431,13 +462,30 @@ describe("Dogs API", () => {
 
   describe("GET /api/dogs/prefetch", () => {
     it("returns multiple dogs by default", async () => {
+      const db = getTestDb();
+      const [breed] = await db.select().from(schema.breeds).limit(1);
+
       // Add more dogs for prefetch testing
-      await env.DB.prepare(
-        `INSERT INTO dogs (id, name, image_key, breed_id, status) VALUES
-          (2, 'Bella', 'dogs/sample-2.jpg', 1, 'approved'),
-          (3, 'Charlie', 'dogs/sample-3.jpg', 1, 'approved'),
-          (4, 'Luna', 'dogs/sample-4.jpg', 1, 'approved')`
-      ).run();
+      await seedDogs([
+        {
+          name: "Bella",
+          imageKey: "dogs/sample-2.jpg",
+          breedId: breed.id,
+          status: "approved",
+        },
+        {
+          name: "Charlie",
+          imageKey: "dogs/sample-3.jpg",
+          breedId: breed.id,
+          status: "approved",
+        },
+        {
+          name: "Luna",
+          imageKey: "dogs/sample-4.jpg",
+          breedId: breed.id,
+          status: "approved",
+        },
+      ]);
 
       const res = await app.request("/api/dogs/prefetch", {}, env);
       expect(res.status).toBe(200);
@@ -449,12 +497,24 @@ describe("Dogs API", () => {
     });
 
     it("respects count parameter", async () => {
+      const db = getTestDb();
+      const [breed] = await db.select().from(schema.breeds).limit(1);
+
       // Add more dogs
-      await env.DB.prepare(
-        `INSERT INTO dogs (id, name, image_key, breed_id, status) VALUES
-          (2, 'Bella', 'dogs/sample-2.jpg', 1, 'approved'),
-          (3, 'Charlie', 'dogs/sample-3.jpg', 1, 'approved')`
-      ).run();
+      await seedDogs([
+        {
+          name: "Bella",
+          imageKey: "dogs/sample-2.jpg",
+          breedId: breed.id,
+          status: "approved",
+        },
+        {
+          name: "Charlie",
+          imageKey: "dogs/sample-3.jpg",
+          breedId: breed.id,
+          status: "approved",
+        },
+      ]);
 
       const res = await app.request("/api/dogs/prefetch?count=2", {}, env);
       expect(res.status).toBe(200);
@@ -464,28 +524,52 @@ describe("Dogs API", () => {
     });
 
     it("excludes specified dog IDs", async () => {
-      // Add more dogs
-      await env.DB.prepare(
-        `INSERT INTO dogs (id, name, image_key, breed_id, status) VALUES
-          (2, 'Bella', 'dogs/sample-2.jpg', 1, 'approved'),
-          (3, 'Charlie', 'dogs/sample-3.jpg', 1, 'approved')`
-      ).run();
+      const db = getTestDb();
+      const [breed] = await db.select().from(schema.breeds).limit(1);
 
-      const res = await app.request("/api/dogs/prefetch?exclude=1,2", {}, env);
+      // Add more dogs
+      await seedDogs([
+        {
+          name: "Bella",
+          imageKey: "dogs/sample-2.jpg",
+          breedId: breed.id,
+          status: "approved",
+        },
+        {
+          name: "Charlie",
+          imageKey: "dogs/sample-3.jpg",
+          breedId: breed.id,
+          status: "approved",
+        },
+      ]);
+
+      // Get all dogs to know IDs
+      const allDogs = await db.select().from(schema.dogs);
+      const excludeIds = allDogs.slice(0, 2).map((d) => d.id);
+
+      const res = await app.request(
+        `/api/dogs/prefetch?exclude=${excludeIds.join(",")}`,
+        {},
+        env
+      );
       expect(res.status).toBe(200);
 
       const json = await res.json();
       expect(json.data.items.length).toBe(1);
-      expect(json.data.items[0].id).toBe(3);
+      expect(excludeIds).not.toContain(json.data.items[0].id);
     });
 
     it("excludes already rated dogs", async () => {
+      const db = getTestDb();
       const anonId = "test-prefetch-rated";
-      await env.DB.prepare(
-        `INSERT INTO ratings (dog_id, value, anon_id) VALUES (1, 4.5, ?)`
-      )
-        .bind(anonId)
-        .run();
+
+      const [dog] = await db.select().from(schema.dogs).limit(1);
+
+      await seedRating({
+        dogId: dog.id,
+        value: 4.5,
+        anonId,
+      });
 
       const res = await app.request(
         "/api/dogs/prefetch",
@@ -500,10 +584,15 @@ describe("Dogs API", () => {
     });
 
     it("excludes already skipped dogs", async () => {
+      const db = getTestDb();
       const anonId = "test-prefetch-skipped";
-      await env.DB.prepare(`INSERT INTO skips (dog_id, anon_id) VALUES (1, ?)`)
-        .bind(anonId)
-        .run();
+
+      const [dog] = await db.select().from(schema.dogs).limit(1);
+
+      await seedSkip({
+        dogId: dog.id,
+        anonId,
+      });
 
       const res = await app.request(
         "/api/dogs/prefetch",
@@ -518,7 +607,8 @@ describe("Dogs API", () => {
     });
 
     it("returns empty array when no dogs available", async () => {
-      await env.DB.prepare(`DELETE FROM dogs`).run();
+      const db = getTestDb();
+      await db.delete(schema.dogs);
 
       const res = await app.request("/api/dogs/prefetch", {}, env);
       const json = await res.json();

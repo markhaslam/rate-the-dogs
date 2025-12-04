@@ -31,11 +31,13 @@ import {
   flattenBreedList,
   getBreedImagesUrl,
   filterDuplicateImages,
+  mergeDuplicateBreedNames,
   calculateStats,
   findInvalidUrls,
   type BreedImages,
   type Stats,
 } from "../src/lib/dogCeoUtils";
+import { getReadableBreedName } from "../src/lib/dogCeoBreeds";
 
 const DOG_CEO_API = "https://dog.ceo/api";
 
@@ -315,12 +317,22 @@ async function main(): Promise<void> {
     // 3. Filter duplicates
     console.log("\nFiltering duplicate images...");
     const {
-      filtered: breedImages,
+      filtered: filteredImages,
       removedCount,
       emptyBreeds,
     } = filterDuplicateImages(rawImages);
 
-    // 4. Validate URLs
+    // 4. Merge breeds with same display name (e.g., bulldog-boston + terrier-boston = Boston Terrier)
+    console.log("\nMerging breeds with same display name...");
+    const { merged: breedImages, mergedBreeds } = mergeDuplicateBreedNames(
+      filteredImages,
+      getReadableBreedName
+    );
+    if (mergedBreeds.length === 0) {
+      console.log("  No duplicates found to merge");
+    }
+
+    // 5. Validate URLs
     const invalidUrls = findInvalidUrls(breedImages);
     const invalidCount = Object.values(invalidUrls).flat().length;
     if (invalidCount > 0) {
