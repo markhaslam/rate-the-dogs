@@ -59,9 +59,9 @@ export function RatePage() {
   useEffect(() => {
     fetch("/api/me/stats")
       .then((res) => res.json())
-      .then((data: { success: boolean; data?: { ratings_count: number } }) => {
+      .then((data: { success: boolean; data?: { ratingsCount: number } }) => {
         if (data.success && data.data) {
-          setRatedCount(data.data.ratings_count);
+          setRatedCount(data.data.ratingsCount);
         }
       })
       .catch((e) => console.error("Failed to fetch stats:", e));

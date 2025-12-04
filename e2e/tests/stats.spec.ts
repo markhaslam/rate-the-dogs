@@ -27,13 +27,43 @@ test.describe("Stats Page", () => {
     await page.goto("/");
 
     // Wait for page to load
+    await page.waitForLoadState("networkidle");
+
+    // Rate a dog first to ensure we have stats
+    await page.waitForSelector('[role="group"][aria-label="Rating"]', {
+      timeout: 10000,
+    });
+    const bones = page.locator('[role="group"][aria-label="Rating"] button');
+    await bones.nth(2).click(); // Rate 3
+
+    // Wait for reveal and dismiss
+    const reveal = page.locator('[data-testid="rating-reveal"]');
+    await expect(reveal).toBeVisible({ timeout: 5000 });
+    await reveal.click();
+    await expect(reveal).not.toBeVisible({ timeout: 3000 });
+
+    // Wait for rating to be saved
     await page.waitForTimeout(1000);
 
-    // Click on "My Stats" in navigation
+    // Click on "My Stats" in navigation (handle mobile hamburger menu)
+    const viewportWidth = (await page.viewportSize())?.width ?? 1024;
+    const isMobile = viewportWidth < 768;
+    if (isMobile) {
+      // On mobile, open the hamburger menu first
+      const menuButton = page.locator('button[aria-label="Toggle menu"]');
+      if (await menuButton.isVisible()) {
+        await menuButton.click();
+        await page.waitForTimeout(500);
+      }
+    }
+
     await page.getByRole("link", { name: /my stats/i }).click();
 
     // Should be on stats page
     await expect(page).toHaveURL(/\/stats/);
+
+    // Wait for data to load
+    await page.waitForLoadState("networkidle");
 
     // Should see the page header
     await expect(page.getByRole("heading", { name: /my stats/i })).toBeVisible({
@@ -60,8 +90,14 @@ test.describe("Stats Page", () => {
     await reveal.click();
     await expect(reveal).not.toBeVisible({ timeout: 3000 });
 
+    // Wait a moment for the rating to be saved to the database
+    await page.waitForTimeout(1000);
+
     // Now navigate to stats page
     await page.goto("/stats");
+
+    // Wait for the page to load and data to be fetched
+    await page.waitForLoadState("networkidle");
 
     // Should NOT show empty state
     await expect(page.getByText("No Stats Yet!")).not.toBeVisible({
@@ -89,6 +125,27 @@ test.describe("Stats Page", () => {
   });
 
   test("responsive layout works on mobile", async ({ page }) => {
+    // First rate a dog to have some stats
+    await page.goto("/");
+
+    // Wait for rating buttons to load
+    await page.waitForSelector('[role="group"][aria-label="Rating"]', {
+      timeout: 10000,
+    });
+
+    // Rate a dog
+    const bones = page.locator('[role="group"][aria-label="Rating"] button');
+    await bones.nth(3).click(); // Rate 4
+
+    // Wait for reveal and dismiss
+    const reveal = page.locator('[data-testid="rating-reveal"]');
+    await expect(reveal).toBeVisible({ timeout: 5000 });
+    await reveal.click();
+    await expect(reveal).not.toBeVisible({ timeout: 3000 });
+
+    // Wait for rating to be saved
+    await page.waitForTimeout(1000);
+
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 812 });
 
@@ -96,12 +153,12 @@ test.describe("Stats Page", () => {
     await page.goto("/stats");
 
     // Wait for page to load
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle");
 
     // Take screenshot for verification
     await page.screenshot({ path: "/tmp/stats-mobile.png" });
 
-    // Page should still be usable
+    // Page should show stats (not empty state)
     await expect(page.getByRole("heading", { name: /my stats/i })).toBeVisible({
       timeout: 5000,
     });
