@@ -52,8 +52,9 @@ export default defineConfig({
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
-        // Use stable Chrome channel for consistent behavior across CI and local
-        channel: "chrome",
+        // Only use Chrome channel in actual CI (where it's installed via GitHub Actions)
+        // On WSL/local, use Playwright's bundled Chromium (no channel setting)
+        ...(isCI ? { channel: "chrome" } : {}),
       },
     },
     {

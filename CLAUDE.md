@@ -366,7 +366,7 @@ E2E tests use Playwright and run in three modes to catch issues at different sta
 **Reliability Features:**
 
 - **Global Setup**: Verifies server health before running any tests (`e2e/global-setup.ts`)
-- **Browser Channel Lock**: Chromium uses stable Chrome channel for consistent behavior
+- **Browser Channel Lock**: In actual CI, Chromium uses stable Chrome channel; locally uses Playwright's bundled Chromium for WSL compatibility
 - **Smoke Tests**: Quick validation of critical paths (`e2e/tests/smoke.spec.ts`)
 - **WebKit Detection**: `isWebKitBrowser()` helper for consistent skip logic
 
